@@ -96,7 +96,6 @@ const wrongIds = () => reviewIds().filter(id => !store.wrong[id].cleared); // �
 const prefs = { status: "all", freq: "all" };
 const FREQ = { high: ["빈도 높음", "bad"], mid: ["빈도 보통", "todo"], low: ["빈도 낮음", "todo"] };
 const STATUS = { todo: ["미완료", "todo"], done: ["완료", ""], ok: ["맞힘", "ok"], bad: ["틀림", "bad"] };
-const TREND = { high: "높음 ↗", mid: "보통 →", low: "낮음 ↘" };
 const statusOf = id => (!(id in store.last) ? "todo" : store.last[id] ? "ok" : "bad");
 let s; // 진행 중인 연습 회차
 let view = 0; // 화면에 떠 있는 실전 회차 (타이머용)
@@ -137,6 +136,7 @@ function home() {
     "#notes": () => notes("wrong"),
     "#review": () => notes("review"),
     "#all": () => { prefs.unit = "all"; list(); },
+    "#go": () => { const todo = PRACTICE.filter(q => !(q.id in store.last)); todo.length ? start(todo, false) : (prefs.unit = "all", list()); },
     "[data-unit]": b => { prefs.unit = b.dataset.unit; list(); },
     "#start": () => startExam(+tab, !store.runs[tab]),
     "#restart": () => startExam(+tab, true),
@@ -145,24 +145,19 @@ function home() {
 }
 
 function practiceHome() {
-  const st = store.stats, all = st[1].s + st[2].s;
-  const box = (id, title, n, sub, tone) => `<button id="${id}" class="card stack" style="gap:.2rem;background:var(--${tone}-soft);border-color:var(--${tone}-soft)">
-    <strong>${title}</strong><span class="big" style="color:var(--${tone})">${n}</span><span class="muted">${sub}</span></button>`;
+  const st = store.stats, done = PRACTICE.filter(q => q.id in store.last).length, left = PRACTICE.length - done;
+  const small = (id, title, n, tone) => `<button id="${id}" class="card row" style="justify-content:space-between;padding:.8rem 1rem"><strong>${title}</strong><span class="count" style="color:var(--${tone})">${n}</span></button>`;
+  // 첫 화면: 진행률 + 이어서 풀기 하나, 그 아래 오답노트·다시보기, 단원 목록은 이름과 진행 막대만
   return `
-    <div class="card stats">
-      <div><div class="big">${all}</div><span class="muted">푼 문제</span></div>
-      <div><div class="big">${pct(st[1].c + st[2].c, all)}%</div><span class="muted">정답률</span></div>
-      <div><div class="big">${st[1].s ? pct(st[1].c, st[1].s) + "%" : "–"}</div><span class="muted">1과목</span></div>
-      <div><div class="big">${st[2].s ? pct(st[2].c, st[2].s) + "%" : "–"}</div><span class="muted">2과목</span></div>
+    <div class="card stack">
+      <span class="row" style="justify-content:space-between"><strong>푼 문제 ${done} / ${PRACTICE.length}</strong><span class="muted">정답률 ${done ? pct(st[1].c + st[2].c, st[1].s + st[2].s) + "%" : "–"}</span></span>
+      <progress value="${done}" max="${PRACTICE.length}"></progress>
+      <button id="go" class="main">${left ? (done ? `이어서 풀기 · 남은 ${left}문제` : "첫 문제 풀기") : "전체 문제 다시 보기"}</button>
     </div>
-    <div class="split">
-      ${box("notes", "오답노트", wrongIds().length, "아직 못 맞힌 문제", "bad")}
-      ${box("review", "다시보기", reviewIds().length, "한 번이라도 틀린 문제", "accent")}
-    </div>
-    ${[1, 2].map(k => `<div class="row" style="justify-content:space-between;margin-top:.6rem"><h3 style="margin:0">${k === 1 ? "1과목 · 데이터 모델링의 이해" : "2과목 · SQL 기본과 활용"}</h3>
-      ${k === 1 ? `<button id="all" class="chip">전체 ${PRACTICE.length}문제</button>` : ""}</div>
-      ${UNITS.filter(u => u.subject === k).map(unitCard).join("")}`).join("")}
-    <p class="muted center">연습 정답률은 실전 모의고사와 따로 기록돼요.<br>출제 빈도는 최근 출제 경향을 바탕으로 한 추정이에요.</p>`;
+    <div class="split">${small("notes", "오답노트", wrongIds().length, "bad")}${small("review", "다시보기", reviewIds().length, "accent")}</div>
+    <div class="row" style="justify-content:space-between;margin-top:.4rem"><h2>단원별로 풀기</h2><button id="all" class="chip">전체 ${PRACTICE.length}문제</button></div>
+    ${[1, 2].map(k => `<h3 class="muted" style="margin:0">${k === 1 ? "1과목 · 데이터 모델링의 이해" : "2과목 · SQL 기본과 활용"}</h3>
+      ${UNITS.filter(u => u.subject === k).map(unitCard).join("")}`).join("")}`;
 }
 
 function examHome(n) {
@@ -191,15 +186,10 @@ function examHome(n) {
 
 // ---------- 연습 ----------
 function unitCard(u) {
-  const qs = PRACTICE.filter(q => q.unit === u.id), tried = qs.filter(q => q.id in store.last);
-  const rate = tried.length ? pct(tried.filter(q => store.last[q.id]).length, tried.length) + "%" : "–";
-  return `<button data-unit="${u.id}" class="card stack" style="gap:.5rem">
-    <span class="row" style="justify-content:space-between;flex-wrap:nowrap"><strong style="font-size:1.15rem">${esc(u.title)}</strong>${solved(u.id)}</span>
-    <span class="muted">${esc(u.desc)}</span>
-    <span style="display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;padding-top:.6rem;border-top:1px solid var(--line)">
-      <span><span class="muted" style="display:block">출제 빈도</span><b style="color:var(--${u.freq === "high" ? "bad" : "ink"})">${TREND[u.freq]}</b></span>
-      <span><span class="muted" style="display:block">내 정답률</span><b>${rate}</b></span>
-    </span>
+  const qs = PRACTICE.filter(q => q.unit === u.id), n = qs.filter(q => q.id in store.last).length;
+  return `<button data-unit="${u.id}" class="card stack" style="gap:.45rem;padding:.9rem 1rem">
+    <span class="row" style="justify-content:space-between;flex-wrap:nowrap"><strong>${esc(u.title)}${u.freq === "high" ? ' <span class="tag bad">자주 나와요</span>' : ""}</strong>${solved(u.id)}</span>
+    <progress value="${n}" max="${qs.length}" style="height:.45rem"></progress>
   </button>`;
 }
 // 대제목의 "푼 문제 / 전체 문제"
@@ -220,6 +210,7 @@ function list() {
   const chips = (key, opts) => opts.map(([v, l]) => `<button class="chip" data-${key}="${v}" aria-pressed="${prefs[key] === v}">${l}</button>`).join("");
   show(`
     <div class="row"><button id="back" aria-label="뒤로" class="back">←</button><h2 style="flex:1">${unit ? esc(unit.title) : "전체 문제"}</h2>${unit ? solved(unit.id) : ""}</div>
+    ${unit ? `<p class="muted">${esc(unit.desc)}</p>` : ""}
     <div class="row">${chips("status", [["all", `전체 ${count("all")}`], ...Object.entries(STATUS).map(([k, [l]]) => [k, `${l} ${count(k)}`])])}</div>
     <div class="row">${chips("freq", [["all", "빈도 전체"], ...Object.entries(FREQ).map(([k, [l]]) => [k, `${l.slice(3)} ${fcount(k)}`])])}</div>
     ${shown.length ? `<button id="solveAll" class="main">이 목록 ${shown.length}문제 풀기</button>` : `<p class="card muted center" style="padding:2rem 1rem">조건에 맞는 문제가 없어요.</p>`}
