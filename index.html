@@ -72,6 +72,8 @@ details.card > summary { list-style:none; } details.card > summary::-webkit-deta
 
 <script src="questions.js"></script>
 <script>
+// 카카오톡 안의 브라우저는 앱을 닫으면 기록이 지워져서, 기본 브라우저(Chrome·Safari)로 다시 열기
+if (/KAKAOTALK/i.test(navigator.userAgent)) location.href = "kakaotalk://web/openExternal?url=" + encodeURIComponent(location.href);
 const BANK = window.SQLD_QUESTIONS || [], UNITS = window.SQLD_UNITS || [];
 const byId = Object.fromEntries(BANK.map(q => [q.id, q]));
 const PRACTICE = BANK.filter(q => !q.exam && !q.trap);
