@@ -262,7 +262,15 @@ function start(list, retry, i = 0) {
   question();
 }
 
+// 풀던 연습 회차를 저장해 앱을 닫았다 열어도 그 문제부터 (✕로 그만두면 지움)
+function keep() {
+  store.cur = { ids: s.list.map(q => q.id), i: s.i + (s.checked ? 1 : 0), retry: s.retry, res: s.results.map(r => [r.q.id, r.picked, r.ok]) };
+  save();
+}
+const stop = () => { delete store.cur; save(); };
+
 function question() {
+  keep();
   const q = s.list[s.i];
   if (!s.checked && !s.tried.length) s.prev = store.wrong[q.id]?.count || 0; // 지금까지 틀린 횟수
   const cls = n => (s.tried.includes(n) ? "bad" : s.checked && n === s.picked ? "ok" : ""); // tried: 이번에 고른 오답
@@ -273,7 +281,7 @@ function question() {
     <h2 class="qtext">${esc(q.q)}</h2>
     ${code(q)}
     ${q.options.map((o, k) => `<button class="opt ${cls(k + 1)}" role="radio" data-n="${k + 1}" aria-checked="${s.picked === k + 1}" ${s.checked || s.tried.includes(k + 1) ? "disabled" : ""}><b>${k + 1}</b><span>${esc(o)}</span></button>`).join("")}`, {
-    "#quit": () => (s.results.length ? result() : home()),
+    "#quit": () => (s.results.length ? result() : (stop(), home())),
     "[data-n]": b => { s.picked = +b.dataset.n; question(); },
   }, s.picked || s.checked || s.tried.length);
   const last = s.i === s.list.length - 1, note = s.note ? `<span class="muted">${s.note}</span>` : "";
@@ -318,6 +326,7 @@ function check() {
 }
 
 function result() {
+  stop();
   const res = s.results, right = res.filter(r => r.ok).length, score = pct(right, res.length);
   const wrong = res.filter(r => !r.ok).map(r => r.q);
   show(`
@@ -483,7 +492,11 @@ setInterval(() => {
   $("#timer").style.color = left < 600000 ? "var(--bad)" : "";
 }, 1000);
 
-home();
+const c = store.cur;
+if (c && c.i < c.ids.length && c.ids.every(id => byId[id])) {
+  s = { list: c.ids.map(id => byId[id]), i: c.i, picked: 0, checked: false, tried: [], retry: c.retry, results: c.res.map(([id, picked, ok]) => ({ q: byId[id], picked, ok })) };
+  question();
+} else { if (c) stop(); home(); }
 
 // 앱으로 설치하면 인터넷 없이도 열리게 (sw.js). 미리보기처럼 막힌 곳에서는 조용히 건너뜀
 try { navigator.serviceWorker.register("sw.js").catch(() => {}); } catch {}
