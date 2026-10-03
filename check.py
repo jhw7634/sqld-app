@@ -10,11 +10,12 @@ import sqlite3
 import duckdb
 
 src = subprocess.run(["node", "-e", "global.window={};require('./questions.js');"
-                      "console.log(JSON.stringify({u:window.SQLD_UNITS,q:window.SQLD_QUESTIONS}))"],
+                      "console.log(JSON.stringify({u:window.SQLD_UNITS,q:window.SQLD_QUESTIONS,t:window.SQLD_TRAPS||[]}))"],
                      capture_output=True, text=True, check=True, cwd=sys.path[0]).stdout
 data = json.loads(src)
 units = {u["id"]: u for u in data["u"]}
 qs = data["q"]
+traps = {t["id"] for t in data["t"]}
 errors = []
 
 ORACLE = """
@@ -64,6 +65,7 @@ for q in qs:
     if ids[q["id"]] > 1: errors.append(f"{where}: id 중복")
     if q["unit"] not in units: errors.append(f"{where}: 없는 대제목 {q['unit']}")
     elif units[q["unit"]]["subject"] != q["subject"]: errors.append(f"{where}: 과목과 대제목이 안 맞음")
+    if q.get("trap") and q["trap"] not in traps: errors.append(f"{where}: 없는 함정 {q['trap']}")
     if q["freq"] not in ("high", "mid", "low"): errors.append(f"{where}: freq 값 오류")
     o = q["options"]
     if len(o) != 4 or len({norm(x) for x in o}) != 4: errors.append(f"{where}: 보기는 서로 다른 4개여야 함")
@@ -95,7 +97,7 @@ for q in qs:
 
 # 문항 수와 정답 번호 분포
 sets = collections.defaultdict(list)
-for q in qs: sets[f"실전 {q['exam']}" if q.get("exam") else "연습"].append(q)
+for q in qs: sets[f"실전 {q['exam']}" if q.get("exam") else "함정" if q.get("trap") else "연습"].append(q)
 for name, lst in sorted(sets.items()):
     by_subj = collections.Counter(q["subject"] for q in lst)
     ans = collections.Counter(q["answer"] for q in lst)

@@ -48,13 +48,14 @@ progress { width:100%; height:.7rem; accent-color:var(--ok); }
 #dock.ok .main { background:var(--ok); border-color:var(--ok); } #dock.bad .main { background:var(--bad); border-color:var(--bad); }
 #dock h2 { color:var(--ok); } #dock.bad h2 { color:var(--bad); }
 .exp { max-height:42vh; overflow-y:auto; line-height:1.75; }
+details.card > summary { list-style:none; } details.card > summary::-webkit-details-marker { display:none; }
 .why { display:flex; flex-direction:column; gap:.7rem; margin-top:1.1rem; padding-top:1rem; border-top:1px dashed var(--line); }
 .split { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; }
 .back { border:0; padding:.3rem; background:none; font-size:1.3rem; }
 .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:.25rem; text-align:center; }
 .stats .big { font-size:1.35rem; }
 .count { flex:none; font-weight:700; color:var(--accent); font-variant-numeric:tabular-nums; }
-.tabs { display:grid; grid-template-columns:repeat(3,1fr); gap:.25rem; padding:.3rem; background:var(--line); border-radius:1rem; }
+.tabs { display:grid; grid-template-columns:repeat(4,1fr); gap:.25rem; padding:.3rem; background:var(--line); border-radius:1rem; }
 .tabs button { border:0; background:none; padding:.65rem .4rem; text-align:center; font-weight:700; color:var(--muted); border-radius:.75rem; }
 .tabs [aria-selected="true"] { background:var(--card); color:var(--ink); box-shadow:0 1px 3px #0003; }
 .bar { position:sticky; top:env(safe-area-inset-top, 0px); z-index:1; background:var(--bg); padding-block:.3rem; justify-content:space-between; }
@@ -73,7 +74,8 @@ progress { width:100%; height:.7rem; accent-color:var(--ok); }
 <script>
 const BANK = window.SQLD_QUESTIONS || [], UNITS = window.SQLD_UNITS || [];
 const byId = Object.fromEntries(BANK.map(q => [q.id, q]));
-const PRACTICE = BANK.filter(q => !q.exam);
+const PRACTICE = BANK.filter(q => !q.exam && !q.trap);
+const TRAPS = window.SQLD_TRAPS || [], TRAPQ = BANK.filter(q => q.trap); // 함정 요약 20장과 함정마다 2문제
 const EXAM = n => BANK.filter(q => q.exam === n).sort((a, b) => a.subject - b.subject); // 실제 시험처럼 1과목 먼저
 const EXAM_MIN = 90;
 const C = "①②③④", KEY = "sqld-quiz-v1", $ = s => document.querySelector(s);
@@ -122,22 +124,24 @@ function dock(html, handlers, cls = "") {
   fit();
 }
 
-// ---------- 첫 화면: 연습 / 실전 1 / 실전 2 ----------
+// ---------- 첫 화면: 연습 / 함정 / 실전 1 / 실전 2 ----------
 function home() {
   [1, 2].forEach(n => store.runs[n] && Date.now() >= store.runs[n].endAt && finish(n, true));
   const tab = store.tab;
   show(`
     <div class="row" style="justify-content:space-between"><h1>SQLD <span style="color:var(--accent)">오답킬러</span></h1></div>
     <div class="tabs" role="tablist">
-      ${[["practice", "연습"], ["1", "실전 1"], ["2", "실전 2"]].map(([k, l]) => `<button role="tab" data-tab="${k}" aria-selected="${tab === k}">${l}</button>`).join("")}
+      ${[["practice", "연습"], ["trap", "함정"], ["1", "실전 1"], ["2", "실전 2"]].map(([k, l]) => `<button role="tab" data-tab="${k}" aria-selected="${tab === k}">${l}</button>`).join("")}
     </div>
-    ${tab === "practice" ? practiceHome() : examHome(+tab)}`, {
+    ${tab === "practice" ? practiceHome() : tab === "trap" ? trapHome() : examHome(+tab)}`, {
     "[data-tab]": b => { store.tab = b.dataset.tab; save(); home(); },
     "#notes": () => notes("wrong"),
     "#review": () => notes("review"),
     "#all": () => { prefs.unit = "all"; list(); },
     "#go": () => { const todo = PRACTICE.filter(q => !(q.id in store.last)); todo.length ? start(todo, false) : (prefs.unit = "all", list()); },
     "[data-unit]": b => { prefs.unit = b.dataset.unit; list(); },
+    "#tgo": () => { const todo = TRAPQ.filter(q => !(q.id in store.last)); start(todo.length ? todo : shuffle(TRAPQ), false); },
+    "[data-trap]": b => start(TRAPQ.filter(q => q.trap === b.dataset.trap), false),
     "#start": () => startExam(+tab, !store.runs[tab]),
     "#restart": () => startExam(+tab, true),
     "#result": () => review(+tab),
@@ -158,6 +162,27 @@ function practiceHome() {
     <div class="row" style="justify-content:space-between;margin-top:.4rem"><h2>단원별로 풀기</h2><button id="all" class="chip">전체 ${PRACTICE.length}문제</button></div>
     ${[1, 2].map(k => `<h3 class="muted" style="margin:0">${k === 1 ? "1과목 · 데이터 모델링의 이해" : "2과목 · SQL 기본과 활용"}</h3>
       ${UNITS.filter(u => u.subject === k).map(unitCard).join("")}`).join("")}`;
+}
+
+// 함정: 요약을 읽고 바로 그 함정 2문제로 확인. 정답률은 연습과 따로 (stats.t)
+function trapHome() {
+  const st = store.stats.t || { s: 0, c: 0 }, done = TRAPQ.filter(q => q.id in store.last).length, left = TRAPQ.length - done;
+  return `
+    <div class="card stack">
+      <span class="row" style="justify-content:space-between"><strong>함정 퀴즈 ${done} / ${TRAPQ.length}</strong><span class="muted">정답률 ${st.s ? pct(st.c, st.s) + "%" : "–"}</span></span>
+      <progress value="${done}" max="${TRAPQ.length}"></progress>
+      <button id="tgo" class="main">${left ? (done ? `이어서 풀기 · 남은 ${left}문제` : `함정 퀴즈 ${TRAPQ.length}문제 풀기`) : "섞어서 다시 풀기"}</button>
+    </div>
+    <p class="muted">시험 직전에 훑어보는 함정 ${TRAPS.length}개예요. 제목을 누르면 요약이 열리고, 바로 2문제로 확인할 수 있어요.</p>
+    ${TRAPS.map((t, i) => { const qs = TRAPQ.filter(q => q.trap === t.id); return `
+    <details class="card">
+      <summary class="row" style="justify-content:space-between;flex-wrap:nowrap;cursor:pointer"><strong><span style="color:var(--bad)">${i + 1}.</span> ${esc(t.title)}</strong><span class="count">${qs.filter(q => q.id in store.last).length} / ${qs.length}</span></summary>
+      <div class="stack" style="margin-top:.8rem">
+        <p>${esc(t.body)}</p>
+        ${t.ex ? `<pre>${esc(t.ex)}</pre>` : ""}
+        <button data-trap="${t.id}" class="center">이 함정 ${qs.length}문제 풀기</button>
+      </div>
+    </details>`; }).join("")}`;
 }
 
 function examHome(n) {
@@ -244,7 +269,7 @@ function question() {
   show(`
     <div class="row"><button id="quit" aria-label="그만 풀기" class="back">✕</button>
       <progress max="${s.list.length}" value="${s.i + s.checked}" style="flex:1"></progress><span class="muted">${s.i + 1} / ${s.list.length}</span></div>
-    <div class="row"><span class="tag">${q.subject}과목 · ${esc(q.topic)}</span>${q.exam ? `<span class="tag todo">실전 ${q.exam}</span>` : `<span class="tag ${FREQ[q.freq][1]}">${FREQ[q.freq][0]}</span>`}${s.prev ? `<span class="tag bad">${s.prev}번 틀렸던 문제</span>` : ""}</div>
+    <div class="row"><span class="tag">${q.subject}과목 · ${esc(q.topic)}</span>${q.exam ? `<span class="tag todo">실전 ${q.exam}</span>` : q.trap ? `<span class="tag bad">함정</span>` : `<span class="tag ${FREQ[q.freq][1]}">${FREQ[q.freq][0]}</span>`}${s.prev ? `<span class="tag bad">${s.prev}번 틀렸던 문제</span>` : ""}</div>
     <h2 class="qtext">${esc(q.q)}</h2>
     ${code(q)}
     ${q.options.map((o, k) => `<button class="opt ${cls(k + 1)}" role="radio" data-n="${k + 1}" aria-checked="${s.picked === k + 1}" ${s.checked || s.tried.includes(k + 1) ? "disabled" : ""}><b>${k + 1}</b><span>${esc(o)}</span></button>`).join("")}`, {
@@ -274,8 +299,9 @@ function check() {
     if (ok) s.note = "다시 풀어 맞혔어요. 처음엔 틀렸으니 오답노트에 남겨 둘게요.";
   } else {
     store.last[q.id] = ok;
-    store.stats[q.subject].s++;
-    if (ok) store.stats[q.subject].c++;
+    const st = q.trap ? (store.stats.t ||= { s: 0, c: 0 }) : store.stats[q.subject];
+    st.s++;
+    if (ok) st.c++;
     if (!ok) {
       store.wrong[q.id] = { count: (w?.count || 0) + 1, picked: s.picked, at: Date.now() };
       s.note = w ? `지금까지 ${w.count + 1}번 틀렸어요. 오답노트에 다시 넣었어요.` : "오답노트에 저장했어요.";
@@ -322,7 +348,7 @@ function notes(mode) {
       : `<p class="card muted center" style="padding:2.5rem 1rem">${review ? "아직 틀린 적 있는 문제가 없어요." : "지금 못 맞힌 문제가 없어요."}<br>문제를 풀다 틀리면 여기에 자동으로 저장돼요.</p>`}
     ${ids.map(id => { const q = byId[id], w = store.wrong[id]; return `
       <div class="card stack">
-        <div class="row"><span class="tag">${q.subject}과목 · ${esc(q.topic)}</span>${q.exam ? `<span class="tag todo">실전 ${q.exam}</span>` : ""}<span class="tag bad">${w.count}번 틀림</span>${w.cleared ? `<span class="tag ok">지금은 맞힘</span>` : ""}</div>
+        <div class="row"><span class="tag">${q.subject}과목 · ${esc(q.topic)}</span>${q.exam ? `<span class="tag todo">실전 ${q.exam}</span>` : q.trap ? `<span class="tag todo">함정</span>` : ""}<span class="tag bad">${w.count}번 틀림</span>${w.cleared ? `<span class="tag ok">지금은 맞힘</span>` : ""}</div>
         <strong>${esc(q.q)}</strong>${code(q)}
         <span style="color:var(--bad)">마지막 오답 ${ans(q, w.picked)}</span>
         <strong style="color:var(--ok)">정답 ${ans(q, q.answer)}</strong>

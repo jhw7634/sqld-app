@@ -7674,3 +7674,1215 @@ window.SQLD_QUESTIONS = [
     ]
   }
 ];
+
+// ---- 함정 체크: 시험 직전에 보는 요약 20장 + 함정마다 2문제 (trap 필드로 연결, 연습·실전과 따로 셈)
+window.SQLD_TRAPS = [
+  {
+    "id": "t01",
+    "title": "NULL과 연산·비교",
+    "body": "NULL이 섞인 산술·비교 연산의 결과는 NULL이에요. NULL인지 확인할 때는 = NULL이 아니라 IS NULL을 써요. 단, Oracle의 문자열 연결 ||는 예외로 NULL을 빈 문자열처럼 이어 붙여요.",
+    "ex": "100 + NULL        → NULL\nWHERE C = NULL    → 0건\nWHERE C IS NULL   → NULL인 행\n'A' || NULL       → 'A' (Oracle)"
+  },
+  {
+    "id": "t02",
+    "title": "Oracle의 빈 문자열 ''",
+    "body": "Oracle은 길이가 0인 문자열 ''을 NULL로 저장해요. 그래서 WHERE C = ''로는 아무 행도 찾지 못하고 IS NULL로 찾아야 해요. SQL Server는 ''과 NULL을 서로 다른 값으로 봐요.",
+    "ex": "INSERT INTO T (C) VALUES ('');\nSELECT COUNT(*) FROM T WHERE C IS NULL;  -- Oracle: 1"
+  },
+  {
+    "id": "t03",
+    "title": "COUNT·SUM·AVG와 NULL",
+    "body": "COUNT(*)는 NULL이 있는 행까지 모두 세지만 COUNT(컬럼)·SUM·AVG·MAX·MIN은 NULL을 빼고 계산해요. 그래서 AVG는 NULL을 뺀 개수로 나눠요.",
+    "ex": "값 10, 20, NULL\nCOUNT(*) 3 · COUNT(C) 2 · AVG(C) 15"
+  },
+  {
+    "id": "t04",
+    "title": "WHERE에는 집계 함수 X, HAVING에 써요",
+    "body": "WHERE는 그룹을 만들기 전에 행을 거르는 곳이라 COUNT·SUM 같은 집계 함수를 쓸 수 없어요. 그룹에 조건을 걸 때는 GROUP BY 뒤의 HAVING에 써요.",
+    "ex": "SELECT DEPTNO FROM EMP\n GROUP BY DEPTNO\nHAVING AVG(SAL) >= 300;"
+  },
+  {
+    "id": "t05",
+    "title": "별칭은 ORDER BY에서만",
+    "body": "SELECT 문은 FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY 순서로 처리돼요. SELECT에서 붙인 별칭은 그보다 늦게 처리되는 ORDER BY에서는 쓸 수 있지만 WHERE에서는 쓸 수 없어요.",
+    "ex": "SELECT SAL * 12 AS YSAL FROM EMP ORDER BY YSAL;    -- 가능\nSELECT SAL * 12 AS YSAL FROM EMP WHERE YSAL > 100;  -- 오류"
+  },
+  {
+    "id": "t06",
+    "title": "ROWNUM > 1은 0건",
+    "body": "ROWNUM은 조건을 통과한 행에 1부터 차례로 붙는 번호예요. 1번이 생기기 전에는 2번도 생길 수 없어서 ROWNUM > 1, ROWNUM = 2 같은 조건은 결과가 0건이에요. ROWNUM = 1, ROWNUM <= n처럼 1을 포함하는 조건만 행이 나와요.",
+    "ex": "WHERE ROWNUM <= 3   → 3건\nWHERE ROWNUM = 2    → 0건\nWHERE ROWNUM > 1    → 0건"
+  },
+  {
+    "id": "t07",
+    "title": "RANK · DENSE_RANK · ROW_NUMBER",
+    "body": "값이 같을 때 RANK는 같은 순위를 주고 다음 순위를 건너뛰어요(1, 1, 3). DENSE_RANK는 건너뛰지 않고(1, 1, 2), ROW_NUMBER는 값이 같아도 서로 다른 번호를 줘요(1, 2, 3).",
+    "ex": "점수 100, 100, 90\nRANK        1, 1, 3\nDENSE_RANK  1, 1, 2\nROW_NUMBER  1, 2, 3"
+  },
+  {
+    "id": "t08",
+    "title": "ROLLUP은 n+1단계",
+    "body": "ROLLUP(A, B)는 (A, B)별 소계, A별 소계, 전체 합계의 3단계를 만들어요. 인자가 n개면 n+1단계이고, 괄호 안 순서를 바꾸면 결과도 달라져요.",
+    "ex": "ROLLUP(A, B) = GROUPING SETS((A, B), (A), ())"
+  },
+  {
+    "id": "t09",
+    "title": "CUBE는 모든 조합",
+    "body": "CUBE(A, B)는 (A, B), (A), (B), () 네 가지 조합을 모두 집계해요. 인자가 n개면 2ⁿ가지 조합이고, ROLLUP과 달리 괄호 안 순서를 바꿔도 결과 행은 같아요.",
+    "ex": "CUBE(A, B) = GROUPING SETS((A, B), (A), (B), ())"
+  },
+  {
+    "id": "t10",
+    "title": "UNION은 중복 제거, UNION ALL은 그대로",
+    "body": "UNION은 두 결과를 합친 뒤 중복 행을 없애고, UNION ALL은 중복까지 그대로 붙여요. UNION 결과가 정렬된 것처럼 보일 때도 있지만 순서는 보장되지 않으니, 순서가 필요하면 맨 끝에 ORDER BY를 써요.",
+    "ex": "A: 1, 1, 2   B: 2, 3\nUNION     → 1, 2, 3\nUNION ALL → 1, 1, 2, 2, 3"
+  },
+  {
+    "id": "t11",
+    "title": "NOT IN에 NULL이 있으면 0건",
+    "body": "NOT IN 목록에 NULL이 하나라도 있으면 어떤 값도 '목록에 없다'로 확정되지 않아 결과가 0건이에요. NOT EXISTS를 쓰거나 서브쿼리에서 IS NOT NULL로 NULL을 빼야 해요.",
+    "ex": "WHERE EMPNO NOT IN (1, 2, NULL)  → 0건"
+  },
+  {
+    "id": "t12",
+    "title": "DDL은 자동 커밋 (Oracle)",
+    "body": "Oracle에서 TRUNCATE·CREATE·ALTER·DROP 같은 DDL은 실행하는 순간 자동으로 커밋돼요. 그 앞에 하던 DML까지 함께 확정되므로 ROLLBACK으로 되돌릴 수 없어요. SQL Server는 BEGIN TRANSACTION 안에서 실행한 DDL도 ROLLBACK할 수 있어요.",
+    "ex": "DELETE FROM T;            -- 아직 확정 전\nCREATE TABLE T2 (ID INT);  -- 여기서 DELETE까지 커밋\nROLLBACK;                  -- 되돌릴 것이 없음"
+  },
+  {
+    "id": "t13",
+    "title": "CONNECT BY PRIOR 방향",
+    "body": "CONNECT BY PRIOR EMPNO = MGR처럼 PRIOR가 자식 쪽 키(자기 번호)에 붙으면 위에서 아래로 내려가는 순방향이에요. PRIOR MGR = EMPNO처럼 부모 쪽 키에 붙으면 아래에서 위로 올라가는 역방향이에요. PRIOR는 '방금 읽은 행'이라고 읽으면 쉬워요.",
+    "ex": "CONNECT BY PRIOR EMPNO = MGR  → 부하 방향(순방향)\nCONNECT BY PRIOR MGR = EMPNO  → 상사 방향(역방향)"
+  },
+  {
+    "id": "t14",
+    "title": "BETWEEN은 양 끝 포함",
+    "body": "A BETWEEN 10 AND 20은 A >= 10 AND A <= 20과 같아서 양 끝값을 포함해요. 작은 값을 앞에 써야 하고, BETWEEN 20 AND 10처럼 거꾸로 쓰면 0건이에요.",
+    "ex": "C: 5, 10, 15, 20, 25\nC BETWEEN 10 AND 20 → 10, 15, 20\nC BETWEEN 20 AND 10 → 0건"
+  },
+  {
+    "id": "t15",
+    "title": "LEFT JOIN 뒤 WHERE 조건",
+    "body": "LEFT OUTER JOIN 결과에서 오른쪽 테이블 컬럼에 WHERE 조건을 걸면, 짝이 없어 NULL이 된 행이 걸러져 INNER JOIN처럼 돼요. 짝이 없는 왼쪽 행을 살리려면 그 조건을 ON 절에 넣어요.",
+    "ex": "LEFT JOIN E ON ... WHERE E.SAL >= 200      → 짝 없는 행 사라짐\nLEFT JOIN E ON ... AND E.SAL >= 200        → 짝 없는 행 NULL로 남음"
+  },
+  {
+    "id": "t16",
+    "title": "윈도우 기본 범위는 동점을 묶어요",
+    "body": "윈도우 함수에 ORDER BY만 쓰면 기본 범위는 RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW예요. RANGE는 정렬 값이 같은 행을 한 묶음으로 보므로, 누적 합계에서 동점 행은 같은 값이 나와요. 한 행씩 누적하려면 ROWS로 지정해요.",
+    "ex": "AMT 100, 200, 200, 300\nSUM(AMT) OVER (ORDER BY AMT) → 100, 500, 500, 800"
+  },
+  {
+    "id": "t17",
+    "title": "COUNT(DISTINCT)는 NULL을 안 세요",
+    "body": "COUNT(DISTINCT 컬럼)은 같은 값을 하나로 센 뒤 NULL은 빼요. 값이 A, A, B, NULL이면 COUNT(*) 4, COUNT(컬럼) 3, COUNT(DISTINCT 컬럼) 2예요.",
+    "ex": "A, A, B, NULL\nCOUNT(*) 4 · COUNT(C) 3 · COUNT(DISTINCT C) 2"
+  },
+  {
+    "id": "t18",
+    "title": "NVL · NVL2 · NULLIF · COALESCE",
+    "body": "NVL(A, B)는 A가 NULL이면 B예요. NVL2(A, B, C)는 A가 NULL이 아니면 B, NULL이면 C예요. NULLIF(A, B)는 A와 B가 같으면 NULL, 다르면 A예요. COALESCE(A, B, …)는 앞에서부터 처음 나오는 NULL이 아닌 값이에요.",
+    "ex": "NVL2(NULL, 1, 2)          → 2\nNULLIF(5, 5)              → NULL\nCOALESCE(NULL, NULL, 3)   → 3"
+  },
+  {
+    "id": "t19",
+    "title": "NULL 정렬 위치",
+    "body": "Oracle은 NULL을 가장 큰 값처럼 다뤄서 오름차순이면 맨 뒤, 내림차순이면 맨 앞에 와요. SQL Server는 반대로 가장 작은 값처럼 다뤄 오름차순이면 맨 앞이에요. Oracle에서는 NULLS FIRST, NULLS LAST로 위치를 바꿀 수 있어요.",
+    "ex": "C: 20, NULL, 10\nOracle ORDER BY C       → 10, 20, NULL\nOracle ORDER BY C DESC  → NULL, 20, 10"
+  },
+  {
+    "id": "t20",
+    "title": "행이 없어도 집계는 1행",
+    "body": "조건에 맞는 행이 하나도 없어도 GROUP BY 없는 집계 쿼리는 1행을 돌려줘요. 이때 COUNT는 0, SUM·AVG·MAX·MIN은 NULL이에요. GROUP BY를 쓰면 만들어진 그룹이 없으니 결과도 0건이에요.",
+    "ex": "WHERE 1 = 0 일 때\nSELECT COUNT(*), SUM(SAL)              → 0, NULL\nSELECT DEPTNO, COUNT(*) ... GROUP BY   → 0건"
+  }
+];
+window.SQLD_QUESTIONS.push(...
+[
+  {
+    "id": "t01-1",
+    "trap": "t01",
+    "unit": "select",
+    "freq": "high",
+    "subject": 2,
+    "topic": "NULL 연산",
+    "q": "테이블 T의 C1 값이 10, NULL, 30일 때 다음 SQL의 결과는?",
+    "code": "SELECT COUNT(*)\n  FROM T\n WHERE C1 = NULL;",
+    "options": [
+      "0",
+      "1",
+      "3",
+      "오류가 발생한다"
+    ],
+    "answer": 1,
+    "exp": "NULL과 =로 비교하면 결과는 참이 아니라 NULL(알 수 없음)이고, WHERE는 참인 행만 남깁니다. 그래서 C1이 NULL인 행도 걸리지 않아 0건입니다. NULL인 행을 찾으려면 WHERE C1 IS NULL로 써야 합니다.",
+    "why": [
+      "",
+      "C1이 NULL인 행이 하나 있지만 C1 = NULL은 그 행에서도 참이 아닙니다. 1이 나오려면 WHERE C1 IS NULL로 써야 합니다.",
+      "WHERE 조건이 참인 행만 남습니다. C1 = NULL은 어느 행에서도 참이 되지 않으므로 세 행 모두 빠집니다.",
+      "= NULL은 문법 오류가 아니어서 실행은 됩니다. 다만 조건이 어떤 행에서도 참이 되지 않아 0건이 나올 뿐입니다."
+    ],
+    "check": {
+      "setup": "CREATE TABLE T (C1 INT); INSERT INTO T VALUES (10), (NULL), (30);",
+      "sql": "SELECT COUNT(*) FROM T WHERE C1 = NULL"
+    }
+  },
+  {
+    "id": "t01-2",
+    "trap": "t01",
+    "unit": "select",
+    "freq": "high",
+    "subject": 2,
+    "topic": "NULL 연산",
+    "q": "EMP의 (SAL, COMM)이 (100, 10), (200, NULL)일 때 다음 SQL의 결과는?",
+    "code": "SELECT SAL + COMM\n  FROM EMP\n ORDER BY SAL;",
+    "options": [
+      "110, 200",
+      "110, 0",
+      "110, NULL",
+      "NULL, NULL"
+    ],
+    "answer": 3,
+    "exp": "NULL은 '값을 모름'이라 NULL을 더한 결과도 NULL입니다. 첫 행은 100 + 10 = 110, 둘째 행은 200 + NULL = NULL입니다. 둘째 행을 200으로 만들려면 SAL + NVL(COMM, 0)으로 써야 합니다.",
+    "why": [
+      "COMM이 NULL인 행을 SAL 값만으로 계산하려면 SAL + NVL(COMM, 0)처럼 NULL을 0으로 바꿔야 합니다. 그냥 더하면 결과가 NULL입니다.",
+      "NULL은 0이 아니라 값을 모른다는 뜻이어서, 200 + NULL은 0도 200도 아닌 NULL입니다.",
+      "",
+      "첫 행은 SAL 100과 COMM 10이 모두 값이 있어 110으로 정상 계산됩니다. NULL이 되는 것은 COMM이 비어 있는 둘째 행뿐입니다."
+    ],
+    "check": {
+      "setup": "CREATE TABLE EMP (SAL INT, COMM INT); INSERT INTO EMP VALUES (100, 10), (200, NULL);",
+      "sql": "SELECT SAL + COMM FROM EMP ORDER BY SAL"
+    }
+  },
+  {
+    "id": "t02-1",
+    "trap": "t02",
+    "unit": "select",
+    "freq": "high",
+    "subject": 2,
+    "topic": "빈 문자열",
+    "q": "Oracle에서 빈 테이블 T에 INSERT INTO T (C1) VALUES ('')로 한 행을 넣었다. 다음 SQL의 결과는?",
+    "code": "SELECT COUNT(*), COUNT(C1)\n  FROM T\n WHERE C1 IS NULL;",
+    "options": [
+      "0, 0",
+      "1, 0",
+      "1, 1",
+      "오류가 발생한다"
+    ],
+    "answer": 2,
+    "exp": "Oracle은 ''을 NULL로 저장하므로 넣은 행은 C1 IS NULL 조건에 걸립니다. COUNT(*)는 그 행을 세어 1, COUNT(C1)은 NULL을 세지 않아 0입니다.",
+    "why": [
+      "SQL Server처럼 ''을 값이 있는 문자열로 볼 때의 결과입니다. Oracle은 ''을 NULL로 저장하므로 IS NULL 조건에 그 행이 걸립니다.",
+      "",
+      "행은 1건 걸리지만 그 행의 C1이 NULL이므로 COUNT(C1)은 세지 않아 0입니다.",
+      "''은 Oracle에서도 올바른 문자열 리터럴이라 INSERT와 조회 모두 정상 실행됩니다."
+    ],
+    "check": {
+      "setup": "CREATE TABLE T (C1 VARCHAR); INSERT INTO T VALUES (NULL);",
+      "sql": "SELECT COUNT(*), COUNT(C1) FROM T WHERE C1 IS NULL"
+    }
+  },
+  {
+    "id": "t02-2",
+    "trap": "t02",
+    "unit": "select",
+    "freq": "high",
+    "subject": 2,
+    "topic": "빈 문자열",
+    "q": "Oracle에서 다음 SQL의 결과는?",
+    "code": "SELECT NVL('', 'X'), LENGTH('')\n  FROM DUAL;",
+    "options": [
+      "빈 문자열, 0",
+      "X, 0",
+      "빈 문자열, NULL",
+      "X, NULL"
+    ],
+    "answer": 4,
+    "exp": "Oracle에서 ''은 NULL입니다. NVL(NULL, 'X')는 'X'를 돌려주고, LENGTH(NULL)은 0이 아니라 NULL입니다.",
+    "why": [
+      "SQL Server처럼 ''을 길이 0인 문자열로 볼 때의 생각입니다. Oracle에서는 ''이 NULL이라 NVL이 'X'로 바꾸고, LENGTH도 NULL을 돌려줍니다.",
+      "NVL 부분은 맞지만, LENGTH('')은 LENGTH(NULL)과 같아서 0이 아니라 NULL입니다.",
+      "LENGTH 부분은 맞지만, ''이 NULL이므로 NVL이 두 번째 인자 'X'로 바꿔 줍니다.",
+      ""
+    ]
+  },
+  {
+    "id": "t03-1",
+    "trap": "t03",
+    "unit": "group",
+    "freq": "high",
+    "subject": 2,
+    "topic": "집계 함수와 NULL",
+    "q": "테이블 T의 C1 값이 10, 20, NULL, 30일 때 다음 SQL의 결과는?",
+    "code": "SELECT AVG(C1), SUM(C1) / COUNT(*)\n  FROM T;",
+    "options": [
+      "15, 15",
+      "20, 20",
+      "20, 15",
+      "15, 20"
+    ],
+    "answer": 3,
+    "exp": "AVG는 NULL을 뺀 3개 값으로 나눠 60 / 3 = 20입니다. SUM(C1) / COUNT(*)는 NULL 행까지 센 4로 나눠 60 / 4 = 15입니다.",
+    "why": [
+      "AVG도 NULL 행을 0으로 쳐서 4로 나눈다고 본 답입니다. AVG는 NULL을 빼고 남은 3개 값으로 나눠 20입니다.",
+      "SUM(C1) / COUNT(*)까지 NULL을 뺀 개수로 나눈다고 본 답입니다. COUNT(*)는 NULL 행도 세므로 4로 나눠 15입니다.",
+      "",
+      "두 값이 서로 바뀌었습니다. 앞의 AVG가 3으로 나눈 20, 뒤의 식이 4로 나눈 15입니다."
+    ],
+    "check": {
+      "setup": "CREATE TABLE T (C1 INT); INSERT INTO T VALUES (10), (20), (NULL), (30);",
+      "sql": "SELECT AVG(C1), SUM(C1) / COUNT(*) FROM T"
+    }
+  },
+  {
+    "id": "t03-2",
+    "trap": "t03",
+    "unit": "group",
+    "freq": "high",
+    "subject": 2,
+    "topic": "집계 함수와 NULL",
+    "q": "테이블 T의 (A, B)가 (10, 1), (20, NULL), (NULL, 3)일 때 다음 SQL의 결과는?",
+    "code": "SELECT SUM(A + B), SUM(A) + SUM(B)\n  FROM T;",
+    "options": [
+      "11, 34",
+      "34, 34",
+      "11, 11",
+      "NULL, 34"
+    ],
+    "answer": 1,
+    "exp": "SUM(A + B)는 행마다 A + B를 먼저 계산합니다. 둘째·셋째 행은 NULL이 섞여 NULL이 되고 SUM은 NULL을 건너뛰므로 11입니다. SUM(A) + SUM(B)는 컬럼별로 NULL을 빼고 더해 30 + 4 = 34입니다.",
+    "why": [
+      "",
+      "SUM(A + B)에서 NULL이 섞인 행은 A + B 자체가 NULL이 되어 빠집니다. 첫 행의 11만 남습니다.",
+      "SUM(A) + SUM(B)는 컬럼마다 NULL을 빼고 더하므로 30 + 4 = 34입니다. 행 단위로 먼저 더하는 SUM(A + B)만 11입니다.",
+      "SUM은 NULL인 값을 건너뛰고 나머지를 더합니다. 모든 값이 NULL일 때만 NULL이므로 SUM(A + B)는 11입니다."
+    ],
+    "check": {
+      "setup": "CREATE TABLE T (A INT, B INT); INSERT INTO T VALUES (10, 1), (20, NULL), (NULL, 3);",
+      "sql": "SELECT SUM(A + B), SUM(A) + SUM(B) FROM T"
+    }
+  },
+  {
+    "id": "t04-1",
+    "trap": "t04",
+    "unit": "group",
+    "freq": "high",
+    "subject": 2,
+    "topic": "HAVING",
+    "q": "다음 중 오류가 발생하는 SQL은?",
+    "options": [
+      "SELECT DEPTNO FROM EMP WHERE SAL > 100 GROUP BY DEPTNO;",
+      "SELECT DEPTNO FROM EMP GROUP BY DEPTNO HAVING SUM(SAL) > 100;",
+      "SELECT DEPTNO FROM EMP GROUP BY DEPTNO HAVING DEPTNO > 10;",
+      "SELECT DEPTNO FROM EMP WHERE SUM(SAL) > 100 GROUP BY DEPTNO;"
+    ],
+    "answer": 4,
+    "exp": "WHERE는 그룹을 만들기 전 행 하나하나에 적용되므로 SUM 같은 집계 함수를 쓸 수 없습니다. 그룹 합계로 거르려면 HAVING SUM(SAL) > 100으로 써야 합니다.",
+    "why": [
+      "WHERE에 집계 함수가 아닌 일반 컬럼 조건을 쓴 올바른 SQL입니다. 행을 먼저 거른 뒤 그룹을 만듭니다.",
+      "그룹 합계 조건을 HAVING에 쓴 올바른 형태입니다.",
+      "HAVING에는 GROUP BY에 쓴 컬럼 조건도 쓸 수 있어 오류가 나지 않습니다. 같은 조건을 WHERE에 써도 결과는 같습니다.",
+      ""
+    ]
+  },
+  {
+    "id": "t04-2",
+    "trap": "t04",
+    "unit": "group",
+    "freq": "high",
+    "subject": 2,
+    "topic": "HAVING",
+    "q": "EMP의 (DEPTNO, SAL)이 (10, 100), (10, 300), (20, 500), (30, 50), (30, 60)일 때 다음 SQL의 결과는?",
+    "code": "SELECT DEPTNO\n  FROM EMP\n WHERE SAL >= 100\n GROUP BY DEPTNO\nHAVING COUNT(*) >= 2\n ORDER BY DEPTNO;",
+    "options": [
+      "10, 30",
+      "10",
+      "10, 20",
+      "결과 없음"
+    ],
+    "answer": 2,
+    "exp": "WHERE가 먼저 SAL 100 이상인 행만 남깁니다: (10, 100), (10, 300), (20, 500). 그다음 부서별로 묶으면 10번 2명, 20번 1명이고, HAVING으로 2명 이상인 10번만 남습니다.",
+    "why": [
+      "WHERE를 건너뛰고 센 결과입니다. 30번 부서의 SAL 50, 60은 WHERE에서 먼저 빠지므로 그룹으로 남지 않습니다.",
+      "",
+      "HAVING을 건너뛴 결과입니다. 20번 부서는 WHERE를 통과한 행이 1건뿐이라 COUNT(*) >= 2를 만족하지 못합니다.",
+      "10번 부서는 SAL 100과 300 두 행이 WHERE를 통과해 2명이므로 HAVING 조건을 만족합니다. 100은 >= 100에 포함됩니다."
+    ],
+    "check": {
+      "setup": "CREATE TABLE EMP (DEPTNO INT, SAL INT); INSERT INTO EMP VALUES (10, 100), (10, 300), (20, 500), (30, 50), (30, 60);",
+      "sql": "SELECT DEPTNO FROM EMP WHERE SAL >= 100 GROUP BY DEPTNO HAVING COUNT(*) >= 2 ORDER BY DEPTNO"
+    }
+  },
+  {
+    "id": "t05-1",
+    "trap": "t05",
+    "unit": "select",
+    "freq": "high",
+    "subject": 2,
+    "topic": "별칭과 처리 순서",
+    "q": "Oracle에서 다음 중 오류가 발생하는 SQL은?",
+    "options": [
+      "SELECT SAL * 12 AS YSAL FROM EMP ORDER BY YSAL;",
+      "SELECT SAL * 12 AS YSAL FROM EMP WHERE YSAL > 1000;",
+      "SELECT SAL * 12 AS YSAL FROM EMP WHERE SAL * 12 > 1000;",
+      "SELECT SAL * 12 AS YSAL FROM EMP ORDER BY 1;"
+    ],
+    "answer": 2,
+    "exp": "WHERE는 SELECT보다 먼저 처리되므로 SELECT에서 만든 별칭 YSAL을 아직 알지 못합니다. WHERE에는 SAL * 12처럼 식을 그대로 써야 합니다.",
+    "why": [
+      "ORDER BY는 SELECT 다음에 처리되므로 별칭을 쓸 수 있습니다.",
+      "",
+      "별칭 대신 식을 그대로 쓴 올바른 WHERE 절입니다.",
+      "ORDER BY 1은 SELECT 목록의 첫 번째 컬럼으로 정렬하라는 뜻이라 올바른 문장입니다."
+    ]
+  },
+  {
+    "id": "t05-2",
+    "trap": "t05",
+    "unit": "select",
+    "freq": "high",
+    "subject": 2,
+    "topic": "별칭과 처리 순서",
+    "q": "SELECT 문이 논리적으로 처리되는 순서로 옳은 것은?",
+    "options": [
+      "SELECT → FROM → WHERE → GROUP BY → HAVING → ORDER BY",
+      "FROM → WHERE → SELECT → GROUP BY → HAVING → ORDER BY",
+      "FROM → GROUP BY → WHERE → HAVING → SELECT → ORDER BY",
+      "FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY"
+    ],
+    "answer": 4,
+    "exp": "대상 테이블(FROM)을 정하고, 행을 거르고(WHERE), 묶고(GROUP BY), 그룹을 거른(HAVING) 뒤 보여 줄 컬럼을 고르고(SELECT), 마지막에 정렬(ORDER BY)합니다. 그래서 별칭은 ORDER BY에서만 쓸 수 있습니다.",
+    "why": [
+      "SQL을 쓰는 순서일 뿐 처리 순서는 아닙니다. SELECT는 그룹 조건까지 처리한 뒤에 실행됩니다.",
+      "SELECT가 GROUP BY보다 먼저라면 집계 결과를 SELECT에 쓸 수 없습니다. SELECT는 HAVING 다음에 처리됩니다.",
+      "WHERE는 그룹을 만들기 전에 행을 거르므로 GROUP BY보다 먼저 처리됩니다.",
+      ""
+    ]
+  },
+  {
+    "id": "t06-1",
+    "trap": "t06",
+    "unit": "window",
+    "freq": "high",
+    "subject": 2,
+    "topic": "ROWNUM",
+    "q": "Oracle에서 EMP에 행이 5건 있을 때, 결과가 0건인 SQL은?",
+    "options": [
+      "SELECT * FROM EMP WHERE ROWNUM >= 2;",
+      "SELECT * FROM EMP WHERE ROWNUM <= 3;",
+      "SELECT * FROM EMP WHERE ROWNUM < 2;",
+      "SELECT * FROM EMP WHERE ROWNUM = 1;"
+    ],
+    "answer": 1,
+    "exp": "첫 행은 ROWNUM 1을 받는데 ROWNUM >= 2를 만족하지 못해 버려집니다. 다음 행도 다시 1번을 받아 버려지므로 2번은 끝내 생기지 않아 0건입니다.",
+    "why": [
+      "",
+      "1부터 3까지 번호가 차례로 붙으므로 3건이 조회됩니다.",
+      "ROWNUM 1인 첫 행이 조건을 만족하므로 1건이 조회됩니다.",
+      "ROWNUM = 1은 첫 행을 가져오는 올바른 조건이라 1건이 조회됩니다."
+    ]
+  },
+  {
+    "id": "t06-2",
+    "trap": "t06",
+    "unit": "window",
+    "freq": "high",
+    "subject": 2,
+    "topic": "ROWNUM",
+    "q": "Oracle에서 EMP에 행이 5건 있을 때 다음 SQL의 결과 건수는?",
+    "code": "SELECT *\n  FROM EMP\n WHERE ROWNUM BETWEEN 2 AND 4;",
+    "options": [
+      "3건",
+      "4건",
+      "0건",
+      "5건"
+    ],
+    "answer": 3,
+    "exp": "BETWEEN 2 AND 4는 ROWNUM >= 2 AND ROWNUM <= 4입니다. 첫 행이 ROWNUM 1에서 걸러지니 2번 이후 번호가 생기지 않아 0건입니다. 2~4번째 행이 필요하면 인라인 뷰에서 ROWNUM에 별칭을 붙인 뒤 바깥에서 조건을 걸어야 합니다.",
+    "why": [
+      "2~4번째 행을 기대한 답이지만, 첫 행이 ROWNUM 1을 받는 순간 조건에 걸려 버려지므로 2번째 이후 번호가 생기지 않습니다.",
+      "ROWNUM <= 4였다면 4건입니다. 하한 2가 붙으면 1번이 생기지 못해 0건이 됩니다.",
+      "",
+      "조건 없이 전체를 조회한 결과입니다. 이 조건은 오히려 모든 행을 걸러 버립니다."
+    ]
+  },
+  {
+    "id": "t07-1",
+    "trap": "t07",
+    "unit": "window",
+    "freq": "high",
+    "subject": 2,
+    "topic": "순위 함수",
+    "q": "T의 SCORE가 90, 80, 80, 70일 때 다음 SQL의 결과는?",
+    "code": "SELECT R1, R2\n  FROM (SELECT SCORE,\n               RANK() OVER (ORDER BY SCORE DESC) AS R1,\n               DENSE_RANK() OVER (ORDER BY SCORE DESC) AS R2\n          FROM T)\n WHERE SCORE = 70;",
+    "options": [
+      "3, 3",
+      "4, 4",
+      "3, 4",
+      "4, 3"
+    ],
+    "answer": 4,
+    "exp": "80점 두 명이 공동 2위입니다. RANK는 2위를 두 번 쓴 만큼 건너뛰어 70점이 4위, DENSE_RANK는 건너뛰지 않아 3위입니다.",
+    "why": [
+      "DENSE_RANK의 3은 맞지만, RANK는 공동 2위 두 명 다음 순위를 건너뛰어 4입니다.",
+      "RANK의 4는 맞지만, DENSE_RANK는 순위를 건너뛰지 않아 2위 다음이 3입니다.",
+      "두 값이 서로 바뀌었습니다. 건너뛰는 RANK가 4, 건너뛰지 않는 DENSE_RANK가 3입니다.",
+      ""
+    ],
+    "check": {
+      "setup": "CREATE TABLE T (SCORE INT); INSERT INTO T VALUES (90), (80), (80), (70);",
+      "sql": "SELECT R1, R2 FROM (SELECT SCORE, RANK() OVER (ORDER BY SCORE DESC) AS R1, DENSE_RANK() OVER (ORDER BY SCORE DESC) AS R2 FROM T) WHERE SCORE = 70"
+    }
+  },
+  {
+    "id": "t07-2",
+    "trap": "t07",
+    "unit": "window",
+    "freq": "high",
+    "subject": 2,
+    "topic": "순위 함수",
+    "q": "T의 SCORE가 100, 100, 90일 때 다음 SQL의 결과는?",
+    "code": "SELECT A, B, C\n  FROM (SELECT SCORE,\n               ROW_NUMBER() OVER (ORDER BY SCORE DESC) AS A,\n               RANK() OVER (ORDER BY SCORE DESC) AS B,\n               DENSE_RANK() OVER (ORDER BY SCORE DESC) AS C\n          FROM T)\n WHERE SCORE = 90;",
+    "options": [
+      "3, 2, 2",
+      "3, 3, 2",
+      "2, 3, 2",
+      "3, 3, 3"
+    ],
+    "answer": 2,
+    "exp": "90점은 세 번째 행이라 ROW_NUMBER는 3입니다. RANK는 공동 1위 두 명 다음을 건너뛰어 3, DENSE_RANK는 건너뛰지 않아 2입니다.",
+    "why": [
+      "RANK를 DENSE_RANK처럼 계산했습니다. RANK는 공동 1위가 두 명이면 다음 순위를 3으로 건너뜁니다.",
+      "",
+      "ROW_NUMBER는 동점이어도 행마다 다른 번호를 주므로 100점 두 명이 1, 2이고 90점은 3입니다.",
+      "DENSE_RANK는 순위를 건너뛰지 않아 1위 다음이 바로 2입니다."
+    ],
+    "check": {
+      "setup": "CREATE TABLE T (SCORE INT); INSERT INTO T VALUES (100), (100), (90);",
+      "sql": "SELECT A, B, C FROM (SELECT SCORE, ROW_NUMBER() OVER (ORDER BY SCORE DESC) AS A, RANK() OVER (ORDER BY SCORE DESC) AS B, DENSE_RANK() OVER (ORDER BY SCORE DESC) AS C FROM T) WHERE SCORE = 90"
+    }
+  },
+  {
+    "id": "t08-1",
+    "trap": "t08",
+    "unit": "window",
+    "freq": "high",
+    "subject": 2,
+    "topic": "ROLLUP",
+    "q": "SALES의 (REGION, ITEM, AMT)가 (서울, A, 10), (서울, B, 20), (부산, A, 30)일 때 다음 SQL의 결과 행 수는?",
+    "code": "SELECT REGION, ITEM, SUM(AMT)\n  FROM SALES\n GROUP BY ROLLUP(REGION, ITEM);",
+    "options": [
+      "5",
+      "8",
+      "6",
+      "4"
+    ],
+    "answer": 3,
+    "exp": "(REGION, ITEM)별 3행, REGION별 소계 2행(서울, 부산), 전체 합계 1행으로 모두 6행입니다.",
+    "why": [
+      "전체 합계 1행을 빠뜨렸습니다. ROLLUP은 마지막 단계로 ()인 전체 합계도 만듭니다.",
+      "CUBE(REGION, ITEM)의 결과입니다. ROLLUP은 ITEM별 소계(A, B)를 만들지 않습니다.",
+      "",
+      "원래 조합 3행과 전체 합계만 센 결과입니다. ROLLUP은 REGION별 소계 2행(서울, 부산)도 만듭니다."
+    ],
+    "check": {
+      "setup": "CREATE TABLE SALES (REGION VARCHAR, ITEM VARCHAR, AMT INT); INSERT INTO SALES VALUES ('서울', 'A', 10), ('서울', 'B', 20), ('부산', 'A', 30);",
+      "sql": "SELECT COUNT(*) FROM (SELECT REGION, ITEM, SUM(AMT) FROM SALES GROUP BY ROLLUP(REGION, ITEM))"
+    }
+  },
+  {
+    "id": "t08-2",
+    "trap": "t08",
+    "unit": "window",
+    "freq": "high",
+    "subject": 2,
+    "topic": "ROLLUP",
+    "q": "GROUP BY ROLLUP(A, B)와 같은 결과를 내는 것은?",
+    "options": [
+      "GROUP BY GROUPING SETS((A, B), (A), ())",
+      "GROUP BY GROUPING SETS((A, B), (A), (B), ())",
+      "GROUP BY GROUPING SETS((A), (B))",
+      "GROUP BY GROUPING SETS((A, B), (B), ())"
+    ],
+    "answer": 1,
+    "exp": "ROLLUP(A, B)는 오른쪽 인자부터 하나씩 빼며 (A, B), (A), () 세 단계로 집계합니다.",
+    "why": [
+      "",
+      "CUBE(A, B)와 같은 결과입니다. ROLLUP에는 B만으로 묶은 (B) 단계가 없습니다.",
+      "A별, B별 소계만 있고 (A, B) 조합과 전체 합계가 없습니다.",
+      "ROLLUP(B, A)와 같은 결과입니다. 괄호 안 순서가 바뀌면 소계 기준도 바뀝니다."
+    ]
+  },
+  {
+    "id": "t09-1",
+    "trap": "t09",
+    "unit": "window",
+    "freq": "high",
+    "subject": 2,
+    "topic": "CUBE",
+    "q": "SALES의 (REGION, ITEM, AMT)가 (서울, A, 10), (서울, B, 20), (부산, A, 30)일 때 다음 SQL의 결과 행 수는?",
+    "code": "SELECT REGION, ITEM, SUM(AMT)\n  FROM SALES\n GROUP BY CUBE(REGION, ITEM);",
+    "options": [
+      "8",
+      "6",
+      "4",
+      "7"
+    ],
+    "answer": 1,
+    "exp": "(REGION, ITEM)별 3행, REGION별 2행, ITEM별 2행(A, B), 전체 합계 1행으로 모두 8행입니다.",
+    "why": [
+      "",
+      "ROLLUP(REGION, ITEM)의 결과입니다. CUBE는 ITEM별 소계 2행을 더 만듭니다.",
+      "조합 종류 수(2² = 4)와 결과 행 수를 헷갈렸습니다. 조합마다 값의 개수만큼 행이 생깁니다.",
+      "전체 합계는 한 행이지만 빠뜨리면 안 됩니다. 3 + 2 + 2 + 1 = 8입니다."
+    ],
+    "check": {
+      "setup": "CREATE TABLE SALES (REGION VARCHAR, ITEM VARCHAR, AMT INT); INSERT INTO SALES VALUES ('서울', 'A', 10), ('서울', 'B', 20), ('부산', 'A', 30);",
+      "sql": "SELECT COUNT(*) FROM (SELECT REGION, ITEM, SUM(AMT) FROM SALES GROUP BY CUBE(REGION, ITEM))"
+    }
+  },
+  {
+    "id": "t09-2",
+    "trap": "t09",
+    "unit": "window",
+    "freq": "high",
+    "subject": 2,
+    "topic": "CUBE",
+    "q": "GROUP BY CUBE(A, B, C)가 만드는 그룹 조합의 개수는? (전체 합계 포함)",
+    "options": [
+      "3",
+      "4",
+      "16",
+      "8"
+    ],
+    "answer": 4,
+    "exp": "CUBE는 인자 n개로 만들 수 있는 모든 조합을 집계하므로 2³ = 8가지입니다. 전체 합계 ()도 그 8가지에 들어 있습니다.",
+    "why": [
+      "GROUPING SETS(A, B, C)처럼 컬럼 하나씩만 집계할 때의 개수입니다.",
+      "ROLLUP(A, B, C)의 단계 수(3 + 1)입니다. CUBE는 순서와 상관없이 모든 조합을 만듭니다.",
+      "2를 네 번 곱한 값입니다. 2³ = 8에는 전체 합계가 이미 들어 있으니 따로 더하지 않습니다.",
+      ""
+    ]
+  },
+  {
+    "id": "t10-1",
+    "trap": "t10",
+    "unit": "sub",
+    "freq": "high",
+    "subject": 2,
+    "topic": "집합 연산",
+    "q": "A의 C 값이 1, 1, 2이고 B의 C 값이 2, 3일 때 다음 SQL의 결과 행 수는?",
+    "code": "SELECT C FROM A\nUNION\nSELECT C FROM B;",
+    "options": [
+      "5",
+      "3",
+      "4",
+      "1"
+    ],
+    "answer": 2,
+    "exp": "UNION은 합친 결과 전체에서 중복을 없앱니다. A 안의 1, 1도 하나가 되고, 양쪽에 있는 2도 하나가 되어 1, 2, 3의 3행입니다.",
+    "why": [
+      "UNION ALL의 결과입니다. UNION은 중복을 없앱니다.",
+      "",
+      "양쪽에 겹친 2만 없애고 A 안의 중복 1, 1은 남긴 경우입니다. UNION은 한쪽 안의 중복까지 모두 하나로 합칩니다.",
+      "양쪽에 모두 있는 값만 남기는 INTERSECT의 결과입니다."
+    ],
+    "check": {
+      "setup": "CREATE TABLE A (C INT); CREATE TABLE B (C INT); INSERT INTO A VALUES (1), (1), (2); INSERT INTO B VALUES (2), (3);",
+      "sql": "SELECT COUNT(*) FROM (SELECT C FROM A UNION SELECT C FROM B)"
+    }
+  },
+  {
+    "id": "t10-2",
+    "trap": "t10",
+    "unit": "sub",
+    "freq": "high",
+    "subject": 2,
+    "topic": "집합 연산",
+    "q": "A의 C 값이 1, 1, 2이고 B의 C 값이 2, 3일 때, 결과 행 수가 나머지 셋과 다른 SQL은?",
+    "options": [
+      "SELECT C FROM A UNION SELECT C FROM B;",
+      "SELECT C FROM B UNION SELECT C FROM A;",
+      "SELECT C FROM A UNION ALL SELECT C FROM B;",
+      "SELECT DISTINCT C FROM (SELECT C FROM A UNION ALL SELECT C FROM B);"
+    ],
+    "answer": 3,
+    "exp": "UNION ALL은 중복을 그대로 두어 5행이고, 나머지는 모두 중복을 없애 1, 2, 3의 3행입니다.",
+    "why": [
+      "UNION이 중복을 없애 3행입니다.",
+      "UNION은 두 SELECT의 순서를 바꿔도 같은 행을 돌려주므로 3행입니다.",
+      "",
+      "UNION ALL로 붙인 5행에 DISTINCT를 걸면 UNION과 같은 3행이 됩니다."
+    ],
+    "check": {
+      "setup": "CREATE TABLE A (C INT); CREATE TABLE B (C INT); INSERT INTO A VALUES (1), (1), (2); INSERT INTO B VALUES (2), (3);",
+      "sqls": [
+        "SELECT COUNT(*) FROM (SELECT C FROM A UNION SELECT C FROM B)",
+        "SELECT COUNT(*) FROM (SELECT C FROM B UNION SELECT C FROM A)",
+        "SELECT COUNT(*) FROM (SELECT C FROM A UNION ALL SELECT C FROM B)",
+        "SELECT COUNT(*) FROM (SELECT DISTINCT C FROM (SELECT C FROM A UNION ALL SELECT C FROM B))"
+      ]
+    }
+  },
+  {
+    "id": "t11-1",
+    "trap": "t11",
+    "unit": "sub",
+    "freq": "high",
+    "subject": 2,
+    "topic": "NOT IN 서브쿼리",
+    "q": "부하 직원이 없는 사원을 찾으려고 다음 SQL을 실행했다. EMP의 (EMPNO, MGR)이 (1, NULL), (2, 1), (3, 1), (4, 2)일 때 결과는?",
+    "code": "SELECT EMPNO\n  FROM EMP\n WHERE EMPNO NOT IN (SELECT MGR FROM EMP);",
+    "options": [
+      "3, 4",
+      "1",
+      "결과 없음",
+      "2, 3, 4"
+    ],
+    "answer": 3,
+    "exp": "서브쿼리 결과는 NULL, 1, 1, 2입니다. EMPNO NOT IN (NULL, 1, 2)는 EMPNO <> NULL 비교가 섞여 어떤 행에서도 참이 되지 않으므로 0건입니다.",
+    "why": [
+      "의도한 답이지만, 서브쿼리 결과에 1번 사원의 MGR인 NULL이 들어 있어 3, 4도 조회되지 않습니다. WHERE MGR IS NOT NULL을 넣어야 3, 4가 나옵니다.",
+      "1번은 다른 사원의 MGR 값(1)으로 목록에 있으므로 NOT IN에 걸리지 않습니다. 게다가 NULL 때문에 어떤 행도 조회되지 않습니다.",
+      "",
+      "2번은 4번의 MGR 값이라 목록에 있으므로 NULL이 없더라도 빠집니다. 실제로는 목록의 NULL 때문에 모든 행이 빠집니다."
+    ],
+    "check": {
+      "setup": "CREATE TABLE EMP (EMPNO INT, MGR INT); INSERT INTO EMP VALUES (1, NULL), (2, 1), (3, 1), (4, 2);",
+      "sql": "SELECT EMPNO FROM EMP WHERE EMPNO NOT IN (SELECT MGR FROM EMP)"
+    }
+  },
+  {
+    "id": "t11-2",
+    "trap": "t11",
+    "unit": "sub",
+    "freq": "high",
+    "subject": 2,
+    "topic": "NOT IN 서브쿼리",
+    "q": "EMP의 (EMPNO, MGR)이 (1, NULL), (2, 1), (3, 1), (4, 2)일 때, 결과가 나머지 셋과 다른 SQL은?",
+    "options": [
+      "SELECT EMPNO FROM EMP WHERE EMPNO NOT IN (SELECT MGR FROM EMP WHERE MGR IS NOT NULL);",
+      "SELECT EMPNO FROM EMP WHERE EMPNO NOT IN (SELECT MGR FROM EMP);",
+      "SELECT EMPNO FROM EMP E WHERE NOT EXISTS (SELECT 1 FROM EMP M WHERE M.MGR = E.EMPNO);",
+      "SELECT E.EMPNO FROM EMP E LEFT JOIN EMP M ON M.MGR = E.EMPNO WHERE M.EMPNO IS NULL;"
+    ],
+    "answer": 2,
+    "exp": "서브쿼리 결과에 NULL이 섞인 NOT IN만 0건이고, 나머지는 모두 부하 직원이 없는 3, 4를 돌려줍니다.",
+    "why": [
+      "서브쿼리에서 NULL을 뺐으므로 NOT IN (1, 2)가 되어 3, 4가 조회됩니다.",
+      "",
+      "NOT EXISTS는 NULL과 비교한 결과를 '짝 없음'으로 처리하므로 NULL이 있어도 3, 4가 조회됩니다.",
+      "LEFT JOIN 후 짝이 없는 행(M.EMPNO IS NULL)만 남기는 방식이라 3, 4가 조회됩니다."
+    ],
+    "check": {
+      "setup": "CREATE TABLE EMP (EMPNO INT, MGR INT); INSERT INTO EMP VALUES (1, NULL), (2, 1), (3, 1), (4, 2);",
+      "sqls": [
+        "SELECT EMPNO FROM EMP WHERE EMPNO NOT IN (SELECT MGR FROM EMP WHERE MGR IS NOT NULL) ORDER BY 1",
+        "SELECT EMPNO FROM EMP WHERE EMPNO NOT IN (SELECT MGR FROM EMP) ORDER BY 1",
+        "SELECT EMPNO FROM EMP E WHERE NOT EXISTS (SELECT 1 FROM EMP M WHERE M.MGR = E.EMPNO) ORDER BY 1",
+        "SELECT E.EMPNO FROM EMP E LEFT JOIN EMP M ON M.MGR = E.EMPNO WHERE M.EMPNO IS NULL ORDER BY 1"
+      ]
+    }
+  },
+  {
+    "id": "t12-1",
+    "trap": "t12",
+    "unit": "manage",
+    "freq": "high",
+    "subject": 2,
+    "topic": "DDL과 트랜잭션",
+    "q": "Oracle에서 T에 ID 1, 2, 3인 행이 있을 때 다음을 차례로 실행했다. 이후 SELECT COUNT(*) FROM T의 결과는?",
+    "code": "DELETE FROM T WHERE ID = 1;\nCREATE TABLE T2 (ID NUMBER);\nROLLBACK;",
+    "options": [
+      "3",
+      "0",
+      "오류가 발생한다",
+      "2"
+    ],
+    "answer": 4,
+    "exp": "CREATE TABLE은 DDL이라 실행되면서 자동 커밋이 일어나고, 그 앞의 DELETE도 함께 확정됩니다. ROLLBACK은 되돌릴 변경이 없어 행은 2건입니다.",
+    "why": [
+      "ROLLBACK이 DELETE를 취소한다고 본 답입니다. CREATE TABLE을 실행하는 순간 DELETE까지 커밋되어 되돌릴 수 없습니다.",
+      "DELETE는 ID = 1인 1건만 지웁니다. 모든 행이 지워지는 것은 TRUNCATE나 조건 없는 DELETE입니다.",
+      "ROLLBACK은 되돌릴 변경이 없어도 오류 없이 실행되고, 앞의 두 문장도 올바른 문장입니다.",
+      ""
+    ]
+  },
+  {
+    "id": "t12-2",
+    "trap": "t12",
+    "unit": "manage",
+    "freq": "high",
+    "subject": 2,
+    "topic": "DDL과 트랜잭션",
+    "q": "Oracle에서 T의 모든 행을 지운 뒤, 바로 ROLLBACK을 실행해 행을 되살릴 수 있는 것은?",
+    "options": [
+      "DELETE FROM T;",
+      "TRUNCATE TABLE T;",
+      "DROP TABLE T;",
+      "DELETE FROM T; COMMIT;"
+    ],
+    "answer": 1,
+    "exp": "DELETE는 DML이라 커밋하기 전까지 ROLLBACK으로 되돌릴 수 있습니다.",
+    "why": [
+      "",
+      "TRUNCATE는 DDL이라 실행과 동시에 자동 커밋되어 ROLLBACK으로 되살릴 수 없습니다.",
+      "DROP도 DDL이라 자동 커밋됩니다. 테이블 자체가 사라지므로 ROLLBACK으로 되돌릴 수 없습니다.",
+      "COMMIT으로 이미 확정했으므로 그 뒤의 ROLLBACK은 DELETE를 되돌리지 못합니다."
+    ]
+  },
+  {
+    "id": "t13-1",
+    "trap": "t13",
+    "unit": "hier",
+    "freq": "high",
+    "subject": 2,
+    "topic": "계층 쿼리",
+    "q": "EMP의 (EMPNO, MGR)이 (1, NULL), (2, 1), (3, 1), (4, 2), (5, 4)일 때 다음 SQL로 조회되는 사원 번호는?",
+    "code": "SELECT EMPNO\n  FROM EMP\n START WITH EMPNO = 2\nCONNECT BY PRIOR EMPNO = MGR;",
+    "options": [
+      "2, 1",
+      "2, 4, 5",
+      "1, 2, 3, 4, 5",
+      "4, 5"
+    ],
+    "answer": 2,
+    "exp": "PRIOR EMPNO = MGR은 '방금 읽은 행의 EMPNO를 MGR로 가진 행', 즉 부하를 찾아 내려갑니다. 2번에서 시작해 부하 4번, 그 부하 5번이 조회됩니다.",
+    "why": [
+      "CONNECT BY PRIOR MGR = EMPNO처럼 상사 방향으로 올라갈 때의 결과입니다.",
+      "",
+      "START WITH가 2번이므로 1번과 3번은 2번의 아래쪽에 없어 조회되지 않습니다.",
+      "START WITH로 지정한 2번 행 자신도 LEVEL 1로 결과에 포함됩니다."
+    ],
+    "check": {
+      "setup": "CREATE TABLE EMP (EMPNO INT, MGR INT); INSERT INTO EMP VALUES (1, NULL), (2, 1), (3, 1), (4, 2), (5, 4);",
+      "sql": "WITH RECURSIVE R AS (SELECT EMPNO FROM EMP WHERE EMPNO = 2 UNION ALL SELECT E.EMPNO FROM EMP E JOIN R ON E.MGR = R.EMPNO) SELECT EMPNO FROM R ORDER BY EMPNO"
+    }
+  },
+  {
+    "id": "t13-2",
+    "trap": "t13",
+    "unit": "hier",
+    "freq": "high",
+    "subject": 2,
+    "topic": "계층 쿼리",
+    "q": "EMP의 (EMPNO, MGR)이 (1, NULL), (2, 1), (3, 1), (4, 2), (5, 4)일 때 다음 SQL의 결과 건수는?",
+    "code": "SELECT EMPNO, LEVEL\n  FROM EMP\n START WITH EMPNO = 5\nCONNECT BY PRIOR MGR = EMPNO;",
+    "options": [
+      "4",
+      "1",
+      "2",
+      "5"
+    ],
+    "answer": 1,
+    "exp": "PRIOR MGR = EMPNO는 '방금 읽은 행의 MGR을 EMPNO로 가진 행', 즉 상사를 찾아 올라갑니다. 5 → 4 → 2 → 1로 올라가 4건입니다.",
+    "why": [
+      "",
+      "순방향(PRIOR EMPNO = MGR)으로 읽은 경우입니다. 5번은 부하가 없어 자기 자신 1건만 나오지만, 이 SQL은 상사 쪽으로 올라갑니다.",
+      "바로 위 상사 4번까지만 센 경우입니다. 조건이 맞는 동안 최상위 1번까지 계속 올라갑니다.",
+      "전체 사원 수입니다. 3번은 5번의 상사 경로(4, 2, 1)에 없으므로 조회되지 않습니다."
+    ],
+    "check": {
+      "setup": "CREATE TABLE EMP (EMPNO INT, MGR INT); INSERT INTO EMP VALUES (1, NULL), (2, 1), (3, 1), (4, 2), (5, 4);",
+      "sql": "WITH RECURSIVE R AS (SELECT EMPNO, MGR FROM EMP WHERE EMPNO = 5 UNION ALL SELECT E.EMPNO, E.MGR FROM EMP E JOIN R ON E.EMPNO = R.MGR) SELECT COUNT(*) FROM R"
+    }
+  },
+  {
+    "id": "t14-1",
+    "trap": "t14",
+    "unit": "select",
+    "freq": "high",
+    "subject": 2,
+    "topic": "BETWEEN",
+    "q": "T의 C 값이 5, 10, 15, 20, 25일 때 다음 SQL의 결과는?",
+    "code": "SELECT COUNT(*)\n  FROM T\n WHERE C BETWEEN 10 AND 20;",
+    "options": [
+      "1",
+      "2",
+      "3",
+      "0"
+    ],
+    "answer": 3,
+    "exp": "BETWEEN은 양 끝값을 포함하므로 10, 15, 20의 3건입니다.",
+    "why": [
+      "양 끝값 10과 20을 빼고 15만 센 경우입니다. BETWEEN은 경계값을 포함합니다.",
+      "한쪽 끝만 포함한 경우입니다. BETWEEN은 >=와 <=로 양쪽 끝을 모두 포함합니다.",
+      "",
+      "BETWEEN 20 AND 10처럼 큰 값을 앞에 썼을 때의 결과입니다. 여기서는 작은 값이 앞이라 정상 조회됩니다."
+    ],
+    "check": {
+      "setup": "CREATE TABLE T (C INT); INSERT INTO T VALUES (5), (10), (15), (20), (25);",
+      "sql": "SELECT COUNT(*) FROM T WHERE C BETWEEN 10 AND 20"
+    }
+  },
+  {
+    "id": "t14-2",
+    "trap": "t14",
+    "unit": "select",
+    "freq": "high",
+    "subject": 2,
+    "topic": "BETWEEN",
+    "q": "T의 C 값이 5, 10, 15, 20, 25일 때 다음 SQL의 결과는?",
+    "code": "SELECT COUNT(*)\n  FROM T\n WHERE C BETWEEN 20 AND 10;",
+    "options": [
+      "3",
+      "1",
+      "오류가 발생한다",
+      "0"
+    ],
+    "answer": 4,
+    "exp": "BETWEEN 20 AND 10은 C >= 20 AND C <= 10이라 만족하는 값이 없어 0건입니다. 오류가 아니라 결과가 비는 것입니다.",
+    "why": [
+      "BETWEEN이 두 값의 크기를 알아서 맞춰 준다고 본 답입니다. 앞의 값이 하한, 뒤의 값이 상한으로 고정됩니다.",
+      "C >= 20 AND C <= 10을 동시에 만족하는 값은 없습니다. 20 하나도 10 이하가 아니어서 빠집니다.",
+      "거꾸로 쓴 BETWEEN도 문법은 맞아서 실행됩니다. 조건을 만족하는 행이 없을 뿐입니다.",
+      ""
+    ],
+    "check": {
+      "setup": "CREATE TABLE T (C INT); INSERT INTO T VALUES (5), (10), (15), (20), (25);",
+      "sql": "SELECT COUNT(*) FROM T WHERE C BETWEEN 20 AND 10"
+    }
+  },
+  {
+    "id": "t15-1",
+    "trap": "t15",
+    "unit": "join",
+    "freq": "high",
+    "subject": 2,
+    "topic": "외부 조인",
+    "q": "DEPT의 DEPTNO가 10, 20, 30이고 EMP의 (EMPNO, DEPTNO, SAL)이 (1, 10, 100), (2, 10, 300), (3, 20, 200)일 때 다음 SQL의 결과 행 수는?",
+    "code": "SELECT D.DEPTNO, E.EMPNO\n  FROM DEPT D LEFT OUTER JOIN EMP E\n    ON E.DEPTNO = D.DEPTNO\n WHERE E.SAL >= 200;",
+    "options": [
+      "3",
+      "4",
+      "1",
+      "2"
+    ],
+    "answer": 4,
+    "exp": "LEFT JOIN 결과 (10, 1), (10, 2), (20, 3), (30, NULL) 가운데 WHERE E.SAL >= 200을 만족하는 행은 (10, 2), (20, 3)뿐입니다. 30번 부서는 SAL이 NULL이라 걸러집니다.",
+    "why": [
+      "30번 부서가 NULL로 남는다고 본 답입니다. WHERE는 조인이 끝난 뒤 적용되어 SAL이 NULL인 행을 걸러 냅니다.",
+      "WHERE 없이 LEFT JOIN만 한 결과입니다.",
+      "SAL 200도 >= 200을 만족하므로 20번 부서의 3번 사원도 남습니다.",
+      ""
+    ],
+    "check": {
+      "setup": "CREATE TABLE DEPT (DEPTNO INT); INSERT INTO DEPT VALUES (10), (20), (30);CREATE TABLE EMP (EMPNO INT, DEPTNO INT, SAL INT); INSERT INTO EMP VALUES (1, 10, 100), (2, 10, 300), (3, 20, 200);",
+      "sql": "SELECT COUNT(*) FROM DEPT D LEFT OUTER JOIN EMP E ON E.DEPTNO = D.DEPTNO WHERE E.SAL >= 200"
+    }
+  },
+  {
+    "id": "t15-2",
+    "trap": "t15",
+    "unit": "join",
+    "freq": "high",
+    "subject": 2,
+    "topic": "외부 조인",
+    "q": "DEPT의 DEPTNO가 10, 20, 30이고 EMP의 (EMPNO, DEPTNO, SAL)이 (1, 10, 100), (2, 10, 300), (3, 20, 200)일 때 다음 SQL의 결과는?",
+    "code": "SELECT D.DEPTNO, E.EMPNO\n  FROM DEPT D LEFT OUTER JOIN EMP E\n    ON E.DEPTNO = D.DEPTNO\n   AND E.SAL >= 200\n ORDER BY D.DEPTNO;",
+    "options": [
+      "(10, 2), (20, 3)",
+      "(10, 1), (10, 2), (20, 3), (30, NULL)",
+      "(10, 2), (20, 3), (30, NULL)",
+      "(10, NULL), (20, 3), (30, NULL)"
+    ],
+    "answer": 3,
+    "exp": "조건이 ON 절에 있으면 짝을 찾을 때만 쓰이고, 짝이 없는 왼쪽 행은 NULL로 남습니다. 10번은 2번 사원, 20번은 3번 사원과 짝이 되고 30번은 NULL로 남습니다.",
+    "why": [
+      "SAL 조건을 WHERE에 썼을 때의 결과입니다. ON 절에 쓰면 30번 부서가 NULL로 남습니다.",
+      "1번 사원은 SAL이 100이라 ON 조건을 만족하지 못해 짝이 되지 않습니다.",
+      "",
+      "10번 부서에는 SAL 300인 2번 사원이 ON 조건을 만족하므로 NULL이 아니라 2와 짝이 됩니다."
+    ],
+    "check": {
+      "setup": "CREATE TABLE DEPT (DEPTNO INT); INSERT INTO DEPT VALUES (10), (20), (30);CREATE TABLE EMP (EMPNO INT, DEPTNO INT, SAL INT); INSERT INTO EMP VALUES (1, 10, 100), (2, 10, 300), (3, 20, 200);",
+      "sql": "SELECT D.DEPTNO, E.EMPNO FROM DEPT D LEFT OUTER JOIN EMP E ON E.DEPTNO = D.DEPTNO AND E.SAL >= 200 ORDER BY D.DEPTNO"
+    }
+  },
+  {
+    "id": "t16-1",
+    "trap": "t16",
+    "unit": "window",
+    "freq": "high",
+    "subject": 2,
+    "topic": "윈도우 범위",
+    "q": "T의 (ID, AMT)가 (1, 100), (2, 200), (3, 200), (4, 300)일 때 다음 SQL의 결과는?",
+    "code": "SELECT SUM(AMT) OVER (ORDER BY AMT) AS S\n  FROM T\n ORDER BY ID;",
+    "options": [
+      "100, 500, 500, 800",
+      "100, 300, 500, 800",
+      "800, 800, 800, 800",
+      "100, 200, 200, 300"
+    ],
+    "answer": 1,
+    "exp": "ORDER BY만 쓰면 범위가 RANGE라서 AMT가 같은 200 두 행을 함께 더합니다. 그래서 둘째·셋째 행 모두 100 + 200 + 200 = 500입니다.",
+    "why": [
+      "",
+      "ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW로 지정했을 때의 결과입니다. 기본값인 RANGE는 동점 행을 한꺼번에 더합니다.",
+      "OVER ()처럼 ORDER BY 없이 전체를 더했을 때의 결과입니다.",
+      "누적하지 않고 AMT를 그대로 보여 준 결과입니다. SUM에 ORDER BY를 주면 처음부터 현재 행까지 누적합니다."
+    ],
+    "check": {
+      "setup": "CREATE TABLE T (ID INT, AMT INT); INSERT INTO T VALUES (1, 100), (2, 200), (3, 200), (4, 300);",
+      "sql": "SELECT SUM(AMT) OVER (ORDER BY AMT) AS S FROM T ORDER BY ID"
+    }
+  },
+  {
+    "id": "t16-2",
+    "trap": "t16",
+    "unit": "window",
+    "freq": "high",
+    "subject": 2,
+    "topic": "윈도우 범위",
+    "q": "T의 (ID, AMT)가 (1, 100), (2, 200), (3, 200), (4, 300)일 때, 아래 SQL의 빈칸에 넣으면 결과가 나머지 셋과 다른 것은?",
+    "code": "SELECT ______ AS S\n  FROM T\n ORDER BY ID;",
+    "options": [
+      "SUM(AMT) OVER (ORDER BY AMT)",
+      "SUM(AMT) OVER (ORDER BY AMT, ID ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)",
+      "SUM(AMT) OVER (ORDER BY AMT RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)",
+      "SUM(AMT) OVER (ORDER BY AMT RANGE UNBOUNDED PRECEDING)"
+    ],
+    "answer": 2,
+    "exp": "ROWS는 한 행씩 누적해 100, 300, 500, 800입니다. 나머지 셋은 모두 RANGE 범위라 동점 200 두 행을 함께 더해 100, 500, 500, 800입니다.",
+    "why": [
+      "ORDER BY만 쓰면 기본 범위가 RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW라 100, 500, 500, 800입니다.",
+      "",
+      "기본 범위를 그대로 적은 것이라 ORDER BY만 쓴 것과 결과가 같습니다.",
+      "RANGE UNBOUNDED PRECEDING은 끝을 생략한 형태로, 끝은 CURRENT ROW가 되어 기본 범위와 같습니다."
+    ],
+    "check": {
+      "setup": "CREATE TABLE T (ID INT, AMT INT); INSERT INTO T VALUES (1, 100), (2, 200), (3, 200), (4, 300);",
+      "sqls": [
+        "SELECT SUM(AMT) OVER (ORDER BY AMT) AS S FROM T ORDER BY ID",
+        "SELECT SUM(AMT) OVER (ORDER BY AMT, ID ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS S FROM T ORDER BY ID",
+        "SELECT SUM(AMT) OVER (ORDER BY AMT RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS S FROM T ORDER BY ID",
+        "SELECT SUM(AMT) OVER (ORDER BY AMT RANGE UNBOUNDED PRECEDING) AS S FROM T ORDER BY ID"
+      ]
+    }
+  },
+  {
+    "id": "t17-1",
+    "trap": "t17",
+    "unit": "group",
+    "freq": "high",
+    "subject": 2,
+    "topic": "COUNT(DISTINCT)",
+    "q": "T의 C 값이 'A', 'A', 'B', NULL, 'B'일 때 다음 SQL의 결과는?",
+    "code": "SELECT COUNT(*), COUNT(C), COUNT(DISTINCT C)\n  FROM T;",
+    "options": [
+      "5, 4, 2",
+      "5, 4, 3",
+      "5, 5, 3",
+      "4, 4, 2"
+    ],
+    "answer": 1,
+    "exp": "COUNT(*)는 모든 행 5, COUNT(C)는 NULL을 뺀 4, COUNT(DISTINCT C)는 NULL을 뺀 서로 다른 값 A, B의 2입니다.",
+    "why": [
+      "",
+      "COUNT(DISTINCT C)가 NULL도 한 종류로 센다고 본 답입니다. NULL은 세지 않아 A, B의 2입니다.",
+      "COUNT(C)도 NULL을 세지 않으므로 4입니다. COUNT(DISTINCT C)도 NULL을 빼 2입니다.",
+      "COUNT(*)는 NULL인 행도 세므로 5입니다."
+    ],
+    "check": {
+      "setup": "CREATE TABLE T (C VARCHAR); INSERT INTO T VALUES ('A'), ('A'), ('B'), (NULL), ('B');",
+      "sql": "SELECT COUNT(*), COUNT(C), COUNT(DISTINCT C) FROM T"
+    }
+  },
+  {
+    "id": "t17-2",
+    "trap": "t17",
+    "unit": "group",
+    "freq": "high",
+    "subject": 2,
+    "topic": "COUNT(DISTINCT)",
+    "q": "EMP의 (DEPTNO, JOB)이 (10, CLERK), (10, CLERK), (10, NULL), (20, MANAGER), (20, CLERK)일 때 다음 SQL의 결과는?",
+    "code": "SELECT DEPTNO, COUNT(DISTINCT JOB)\n  FROM EMP\n GROUP BY DEPTNO\n ORDER BY DEPTNO;",
+    "options": [
+      "(10, 2), (20, 2)",
+      "(10, 1), (20, 2)",
+      "(10, 3), (20, 2)",
+      "(10, 1), (20, 1)"
+    ],
+    "answer": 2,
+    "exp": "10번 부서의 JOB은 CLERK, CLERK, NULL이라 중복과 NULL을 빼면 CLERK 하나입니다. 20번 부서는 MANAGER, CLERK 두 종류입니다.",
+    "why": [
+      "10번 부서에서 NULL을 한 종류로 센 경우입니다. COUNT(DISTINCT)는 NULL을 세지 않습니다.",
+      "",
+      "10번 부서의 행 수를 그대로 센 COUNT(*)의 값입니다.",
+      "20번 부서의 MANAGER와 CLERK은 서로 다른 값이라 2입니다."
+    ],
+    "check": {
+      "setup": "CREATE TABLE EMP (DEPTNO INT, JOB VARCHAR); INSERT INTO EMP VALUES (10, 'CLERK'), (10, 'CLERK'), (10, NULL), (20, 'MANAGER'), (20, 'CLERK');",
+      "sql": "SELECT DEPTNO, COUNT(DISTINCT JOB) FROM EMP GROUP BY DEPTNO ORDER BY DEPTNO"
+    }
+  },
+  {
+    "id": "t18-1",
+    "trap": "t18",
+    "unit": "select",
+    "freq": "high",
+    "subject": 2,
+    "topic": "NULL 함수",
+    "q": "Oracle에서 다음 SQL의 결과는?",
+    "code": "SELECT NVL2(NULL, 1, 2), NULLIF(5, 5), COALESCE(NULL, NULL, 3)\n  FROM DUAL;",
+    "options": [
+      "1, NULL, 3",
+      "2, 5, 3",
+      "1, 5, NULL",
+      "2, NULL, 3"
+    ],
+    "answer": 4,
+    "exp": "NVL2는 첫 인자가 NULL이면 세 번째 값 2, NULLIF는 두 값이 같으면 NULL, COALESCE는 처음 나오는 NULL이 아닌 값 3을 돌려줍니다.",
+    "why": [
+      "NVL2의 두 번째 값 1은 첫 인자가 NULL이 아닐 때 돌려줍니다. 첫 인자가 NULL이라 세 번째 값 2입니다.",
+      "NULLIF는 두 값이 같을 때 NULL을 돌려줍니다. 다를 때 첫 값을 돌려줍니다.",
+      "NVL2와 NULLIF를 반대로 읽었고, COALESCE는 끝까지 보면 3이 있어 NULL이 아닙니다.",
+      ""
+    ],
+    "check": {
+      "sql": "SELECT NVL2(NULL, 1, 2), NULLIF(5, 5), COALESCE(NULL, NULL, 3)"
+    }
+  },
+  {
+    "id": "t18-2",
+    "trap": "t18",
+    "unit": "select",
+    "freq": "high",
+    "subject": 2,
+    "topic": "NULL 함수",
+    "q": "EMP의 (ID, COMM)이 (1, 300), (2, NULL), (3, 0)일 때 다음 SQL의 결과는?",
+    "code": "SELECT NVL(NULLIF(COMM, 0), -1)\n  FROM EMP\n ORDER BY ID;",
+    "options": [
+      "300, -1, 0",
+      "300, 0, -1",
+      "300, -1, -1",
+      "-1, -1, 0"
+    ],
+    "answer": 3,
+    "exp": "NULLIF(COMM, 0)은 0을 NULL로 바꾸므로 300, NULL, NULL이 되고, NVL이 NULL을 -1로 바꿔 300, -1, -1입니다.",
+    "why": [
+      "3번 행의 0은 NULLIF에서 NULL로 바뀐 뒤 NVL에서 -1이 됩니다.",
+      "2번 행의 NULL은 NULLIF(NULL, 0)을 거쳐도 NULL이라 NVL에서 -1이 됩니다. 0으로 바뀌는 단계는 없습니다.",
+      "",
+      "1번 행의 300은 0과 다르므로 NULLIF가 그대로 300을 돌려줍니다."
+    ],
+    "check": {
+      "setup": "CREATE TABLE EMP (ID INT, COMM INT); INSERT INTO EMP VALUES (1, 300), (2, NULL), (3, 0);",
+      "sql": "SELECT NVL(NULLIF(COMM, 0), -1) FROM EMP ORDER BY ID"
+    }
+  },
+  {
+    "id": "t19-1",
+    "trap": "t19",
+    "unit": "select",
+    "freq": "high",
+    "subject": 2,
+    "topic": "NULL 정렬",
+    "q": "Oracle에서 T의 C 값이 20, NULL, 10일 때 다음 SQL의 결과 순서는?",
+    "code": "SELECT C\n  FROM T\n ORDER BY C DESC;",
+    "options": [
+      "20, 10, NULL",
+      "10, 20, NULL",
+      "NULL, 20, 10",
+      "NULL, 10, 20"
+    ],
+    "answer": 3,
+    "exp": "Oracle은 NULL을 가장 큰 값처럼 다루므로 내림차순에서는 NULL이 맨 앞에 옵니다.",
+    "why": [
+      "SQL Server의 내림차순 결과입니다. Oracle은 NULL을 가장 큰 값으로 보아 내림차순에서 맨 앞에 둡니다.",
+      "Oracle의 오름차순 결과입니다. DESC라서 큰 값부터 나옵니다.",
+      "",
+      "NULL이 맨 앞인 것은 맞지만, 나머지도 내림차순이라 20이 10보다 먼저입니다."
+    ],
+    "check": {
+      "setup": "CREATE TABLE T (C INT); INSERT INTO T VALUES (20), (NULL), (10);",
+      "sql": "SELECT C FROM T ORDER BY C DESC"
+    }
+  },
+  {
+    "id": "t19-2",
+    "trap": "t19",
+    "unit": "select",
+    "freq": "high",
+    "subject": 2,
+    "topic": "NULL 정렬",
+    "q": "SQL Server에서 T의 C 값이 20, NULL, 10일 때 다음 SQL의 결과 순서는?",
+    "code": "SELECT C\n  FROM T\n ORDER BY C;",
+    "options": [
+      "10, 20, NULL",
+      "20, 10, NULL",
+      "NULL, 20, 10",
+      "NULL, 10, 20"
+    ],
+    "answer": 4,
+    "exp": "SQL Server는 NULL을 가장 작은 값처럼 다루므로 오름차순에서 NULL이 맨 앞에 옵니다.",
+    "why": [
+      "Oracle의 오름차순 결과입니다. SQL Server는 NULL을 가장 작은 값으로 봅니다.",
+      "SQL Server의 내림차순 결과입니다. 여기서는 오름차순입니다.",
+      "NULL이 맨 앞인 것은 맞지만, 나머지는 오름차순이라 10이 20보다 먼저입니다.",
+      ""
+    ],
+    "check": {
+      "setup": "SET default_null_order='nulls_first_on_asc_last_on_desc'; CREATE TABLE T (C INT); INSERT INTO T VALUES (20), (NULL), (10);",
+      "sql": "SELECT C FROM T ORDER BY C"
+    }
+  },
+  {
+    "id": "t20-1",
+    "trap": "t20",
+    "unit": "group",
+    "freq": "high",
+    "subject": 2,
+    "topic": "빈 결과 집계",
+    "q": "EMP의 (DEPTNO, SAL)이 (10, 100), (20, 200)일 때 다음 SQL의 결과는?",
+    "code": "SELECT COUNT(*), SUM(SAL)\n  FROM EMP\n WHERE DEPTNO = 99;",
+    "options": [
+      "0, 0",
+      "0, NULL",
+      "결과 없음",
+      "NULL, NULL"
+    ],
+    "answer": 2,
+    "exp": "GROUP BY가 없는 집계는 행이 없어도 1행을 돌려줍니다. 셀 행이 없으니 COUNT(*)는 0, 더할 값이 없으니 SUM은 NULL입니다.",
+    "why": [
+      "SUM은 더할 값이 하나도 없으면 0이 아니라 NULL을 돌려줍니다. 0이 필요하면 NVL(SUM(SAL), 0)으로 씁니다.",
+      "",
+      "GROUP BY를 썼을 때의 결과입니다. GROUP BY 없는 집계 쿼리는 행이 없어도 1행을 돌려줍니다.",
+      "COUNT는 NULL을 돌려주지 않습니다. 셀 행이 없으면 0입니다."
+    ],
+    "check": {
+      "setup": "CREATE TABLE EMP (DEPTNO INT, SAL INT); INSERT INTO EMP VALUES (10, 100), (20, 200);",
+      "sql": "SELECT COUNT(*), SUM(SAL) FROM EMP WHERE DEPTNO = 99"
+    }
+  },
+  {
+    "id": "t20-2",
+    "trap": "t20",
+    "unit": "group",
+    "freq": "high",
+    "subject": 2,
+    "topic": "빈 결과 집계",
+    "q": "EMP의 (DEPTNO, SAL)이 (10, 100), (20, 200)일 때 다음 SQL의 결과는?",
+    "code": "SELECT DEPTNO, COUNT(*)\n  FROM EMP\n WHERE DEPTNO = 99\n GROUP BY DEPTNO;",
+    "options": [
+      "결과 없음",
+      "99, 0",
+      "NULL, 0",
+      "0"
+    ],
+    "answer": 1,
+    "exp": "WHERE를 통과한 행이 없으면 GROUP BY로 만들 그룹도 없어 결과가 0건입니다.",
+    "why": [
+      "",
+      "99번 부서는 테이블에 없으므로 그룹이 만들어지지 않습니다. 없는 그룹의 COUNT를 0으로 보여 주지 않습니다.",
+      "GROUP BY 없이 COUNT(*)만 조회할 때는 0이 1행 나오지만, GROUP BY를 쓰면 그룹이 없어 행 자체가 없습니다.",
+      "COUNT(*)만 조회하고 GROUP BY를 빼면 0이 나옵니다. GROUP BY가 있으면 0건입니다."
+    ],
+    "check": {
+      "setup": "CREATE TABLE EMP (DEPTNO INT, SAL INT); INSERT INTO EMP VALUES (10, 100), (20, 200);",
+      "sql": "SELECT DEPTNO, COUNT(*) FROM EMP WHERE DEPTNO = 99 GROUP BY DEPTNO"
+    }
+  }
+]);
