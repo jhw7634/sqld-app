@@ -7675,7 +7675,7 @@ window.SQLD_QUESTIONS = [
   }
 ];
 
-// ---- 함정 체크: 시험 직전에 보는 요약 20장 + 함정마다 2문제 (trap 필드로 연결, 연습·실전과 따로 셈)
+// ---- 함정 체크: 시험 직전에 보는 요약 30장 + 함정마다 2문제 (trap 필드로 연결, 연습·실전과 따로 셈)
 window.SQLD_TRAPS = [
   {
     "id": "t01",
@@ -7796,6 +7796,66 @@ window.SQLD_TRAPS = [
     "title": "행이 없어도 집계는 1행",
     "body": "조건에 맞는 행이 하나도 없어도 GROUP BY 없는 집계 쿼리는 1행을 돌려줘요. 이때 COUNT는 0, SUM·AVG·MAX·MIN은 NULL이에요. GROUP BY를 쓰면 만들어진 그룹이 없으니 결과도 0건이에요.",
     "ex": "WHERE 1 = 0 일 때\nSELECT COUNT(*), SUM(SAL)              → 0, NULL\nSELECT DEPTNO, COUNT(*) ... GROUP BY   → 0건"
+  },
+  {
+    "id": "t21",
+    "title": "AND가 OR보다 먼저",
+    "body": "WHERE 절에서 AND가 OR보다 먼저 계산돼요. A OR B AND C는 A OR (B AND C)예요. 뜻이 다르면 괄호로 묶어요.",
+    "ex": "WHERE DEPTNO = 10 OR DEPTNO = 20 AND SAL >= 300\n= WHERE DEPTNO = 10 OR (DEPTNO = 20 AND SAL >= 300)"
+  },
+  {
+    "id": "t22",
+    "title": "ELSE가 없으면 NULL",
+    "body": "CASE에서 맞는 WHEN이 하나도 없고 ELSE도 없으면 결과는 NULL이에요. DECODE도 마지막 기본값을 빼면 똑같이 NULL이에요. CASE는 위에서부터 처음 참이 되는 WHEN 하나만 골라요.",
+    "ex": "CASE WHEN SAL >= 300 THEN 'H' END   -- SAL 100이면 NULL\nDECODE(DEPTNO, 10, 'A')             -- 20이면 NULL"
+  },
+  {
+    "id": "t23",
+    "title": "GROUP BY에 없는 컬럼은 SELECT 불가",
+    "body": "GROUP BY를 쓰면 SELECT에는 GROUP BY에 쓴 컬럼과 집계 함수만 올 수 있어요. 그룹 안에서 값이 여러 개일 수 있는 컬럼을 그냥 쓰면 오류예요. 반대로 GROUP BY 컬럼을 SELECT에 꼭 써야 하는 것은 아니에요.",
+    "ex": "SELECT DEPTNO, JOB, COUNT(*) FROM EMP GROUP BY DEPTNO;  -- 오류\nSELECT COUNT(*) FROM EMP GROUP BY DEPTNO;              -- 가능"
+  },
+  {
+    "id": "t24",
+    "title": "USING·NATURAL JOIN 컬럼엔 별칭 X",
+    "body": "Oracle에서 USING이나 NATURAL JOIN으로 조인한 컬럼에는 테이블 이름이나 별칭을 붙일 수 없어요. E.DEPTNO가 아니라 DEPTNO로만 써요. NATURAL JOIN은 이름이 같은 모든 컬럼으로 조인해요.",
+    "ex": "SELECT E.DEPTNO FROM EMP E JOIN DEPT D USING (DEPTNO);  -- 오류\nSELECT DEPTNO   FROM EMP E JOIN DEPT D USING (DEPTNO);  -- 가능"
+  },
+  {
+    "id": "t25",
+    "title": "CROSS JOIN은 행 수의 곱",
+    "body": "CROSS JOIN이나 조인 조건을 빠뜨린 조인은 모든 행끼리 짝을 지어요(카티션 곱). 결과 행 수는 두 테이블 행 수를 곱한 값이에요.",
+    "ex": "EMP 4행 × DEPT 3행 → 12행"
+  },
+  {
+    "id": "t26",
+    "title": "LIKE의 _는 딱 한 글자",
+    "body": "LIKE에서 _는 정확히 한 글자, %는 0글자 이상 아무 글자예요. 그래서 'A%'는 A 한 글자도 맞고, 'A_'는 A로 시작하는 딱 두 글자만 맞아요. _나 % 자체를 찾으려면 ESCAPE를 써요.",
+    "ex": "'A_'   → AB (O), A (X), ABC (X)\n'_A%'  → 두 번째 글자가 A\n'%#_%' ESCAPE '#' → _가 들어 있는 값"
+  },
+  {
+    "id": "t27",
+    "title": "날짜 + 숫자는 일 단위",
+    "body": "Oracle에서 날짜에 숫자를 더하면 일 단위로 계산해요. SYSDATE + 1은 하루 뒤, + 1/24는 한 시간 뒤, + 1/24/60은 1분 뒤예요. 날짜 - 날짜는 두 날짜 사이의 일수예요.",
+    "ex": "SYSDATE + 1        → 하루 뒤\nSYSDATE + 1/24     → 1시간 뒤\nSYSDATE + 1/24/60  → 1분 뒤"
+  },
+  {
+    "id": "t28",
+    "title": "ROLLBACK TO는 저장점 뒤만 취소",
+    "body": "ROLLBACK TO 저장점은 그 저장점 뒤의 변경만 취소하고 트랜잭션은 계속 이어져요. 저장점 없이 ROLLBACK만 쓰면 트랜잭션 전체가 취소돼요. 같은 이름으로 SAVEPOINT를 다시 만들면 나중 것만 남아요.",
+    "ex": "INSERT 1; SAVEPOINT SP1; INSERT 2;\nROLLBACK TO SP1;   -- 2만 취소\nCOMMIT;            -- 1이 저장됨"
+  },
+  {
+    "id": "t29",
+    "title": "GRANT OPTION은 연쇄 회수, ADMIN OPTION은 아니에요",
+    "body": "객체 권한을 WITH GRANT OPTION으로 받은 사람이 남에게 다시 준 권한은, 처음 권한을 회수하면 함께 회수돼요. 시스템 권한을 WITH ADMIN OPTION으로 받은 경우는 회수해도 그 사람이 남에게 준 권한이 그대로 남아요.",
+    "ex": "객체 권한 (SELECT ON EMP) + WITH GRANT OPTION → 연쇄 회수\n시스템 권한 (CREATE TABLE) + WITH ADMIN OPTION → 연쇄 회수 없음"
+  },
+  {
+    "id": "t30",
+    "title": "식별 관계와 비식별 관계",
+    "body": "부모의 주식별자가 자식의 주식별자 일부가 되면 식별 관계, 자식의 일반 속성(외래키)으로만 가면 비식별 관계예요. 식별 관계가 이어지면 자식의 주식별자 컬럼이 계속 늘어나고, 비식별 관계는 부모 없이도 자식이 생길 수 있는 약한 연결이에요. IE 표기법에서 식별은 실선, 비식별은 점선이에요.",
+    "ex": "식별:   주문(주문번호) → 주문상품(주문번호, 상품번호)\n비식별: 부서(부서번호) → 사원(사원번호), 부서번호는 일반 속성"
   }
 ];
 window.SQLD_QUESTIONS.push(...
@@ -8884,5 +8944,535 @@ window.SQLD_QUESTIONS.push(...
       "setup": "CREATE TABLE EMP (DEPTNO INT, SAL INT); INSERT INTO EMP VALUES (10, 100), (20, 200);",
       "sql": "SELECT DEPTNO, COUNT(*) FROM EMP WHERE DEPTNO = 99 GROUP BY DEPTNO"
     }
+  },
+  {
+    "id": "t21-1",
+    "trap": "t21",
+    "unit": "select",
+    "freq": "high",
+    "subject": 2,
+    "topic": "연산자 우선순위",
+    "q": "EMP의 (DEPTNO, SAL)이 (10, 100), (10, 400), (20, 200), (20, 500), (30, 600)일 때 다음 SQL의 결과는?",
+    "code": "SELECT COUNT(*)\n  FROM EMP\n WHERE DEPTNO = 10 OR DEPTNO = 20 AND SAL >= 300;",
+    "options": [
+      "2",
+      "3",
+      "1",
+      "4"
+    ],
+    "answer": 2,
+    "exp": "AND가 먼저 묶여 DEPTNO = 10 OR (DEPTNO = 20 AND SAL >= 300)이 됩니다. 10번 부서 2행과 20번 부서의 SAL 500 행으로 3건입니다.",
+    "why": [
+      "(DEPTNO = 10 OR DEPTNO = 20) AND SAL >= 300처럼 OR를 먼저 묶었을 때의 결과입니다. 괄호가 없으면 AND가 먼저입니다.",
+      "",
+      "DEPTNO = 20 AND SAL >= 300만 센 경우입니다. OR 앞의 DEPTNO = 10 조건으로 10번 부서 두 행도 조회됩니다.",
+      "10번과 20번 부서의 전체 행 수입니다. 20번 부서의 SAL 200 행은 AND 조건에 걸려 빠집니다."
+    ],
+    "check": {
+      "setup": "CREATE TABLE EMP (DEPTNO INT, SAL INT); INSERT INTO EMP VALUES (10, 100), (10, 400), (20, 200), (20, 500), (30, 600);",
+      "sql": "SELECT COUNT(*) FROM EMP WHERE DEPTNO = 10 OR DEPTNO = 20 AND SAL >= 300"
+    }
+  },
+  {
+    "id": "t21-2",
+    "trap": "t21",
+    "unit": "select",
+    "freq": "high",
+    "subject": 2,
+    "topic": "연산자 우선순위",
+    "q": "EMP의 (DEPTNO, SAL)이 (10, 100), (10, 400), (20, 200), (20, 500), (30, 600)일 때, 결과 건수가 나머지 셋과 다른 SQL은?",
+    "options": [
+      "SELECT * FROM EMP WHERE DEPTNO = 10 OR DEPTNO = 20 AND SAL >= 300;",
+      "SELECT * FROM EMP WHERE DEPTNO = 10 OR (DEPTNO = 20 AND SAL >= 300);",
+      "SELECT * FROM EMP WHERE SAL >= 300 AND DEPTNO = 20 OR DEPTNO = 10;",
+      "SELECT * FROM EMP WHERE (DEPTNO = 10 OR DEPTNO = 20) AND SAL >= 300;"
+    ],
+    "answer": 4,
+    "exp": "괄호로 OR를 먼저 묶은 SQL만 (10, 400), (20, 500)의 2건입니다. 나머지는 모두 AND가 먼저 계산되어 10번 부서 2건과 (20, 500)으로 3건입니다.",
+    "why": [
+      "괄호가 없으니 AND가 먼저 묶여 DEPTNO = 10 OR (DEPTNO = 20 AND SAL >= 300)과 같고 3건입니다.",
+      "AND가 먼저라는 규칙을 괄호로 그대로 적은 것이라 괄호 없는 SQL과 결과가 같은 3건입니다.",
+      "순서만 바뀌었을 뿐 (SAL >= 300 AND DEPTNO = 20) OR DEPTNO = 10으로 계산되어 3건입니다.",
+      ""
+    ],
+    "check": {
+      "setup": "CREATE TABLE EMP (DEPTNO INT, SAL INT); INSERT INTO EMP VALUES (10, 100), (10, 400), (20, 200), (20, 500), (30, 600);",
+      "sqls": [
+        "SELECT COUNT(*) FROM EMP WHERE DEPTNO = 10 OR DEPTNO = 20 AND SAL >= 300",
+        "SELECT COUNT(*) FROM EMP WHERE DEPTNO = 10 OR (DEPTNO = 20 AND SAL >= 300)",
+        "SELECT COUNT(*) FROM EMP WHERE SAL >= 300 AND DEPTNO = 20 OR DEPTNO = 10",
+        "SELECT COUNT(*) FROM EMP WHERE (DEPTNO = 10 OR DEPTNO = 20) AND SAL >= 300"
+      ]
+    }
+  },
+  {
+    "id": "t22-1",
+    "trap": "t22",
+    "unit": "select",
+    "freq": "high",
+    "subject": 2,
+    "topic": "CASE·DECODE",
+    "q": "T의 SAL 값이 100, 300, 500일 때 다음 SQL의 결과는?",
+    "code": "SELECT CASE WHEN SAL >= 400 THEN 'H'\n            WHEN SAL >= 200 THEN 'M'\n       END\n  FROM T\n ORDER BY SAL;",
+    "options": [
+      "NULL, M, H",
+      "M, M, H",
+      "NULL, H, H",
+      "오류가 발생한다"
+    ],
+    "answer": 1,
+    "exp": "100은 어느 WHEN도 만족하지 못하고 ELSE가 없어 NULL입니다. 300은 첫 WHEN이 거짓, 둘째 WHEN이 참이라 M, 500은 첫 WHEN이 참이라 H입니다.",
+    "why": [
+      "",
+      "100은 SAL >= 200도 만족하지 못합니다. 맞는 WHEN이 없을 때 마지막 WHEN 값으로 가지 않고 NULL이 됩니다.",
+      "300은 SAL >= 400이 거짓이라 첫 WHEN을 지나 둘째 WHEN의 M이 됩니다.",
+      "ELSE는 생략할 수 있습니다. 생략하면 맞는 WHEN이 없을 때 NULL을 돌려줄 뿐 오류는 아닙니다."
+    ],
+    "check": {
+      "setup": "CREATE TABLE T (SAL INT); INSERT INTO T VALUES (100), (300), (500);",
+      "sql": "SELECT CASE WHEN SAL >= 400 THEN 'H' WHEN SAL >= 200 THEN 'M' END FROM T ORDER BY SAL"
+    }
+  },
+  {
+    "id": "t22-2",
+    "trap": "t22",
+    "unit": "select",
+    "freq": "high",
+    "subject": 2,
+    "topic": "CASE·DECODE",
+    "q": "Oracle에서 T의 DEPTNO 값이 10, 20, 30일 때 다음 SQL의 결과는?",
+    "code": "SELECT DECODE(DEPTNO, 10, 'A', 20, 'B')\n  FROM T\n ORDER BY DEPTNO;",
+    "options": [
+      "A, B, B",
+      "A, B, 30",
+      "A, B, NULL",
+      "오류가 발생한다"
+    ],
+    "answer": 3,
+    "exp": "DECODE는 비교값과 결과값을 짝지어 적고, 맞는 짝이 없으면 마지막의 기본값을 돌려줍니다. 기본값을 적지 않았으므로 30은 NULL입니다.",
+    "why": [
+      "마지막 결과값 'B'가 기본값이 되지는 않습니다. 기본값은 짝 뒤에 하나를 더 적을 때만 생깁니다. 예: DECODE(DEPTNO, 10, 'A', 20, 'B', 'C')",
+      "맞는 짝이 없을 때 원래 값이 나오지 않습니다. 기본값을 생략하면 NULL입니다.",
+      "",
+      "DECODE는 기본값을 생략할 수 있어 오류가 나지 않습니다."
+    ],
+    "check": {
+      "setup": "CREATE TABLE T (DEPTNO INT); INSERT INTO T VALUES (10), (20), (30);",
+      "sql": "SELECT DECODE(DEPTNO, 10, 'A', 20, 'B') FROM T ORDER BY DEPTNO"
+    }
+  },
+  {
+    "id": "t23-1",
+    "trap": "t23",
+    "unit": "group",
+    "freq": "high",
+    "subject": 2,
+    "topic": "GROUP BY",
+    "q": "다음 중 오류가 발생하는 SQL은?",
+    "options": [
+      "SELECT DEPTNO, COUNT(*) FROM EMP GROUP BY DEPTNO;",
+      "SELECT DEPTNO, MAX(JOB) FROM EMP GROUP BY DEPTNO;",
+      "SELECT COUNT(*) FROM EMP GROUP BY DEPTNO;",
+      "SELECT DEPTNO, JOB, COUNT(*) FROM EMP GROUP BY DEPTNO;"
+    ],
+    "answer": 4,
+    "exp": "JOB은 GROUP BY에 없고 집계 함수로 감싸지도 않았습니다. 한 부서에 JOB이 여러 개일 수 있어 어느 값을 보여 줄지 정할 수 없으므로 오류입니다.",
+    "why": [
+      "GROUP BY 컬럼과 집계 함수만 쓴 올바른 형태입니다.",
+      "JOB을 MAX로 집계했으므로 그룹마다 값이 하나로 정해져 오류가 나지 않습니다.",
+      "GROUP BY에 쓴 컬럼을 SELECT에서 빼는 것은 허용됩니다. 부서별 인원 수만 조회됩니다.",
+      ""
+    ]
+  },
+  {
+    "id": "t23-2",
+    "trap": "t23",
+    "unit": "group",
+    "freq": "high",
+    "subject": 2,
+    "topic": "GROUP BY",
+    "q": "EMP의 (DEPTNO, JOB, SAL)이 (10, CLERK, 100), (10, CLERK, 200), (10, MANAGER, 300), (20, CLERK, 400)일 때 다음 SQL의 결과 행 수는?",
+    "code": "SELECT DEPTNO, JOB, SUM(SAL)\n  FROM EMP\n GROUP BY DEPTNO, JOB;",
+    "options": [
+      "3",
+      "2",
+      "4",
+      "1"
+    ],
+    "answer": 1,
+    "exp": "GROUP BY에 컬럼을 더하면 그 조합마다 그룹이 생깁니다. (10, CLERK), (10, MANAGER), (20, CLERK)의 3개 그룹입니다.",
+    "why": [
+      "",
+      "DEPTNO로만 묶었을 때의 그룹 수입니다. JOB까지 묶으면 10번 부서가 CLERK과 MANAGER로 나뉩니다.",
+      "원래 행 수입니다. (10, CLERK) 두 행은 한 그룹으로 합쳐집니다.",
+      "GROUP BY가 없을 때처럼 전체를 하나로 본 경우입니다."
+    ],
+    "check": {
+      "setup": "CREATE TABLE EMP (DEPTNO INT, JOB VARCHAR, SAL INT); INSERT INTO EMP VALUES (10, 'CLERK', 100), (10, 'CLERK', 200), (10, 'MANAGER', 300), (20, 'CLERK', 400);",
+      "sql": "SELECT COUNT(*) FROM (SELECT DEPTNO, JOB, SUM(SAL) FROM EMP GROUP BY DEPTNO, JOB)"
+    }
+  },
+  {
+    "id": "t24-1",
+    "trap": "t24",
+    "unit": "join",
+    "freq": "high",
+    "subject": 2,
+    "topic": "USING·NATURAL JOIN",
+    "q": "Oracle에서 다음 중 오류가 발생하는 SQL은?",
+    "options": [
+      "SELECT DEPTNO, D.DNAME FROM EMP E JOIN DEPT D USING (DEPTNO);",
+      "SELECT E.DEPTNO, D.DNAME FROM EMP E JOIN DEPT D ON E.DEPTNO = D.DEPTNO;",
+      "SELECT E.DEPTNO, D.DNAME FROM EMP E JOIN DEPT D USING (DEPTNO);",
+      "SELECT DEPTNO, DNAME FROM EMP NATURAL JOIN DEPT;"
+    ],
+    "answer": 3,
+    "exp": "USING (DEPTNO)로 조인한 DEPTNO는 두 테이블이 함께 쓰는 하나의 컬럼이 되므로, E.DEPTNO처럼 별칭을 붙이면 오류입니다.",
+    "why": [
+      "USING 컬럼에는 별칭 없이 DEPTNO로 쓰고, 조인 컬럼이 아닌 DNAME에는 별칭을 붙여도 됩니다.",
+      "ON 절로 조인하면 두 테이블의 DEPTNO가 따로 있으므로 오히려 별칭으로 구분해야 합니다.",
+      "",
+      "NATURAL JOIN의 공통 컬럼을 별칭 없이 쓴 올바른 형태입니다."
+    ]
+  },
+  {
+    "id": "t24-2",
+    "trap": "t24",
+    "unit": "join",
+    "freq": "high",
+    "subject": 2,
+    "topic": "USING·NATURAL JOIN",
+    "q": "A의 (ID, GRP)가 (1, X), (2, Y)이고 B의 (ID, GRP, V)가 (1, X, 10), (2, Z, 20)일 때 다음 SQL의 결과는?",
+    "code": "SELECT COUNT(*)\n  FROM A NATURAL JOIN B;",
+    "options": [
+      "2",
+      "1",
+      "4",
+      "0"
+    ],
+    "answer": 2,
+    "exp": "NATURAL JOIN은 이름이 같은 모든 컬럼, 즉 ID와 GRP가 둘 다 같은 행끼리 조인합니다. (1, X)만 양쪽에 있어 1건입니다.",
+    "why": [
+      "USING (ID)처럼 ID만으로 조인했을 때의 결과입니다. NATURAL JOIN은 GRP까지 같아야 합니다.",
+      "",
+      "조인 조건이 없는 CROSS JOIN의 결과(2 × 2)입니다.",
+      "ID 1인 행은 ID와 GRP가 모두 같아 조인됩니다."
+    ],
+    "check": {
+      "setup": "CREATE TABLE A (ID INT, GRP VARCHAR); CREATE TABLE B (ID INT, GRP VARCHAR, V INT); INSERT INTO A VALUES (1, 'X'), (2, 'Y'); INSERT INTO B VALUES (1, 'X', 10), (2, 'Z', 20);",
+      "sql": "SELECT COUNT(*) FROM A NATURAL JOIN B"
+    }
+  },
+  {
+    "id": "t25-1",
+    "trap": "t25",
+    "unit": "join",
+    "freq": "high",
+    "subject": 2,
+    "topic": "CROSS JOIN",
+    "q": "EMP에 4행, DEPT에 3행이 있을 때 다음 SQL의 결과 행 수는?",
+    "code": "SELECT *\n  FROM EMP, DEPT;",
+    "options": [
+      "12",
+      "7",
+      "4",
+      "3"
+    ],
+    "answer": 1,
+    "exp": "WHERE에 조인 조건이 없으면 EMP의 각 행이 DEPT의 모든 행과 짝을 지어 4 × 3 = 12행입니다.",
+    "why": [
+      "",
+      "두 테이블의 행 수를 더한 값입니다. 카티션 곱은 행 수를 곱합니다.",
+      "EMP 기준으로 짝이 하나씩만 생긴다고 본 경우입니다. 조인 조건이 없으면 DEPT의 3행과 모두 짝을 짓습니다.",
+      "DEPT의 행 수입니다. EMP 4행 각각에 대해 3행씩 생깁니다."
+    ],
+    "check": {
+      "setup": "CREATE TABLE EMP (EMPNO INT); CREATE TABLE DEPT (DEPTNO INT); INSERT INTO EMP VALUES (1), (2), (3), (4); INSERT INTO DEPT VALUES (10), (20), (30);",
+      "sql": "SELECT COUNT(*) FROM EMP, DEPT"
+    }
+  },
+  {
+    "id": "t25-2",
+    "trap": "t25",
+    "unit": "join",
+    "freq": "high",
+    "subject": 2,
+    "topic": "CROSS JOIN",
+    "q": "EMP에 4행, DEPT의 DEPTNO가 10, 20, 30일 때 다음 SQL의 결과 행 수는?",
+    "code": "SELECT *\n  FROM EMP CROSS JOIN DEPT\n WHERE DEPT.DEPTNO = 10;",
+    "options": [
+      "12",
+      "3",
+      "4",
+      "1"
+    ],
+    "answer": 3,
+    "exp": "CROSS JOIN으로 12행이 만들어진 뒤 WHERE가 DEPTNO 10인 행만 남깁니다. EMP 4행 각각이 10번 부서와 짝지은 4행입니다.",
+    "why": [
+      "WHERE를 적용하기 전의 행 수입니다.",
+      "DEPT의 행 수입니다. WHERE는 그중 10번 부서만 남기고, 그 1행이 EMP 4행과 짝을 짓습니다.",
+      "",
+      "DEPT에서 10번 부서만 센 경우입니다. 그 행이 EMP 4행과 각각 짝을 지어 4행이 됩니다."
+    ],
+    "check": {
+      "setup": "CREATE TABLE EMP (EMPNO INT); CREATE TABLE DEPT (DEPTNO INT); INSERT INTO EMP VALUES (1), (2), (3), (4); INSERT INTO DEPT VALUES (10), (20), (30);",
+      "sql": "SELECT COUNT(*) FROM EMP CROSS JOIN DEPT WHERE DEPT.DEPTNO = 10"
+    }
+  },
+  {
+    "id": "t26-1",
+    "trap": "t26",
+    "unit": "select",
+    "freq": "high",
+    "subject": 2,
+    "topic": "LIKE",
+    "q": "T의 NAME 값이 'A', 'AB', 'ABC', 'BA'일 때 다음 SQL의 결과는?",
+    "code": "SELECT COUNT(*)\n  FROM T\n WHERE NAME LIKE 'A_';",
+    "options": [
+      "3",
+      "2",
+      "0",
+      "1"
+    ],
+    "answer": 4,
+    "exp": "_는 정확히 한 글자이므로 'A_'는 A 뒤에 딱 한 글자가 오는 두 글자 값, 즉 'AB'만 맞습니다.",
+    "why": [
+      "'A%'의 결과입니다. _는 %와 달리 글자 수를 하나로 고정합니다.",
+      "_를 0글자 또는 1글자로 본 경우입니다. _는 반드시 한 글자가 있어야 하므로 'A'는 맞지 않습니다.",
+      "'AB'는 A 다음에 한 글자 B가 있어 'A_'에 맞습니다.",
+      ""
+    ],
+    "check": {
+      "setup": "CREATE TABLE T (NAME VARCHAR); INSERT INTO T VALUES ('A'), ('AB'), ('ABC'), ('BA');",
+      "sql": "SELECT COUNT(*) FROM T WHERE NAME LIKE 'A_'"
+    }
+  },
+  {
+    "id": "t26-2",
+    "trap": "t26",
+    "unit": "select",
+    "freq": "high",
+    "subject": 2,
+    "topic": "LIKE",
+    "q": "T의 NAME 값이 'KAI', 'LA', 'A', 'BAA', 'ABA'일 때 다음 SQL의 결과는?",
+    "code": "SELECT COUNT(*)\n  FROM T\n WHERE NAME LIKE '_A%';",
+    "options": [
+      "5",
+      "3",
+      "1",
+      "2"
+    ],
+    "answer": 2,
+    "exp": "'_A%'는 첫 글자는 아무거나 한 글자, 두 번째 글자가 A인 값입니다. 'KAI', 'LA', 'BAA'가 맞아 3건입니다.",
+    "why": [
+      "'%A%'처럼 A가 어디든 들어 있는 값을 센 결과입니다.",
+      "",
+      "'_A'처럼 딱 두 글자인 값만 센 결과입니다. 뒤의 %가 있으면 세 번째 글자부터는 아무 글자나 와도 됩니다.",
+      "'A%'처럼 A로 시작하는 값을 센 결과입니다. 앞의 _ 때문에 A는 두 번째 글자여야 합니다."
+    ],
+    "check": {
+      "setup": "CREATE TABLE T (NAME VARCHAR); INSERT INTO T VALUES ('KAI'), ('LA'), ('A'), ('BAA'), ('ABA');",
+      "sql": "SELECT COUNT(*) FROM T WHERE NAME LIKE '_A%'"
+    }
+  },
+  {
+    "id": "t27-1",
+    "trap": "t27",
+    "unit": "select",
+    "freq": "high",
+    "subject": 2,
+    "topic": "날짜 연산",
+    "q": "Oracle에서 SYSDATE + 1/24가 뜻하는 시점은?",
+    "options": [
+      "지금부터 1일 뒤",
+      "지금부터 24일 뒤",
+      "지금부터 1시간 뒤",
+      "지금부터 1분 뒤"
+    ],
+    "answer": 3,
+    "exp": "날짜에 더하는 숫자 1은 하루입니다. 하루를 24로 나눈 1/24는 1시간입니다.",
+    "why": [
+      "SYSDATE + 1의 의미입니다.",
+      "1/24는 24일이 아니라 하루의 24분의 1입니다.",
+      "",
+      "1분은 하루를 24와 60으로 나눈 1/24/60(= 1/1440)입니다."
+    ]
+  },
+  {
+    "id": "t27-2",
+    "trap": "t27",
+    "unit": "select",
+    "freq": "high",
+    "subject": 2,
+    "topic": "날짜 연산",
+    "q": "Oracle에서 다음 SQL의 결과는?",
+    "code": "SELECT TO_DATE('2026-10-10', 'YYYY-MM-DD')\n     - TO_DATE('2026-10-03', 'YYYY-MM-DD')\n  FROM DUAL;",
+    "options": [
+      "8",
+      "7",
+      "6",
+      "오류가 발생한다"
+    ],
+    "answer": 2,
+    "exp": "날짜에서 날짜를 빼면 두 날짜 사이의 일수가 숫자로 나옵니다. 10일 - 3일 = 7입니다.",
+    "why": [
+      "시작일과 마지막 날을 모두 포함해 센 경우입니다. 날짜 빼기는 단순한 차이입니다.",
+      "",
+      "사이에 낀 날(4일~9일)만 센 경우입니다. 날짜 빼기는 단순한 차이입니다.",
+      "날짜끼리 빼는 것은 허용되며 결과는 일수(숫자)입니다. 날짜끼리 더하는 것은 오류입니다."
+    ],
+    "check": {
+      "sql": "SELECT DATE '2026-10-10' - DATE '2026-10-03'"
+    }
+  },
+  {
+    "id": "t28-1",
+    "trap": "t28",
+    "unit": "manage",
+    "freq": "high",
+    "subject": 2,
+    "topic": "SAVEPOINT",
+    "q": "빈 테이블 T에 다음을 차례로 실행했다. 이후 SELECT COUNT(*) FROM T의 결과는?",
+    "code": "INSERT INTO T VALUES (1);\nSAVEPOINT SP1;\nINSERT INTO T VALUES (2);\nSAVEPOINT SP2;\nINSERT INTO T VALUES (3);\nROLLBACK TO SP1;\nCOMMIT;",
+    "options": [
+      "1",
+      "2",
+      "3",
+      "0"
+    ],
+    "answer": 1,
+    "exp": "ROLLBACK TO SP1은 SP1 뒤의 INSERT 2, 3을 취소합니다. SP1 앞의 INSERT 1은 남아 COMMIT으로 확정되므로 1건입니다.",
+    "why": [
+      "",
+      "ROLLBACK TO SP2였다면 2건입니다. SP1로 돌아가면 SP2 앞의 INSERT 2도 취소됩니다.",
+      "ROLLBACK TO도 취소는 합니다. SP1 뒤의 두 INSERT가 취소됩니다.",
+      "저장점 없이 ROLLBACK만 썼을 때의 결과입니다. ROLLBACK TO SP1은 SP1 앞의 INSERT 1을 남깁니다."
+    ],
+    "check": {
+      "db": "sqlite",
+      "setup": "CREATE TABLE T (C INT); BEGIN; INSERT INTO T VALUES (1); SAVEPOINT SP1; INSERT INTO T VALUES (2); SAVEPOINT SP2; INSERT INTO T VALUES (3); ROLLBACK TO SP1; COMMIT;",
+      "sql": "SELECT COUNT(*) FROM T"
+    }
+  },
+  {
+    "id": "t28-2",
+    "trap": "t28",
+    "unit": "manage",
+    "freq": "high",
+    "subject": 2,
+    "topic": "SAVEPOINT",
+    "q": "빈 테이블 T에 다음을 차례로 실행했다. 이후 SELECT COUNT(*) FROM T의 결과는?",
+    "code": "INSERT INTO T VALUES (1);\nSAVEPOINT A;\nINSERT INTO T VALUES (2);\nSAVEPOINT A;\nINSERT INTO T VALUES (3);\nROLLBACK TO A;\nCOMMIT;",
+    "options": [
+      "1",
+      "3",
+      "0",
+      "2"
+    ],
+    "answer": 4,
+    "exp": "같은 이름으로 다시 만든 SAVEPOINT A가 앞의 것을 대신합니다. 그래서 ROLLBACK TO A는 두 번째 A 뒤의 INSERT 3만 취소하고, 1과 2가 남아 2건입니다.",
+    "why": [
+      "첫 번째 SAVEPOINT A로 돌아간다고 본 답입니다. 같은 이름의 저장점은 나중에 만든 것이 쓰입니다.",
+      "ROLLBACK TO A는 두 번째 A 뒤의 INSERT 3을 취소합니다.",
+      "저장점 없이 ROLLBACK만 썼을 때의 결과입니다.",
+      ""
+    ],
+    "check": {
+      "db": "sqlite",
+      "setup": "CREATE TABLE T (C INT); BEGIN; INSERT INTO T VALUES (1); SAVEPOINT A; INSERT INTO T VALUES (2); SAVEPOINT A; INSERT INTO T VALUES (3); ROLLBACK TO A; COMMIT;",
+      "sql": "SELECT COUNT(*) FROM T"
+    }
+  },
+  {
+    "id": "t29-1",
+    "trap": "t29",
+    "unit": "manage",
+    "freq": "high",
+    "subject": 2,
+    "topic": "권한 회수",
+    "q": "Oracle에서 A가 B에게 EMP 테이블의 SELECT 권한을 WITH GRANT OPTION으로 주었고, B가 C에게 같은 권한을 주었다. 이후 A가 B의 권한을 REVOKE하면?",
+    "options": [
+      "B만 권한을 잃고 C는 그대로 유지된다.",
+      "B와 C 모두 권한을 잃는다.",
+      "C만 권한을 잃고 B는 그대로 유지된다.",
+      "C의 권한을 먼저 회수하지 않으면 오류가 발생한다."
+    ],
+    "answer": 2,
+    "exp": "WITH GRANT OPTION으로 받은 객체 권한을 회수하면, 그 사람이 다시 준 권한도 연쇄로 회수됩니다.",
+    "why": [
+      "시스템 권한을 WITH ADMIN OPTION으로 준 경우의 결과입니다. 객체 권한의 GRANT OPTION은 연쇄로 회수됩니다.",
+      "",
+      "REVOKE 대상은 B이므로 B는 반드시 권한을 잃습니다.",
+      "C에게 준 권한이 남아 있어도 B의 권한 회수는 오류 없이 실행되고, C의 권한까지 함께 회수됩니다."
+    ]
+  },
+  {
+    "id": "t29-2",
+    "trap": "t29",
+    "unit": "manage",
+    "freq": "high",
+    "subject": 2,
+    "topic": "권한 회수",
+    "q": "Oracle에서 A가 B에게 CREATE TABLE 시스템 권한을 WITH ADMIN OPTION으로 주었고, B가 C에게 같은 권한을 주었다. 이후 A가 B의 권한을 REVOKE하면?",
+    "options": [
+      "B만 권한을 잃고 C는 그대로 유지된다.",
+      "B와 C 모두 권한을 잃는다.",
+      "C만 권한을 잃고 B는 그대로 유지된다.",
+      "C의 권한을 먼저 회수하지 않으면 오류가 발생한다."
+    ],
+    "answer": 1,
+    "exp": "WITH ADMIN OPTION으로 준 시스템 권한은 회수해도 연쇄로 회수되지 않습니다. B만 잃고 C의 권한은 남습니다. C의 권한을 없애려면 C에게서 따로 회수해야 합니다.",
+    "why": [
+      "",
+      "객체 권한을 WITH GRANT OPTION으로 준 경우의 결과입니다. 시스템 권한의 ADMIN OPTION은 연쇄 회수가 없습니다.",
+      "REVOKE 대상은 B이므로 B는 반드시 권한을 잃습니다.",
+      "C에게 준 권한이 남아 있어도 B의 권한 회수는 오류 없이 실행됩니다."
+    ]
+  },
+  {
+    "id": "t30-1",
+    "trap": "t30",
+    "unit": "key",
+    "freq": "high",
+    "subject": 1,
+    "topic": "식별 관계",
+    "q": "부모 엔터티의 주식별자를 자식 엔터티가 자기 주식별자의 일부로 상속받는 관계는?",
+    "options": [
+      "비식별 관계",
+      "자기 참조(재귀) 관계",
+      "배타 관계",
+      "식별 관계"
+    ],
+    "answer": 4,
+    "exp": "부모의 주식별자가 자식의 주식별자 일부가 되면 식별 관계입니다. 자식은 부모 없이 존재할 수 없는 강한 연결입니다.",
+    "why": [
+      "비식별 관계는 부모의 주식별자를 자식의 일반 속성(외래키)으로만 받습니다.",
+      "한 엔터티가 자기 자신과 맺는 관계로, 사원과 관리자처럼 같은 엔터티 안의 연결입니다.",
+      "자식이 여러 부모 중 하나와만 관계를 맺는 경우입니다.",
+      ""
+    ]
+  },
+  {
+    "id": "t30-2",
+    "trap": "t30",
+    "unit": "key",
+    "freq": "high",
+    "subject": 1,
+    "topic": "식별 관계",
+    "q": "비식별 관계에 대한 설명으로 옳은 것은?",
+    "options": [
+      "자식의 주식별자 컬럼 수가 부모보다 늘어난다.",
+      "자식은 반드시 부모가 있어야만 생성될 수 있다.",
+      "부모의 주식별자가 자식의 일반 속성(외래키)으로 상속된다.",
+      "IE 표기법에서 실선으로 표기한다."
+    ],
+    "answer": 3,
+    "exp": "비식별 관계에서는 부모의 주식별자가 자식의 주식별자가 아닌 일반 속성으로 들어갑니다. 그래서 자식의 주식별자는 늘어나지 않고, 외래키가 NULL이면 부모 없이도 존재할 수 있습니다.",
+    "why": [
+      "식별 관계가 이어질 때 생기는 현상입니다. 비식별 관계는 부모 키가 주식별자에 들어가지 않습니다.",
+      "부모 없이 존재할 수 없는 강한 연결은 식별 관계의 특징입니다.",
+      "",
+      "IE 표기법에서 실선은 식별 관계, 비식별 관계는 점선입니다."
+    ]
   }
 ]);
