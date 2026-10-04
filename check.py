@@ -10,7 +10,7 @@ import sqlite3
 import duckdb
 
 src = subprocess.run(["node", "-e", "global.window={};require('./questions.js');"
-                      "console.log(JSON.stringify({u:window.SQLD_UNITS,q:window.SQLD_QUESTIONS,t:window.SQLD_TRAPS||[]}))"],
+                      "console.log(JSON.stringify({u:window.SQLD_UNITS,q:window.SQLD_QUESTIONS,t:window.SQLD_TRAPS||[],s:window.SQLD_STUDY||[]}))"],
                      capture_output=True, text=True, check=True, cwd=sys.path[0]).stdout
 data = json.loads(src)
 units = {u["id"]: u for u in data["u"]}
@@ -94,6 +94,46 @@ for q in qs:
         checked += 1
     except Exception as e:
         errors.append(f"{where}: 실행 오류 {str(e).splitlines()[0]}")
+
+# 공부 탭 예시: 화면에 보여 주는 표(data)로 DB를 만들고 SQL을 실행해서 결과 표(out)와 칸 이름·값이 같은지 확인
+# (Oracle의 MINUS는 DuckDB 문법인 EXCEPT로 바꿔 실행, DUAL은 한 줄짜리 표로 만들어 둠)
+def study(ex):
+    sqlite = ex.get("db") == "sqlite"
+    c = sqlite3.connect(":memory:") if sqlite else duckdb.connect()
+    if not sqlite: c.execute(ORACLE)
+    tables = {"DUAL": {"cols": ["DUMMY"], "rows": [["X"]]}, **ex["data"]}
+    for name, t in tables.items():
+        types = ["INTEGER" if any(isinstance(r[i], int) for r in t["rows"]) else "VARCHAR" for i in range(len(t["cols"]))]
+        c.execute(f"CREATE TABLE {name} ({', '.join(f'{k} {v}' for k, v in zip(t['cols'], types))})")
+        if t["rows"]: c.executemany(f"INSERT INTO {name} VALUES ({', '.join('?' * len(t['cols']))})", t["rows"])
+    if sqlite: c.commit()
+    sql = re.sub(r"\bMINUS\b", "EXCEPT", ex["sql"])
+    parts = [x for x in sql.split(";") if x.strip()] + ([ex["after"]] if ex.get("after") else [])
+    for x in parts[:-1]: c.execute(x)
+    cur = c.execute(parts[-1])
+    rows, cols = [list(map(cell, r)) for r in cur.fetchall()], [d[0] for d in cur.description]
+    want = [list(map(cell, r)) for r in ex["out"]["rows"]]
+    flat = parts[-1]
+    while re.search(r"\([^()]*\)", flat): flat = re.sub(r"\([^()]*\)", "", flat)
+    if "ORDER BY" not in flat.upper(): rows, want = sorted(rows), sorted(want) # 정렬하지 않은 결과는 순서 상관없이 비교
+    return cols == ex["out"]["cols"] and rows == want, f"{cols} {rows}"
+
+ran = 0
+for l in data["s"]:
+    if l.get("unit") not in units: errors.append(f"공부 {l['id']}: 없는 대제목 {l.get('unit')}")
+    for k, ex in enumerate(l["ex"]):
+        for name, t in {**ex["data"], **({"out": ex["out"]} if "out" in ex else {})}.items():
+            if any(len(r) != len(t["cols"]) for r in t["rows"]): errors.append(f"공부 {l['id']} 예시 {k + 1}: {name} 칸 수가 안 맞음")
+        if "out" not in ex:
+            if ex.get("after"): errors.append(f"공부 {l['id']} 예시 {k + 1}: after에는 out이 필요함")
+            continue
+        try:
+            ok, got = study(ex)
+            if not ok: errors.append(f"공부 {l['id']} 예시 {k + 1}: 실행 결과 {got} ≠ out")
+            ran += 1
+        except Exception as e:
+            errors.append(f"공부 {l['id']} 예시 {k + 1}: 실행 오류 {str(e).splitlines()[0]}")
+print(f"공부 탭: {len(data['s'])}개 설명, 예시 {ran}개 실행 확인")
 
 # 문항 수와 정답 번호 분포
 sets = collections.defaultdict(list)

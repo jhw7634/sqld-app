@@ -55,11 +55,16 @@ details.card > summary { list-style:none; } details.card > summary::-webkit-deta
 .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:.25rem; text-align:center; }
 .stats .big { font-size:1.35rem; }
 .count { flex:none; font-weight:700; color:var(--accent); font-variant-numeric:tabular-nums; }
-.tabs { display:grid; grid-template-columns:repeat(4,1fr); gap:.25rem; padding:.3rem; background:var(--line); border-radius:1rem; }
+.tabs { display:grid; grid-template-columns:repeat(5,1fr); gap:.25rem; padding:.3rem; background:var(--line); border-radius:1rem; }
 .tabs button { border:0; background:none; padding:.65rem .4rem; text-align:center; font-weight:700; color:var(--muted); border-radius:.75rem; }
 .tabs [aria-selected="true"] { background:var(--card); color:var(--ink); box-shadow:0 1px 3px #0003; }
 .bar { position:sticky; top:env(safe-area-inset-top, 0px); z-index:1; background:var(--bg); padding-block:.3rem; justify-content:space-between; }
 .timer { font-weight:800; font-size:1.15rem; font-variant-numeric:tabular-nums; }
+.scroll { overflow-x:auto; }
+table { border-collapse:collapse; font-size:.95rem; white-space:nowrap; }
+caption { text-align:left; font-weight:700; padding-bottom:.25rem; }
+th, td { border:1px solid var(--line); padding:.3rem .7rem; text-align:left; }
+th { background:var(--accent-soft); }
 .sheet { display:grid; grid-template-columns:repeat(5,1fr); gap:.45rem; }
 .sheet button { padding:.45rem 0; text-align:center; font-weight:700; line-height:1.3; }
 .sheet small { display:block; font-weight:400; color:var(--muted); }
@@ -77,6 +82,7 @@ if (/KAKAOTALK/i.test(navigator.userAgent)) location.href = "kakaotalk://web/ope
 const BANK = window.SQLD_QUESTIONS || [], UNITS = window.SQLD_UNITS || [];
 const byId = Object.fromEntries(BANK.map(q => [q.id, q]));
 const PRACTICE = BANK.filter(q => !q.exam && !q.trap);
+const STUDY = window.SQLD_STUDY || []; // 공부 탭: 쉬운 SQL 설명과 실행해 본 예시
 const TRAPS = window.SQLD_TRAPS || [], TRAPQ = BANK.filter(q => q.trap); // 함정 요약 20장과 함정마다 2문제
 const EXAM = n => BANK.filter(q => q.exam === n).sort((a, b) => a.subject - b.subject); // 실제 시험처럼 1과목 먼저
 const EXAM_MIN = 90;
@@ -91,7 +97,7 @@ const more = q => (q.why ? `<div class="why"><span class="muted">다른 보기 �
 const clock = ms => { const t = Math.max(0, Math.ceil(ms / 1000)); return `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`; };
 
 // 이 브라우저에만 저장: 연습 통계(stats, last), 오답(wrong), 실전 기록(exams), 푸는 중인 실전(runs)
-const store = { wrong: {}, stats: { 1: { s: 0, c: 0 }, 2: { s: 0, c: 0 } }, last: {}, exams: {}, runs: {}, tab: "practice" };
+const store = { wrong: {}, stats: { 1: { s: 0, c: 0 }, 2: { s: 0, c: 0 } }, last: {}, exams: {}, runs: {}, tab: "study" };
 try { Object.assign(store, JSON.parse(localStorage.getItem(KEY))); } catch (e) {}
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} };
 const reviewIds = () => Object.keys(store.wrong).filter(id => byId[id]); // 다시보기: 한 번이라도 틀린 문제
@@ -126,16 +132,16 @@ function dock(html, handlers, cls = "") {
   fit();
 }
 
-// ---------- 첫 화면: 연습 / 함정 / 실전 1 / 실전 2 ----------
+// ---------- 첫 화면: 공부 / 연습 / 함정 / 실전 1 / 실전 2 ----------
 function home() {
   [1, 2].forEach(n => store.runs[n] && Date.now() >= store.runs[n].endAt && finish(n, true));
   const tab = store.tab;
   show(`
     <div class="row" style="justify-content:space-between"><h1>SQLD <span style="color:var(--accent)">오답킬러</span></h1></div>
     <div class="tabs" role="tablist">
-      ${[["practice", "연습"], ["trap", "함정"], ["1", "실전 1"], ["2", "실전 2"]].map(([k, l]) => `<button role="tab" data-tab="${k}" aria-selected="${tab === k}">${l}</button>`).join("")}
+      ${[["study", "공부"], ["practice", "연습"], ["trap", "함정"], ["1", "실전 1"], ["2", "실전 2"]].map(([k, l]) => `<button role="tab" data-tab="${k}" aria-selected="${tab === k}">${l}</button>`).join("")}
     </div>
-    ${tab === "practice" ? practiceHome() : tab === "trap" ? trapHome() : examHome(+tab)}`, {
+    ${tab === "study" ? studyHome() : tab === "practice" ? practiceHome() : tab === "trap" ? trapHome() : examHome(+tab)}`, {
     "[data-tab]": b => { store.tab = b.dataset.tab; save(); home(); },
     "#notes": () => notes("wrong"),
     "#review": () => notes("review"),
@@ -164,6 +170,30 @@ function practiceHome() {
     <div class="row" style="justify-content:space-between;margin-top:.4rem"><h2>단원별로 풀기</h2><button id="all" class="chip">전체 ${PRACTICE.length}문제</button></div>
     ${[1, 2].map(k => `<h3 class="muted" style="margin:0">${k === 1 ? "1과목 · 데이터 모델링의 이해" : "2과목 · SQL 기본과 활용"}</h3>
       ${UNITS.filter(u => u.subject === k).map(unitCard).join("")}`).join("")}`;
+}
+
+// 공부: 묶음별 설명 카드. 열면 쉬운 설명, 예시 표, SQL, 실행 결과
+const grid = (t, name) => `<div class="scroll"><table>${name ? `<caption>${esc(name)}</caption>` : ""}<tr>${t.cols.map(c => `<th>${esc(c)}</th>`).join("")}</tr>
+  ${t.rows.length ? t.rows.map(r => `<tr>${r.map(v => (v === null ? '<td class="muted">NULL</td>' : `<td>${esc(v)}</td>`)).join("")}</tr>`).join("") : `<tr><td class="muted" colspan="${t.cols.length}">결과 없음 (0줄)</td></tr>`}</table></div>`;
+function studyHome() {
+  return `
+    <p class="muted">SQL을 처음부터 쉽게 정리했어요. 제목을 누르면 설명이 열려요. 예시 결과는 모두 실제로 실행해서 확인했어요.</p>
+    ${[...new Set(STUDY.map(l => l.part))].map(part => `<h3 class="muted" style="margin:.4rem 0 0">${esc(part)}</h3>
+    ${STUDY.filter(l => l.part === part).map(l => `
+    <details class="card">
+      <summary style="cursor:pointer"><strong><span style="color:var(--accent)">${STUDY.indexOf(l) + 1}.</span> ${esc(l.title)}</strong><br><span class="muted">${esc(l.sum)}</span></summary>
+      <div class="stack" style="margin-top:.8rem">
+        ${l.body.map(p => `<p>${esc(p)}</p>`).join("")}
+        ${l.ex.map(e => `<div class="stack" style="border-top:1px dashed var(--line);padding-top:.8rem">
+          <strong>${esc(e.say)}</strong>
+          ${Object.entries(e.data).map(([n, t]) => grid(t, n)).join("")}
+          <pre>${esc(e.sql)}</pre>
+          ${e.out ? grid(e.out, e.after ? "실행한 뒤 표" : "결과") : ""}
+        </div>`).join("")}
+        ${l.tip ? `<p class="card" style="background:var(--accent-soft);border:0"><strong>시험 포인트</strong><br>${esc(l.tip)}</p>` : ""}
+        <button data-unit="${l.unit}" class="center">관련 연습 문제 풀기</button>
+      </div>
+    </details>`).join("")}`).join("")}`;
 }
 
 // 함정: 요약을 읽고 바로 그 함정 2문제로 확인. 정답률은 연습과 따로 (stats.t)
