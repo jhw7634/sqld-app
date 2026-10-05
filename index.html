@@ -56,7 +56,7 @@ details.card > summary, .part > summary { list-style:none; } details.card > summ
 .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:.25rem; text-align:center; }
 .stats .big { font-size:1.35rem; }
 .count { flex:none; font-weight:700; color:var(--accent); font-variant-numeric:tabular-nums; }
-.tabs { display:grid; grid-template-columns:repeat(5,1fr); gap:.25rem; padding:.3rem; background:var(--line); border-radius:1rem; }
+.tabs { display:grid; grid-template-columns:repeat(4,1fr); gap:.25rem; padding:.3rem; background:var(--line); border-radius:1rem; }
 .tabs button { border:0; background:none; padding:.65rem .4rem; text-align:center; font-weight:700; color:var(--muted); border-radius:.75rem; }
 .tabs [aria-selected="true"] { background:var(--card); color:var(--ink); box-shadow:0 1px 3px #0003; }
 .bar { position:sticky; top:env(safe-area-inset-top, 0px); z-index:1; background:var(--bg); padding-block:.3rem; justify-content:space-between; }
@@ -133,16 +133,17 @@ function dock(html, handlers, cls = "") {
   fit();
 }
 
-// ---------- 첫 화면: 이론 / 연습 / 함정 / 실전 1 / 실전 2 ----------
+// ---------- 첫 화면: 이론 / 연습 / 함정 / 실전 (실전 1 아래 실전 2) ----------
 function home() {
   [1, 2].forEach(n => store.runs[n] && Date.now() >= store.runs[n].endAt && finish(n, true));
+  if (store.tab === "1" || store.tab === "2") store.tab = "exam"; // 예전 실전 1·2 탭은 합친 실전 탭으로
   const tab = store.tab;
   show(`
     <div class="row" style="justify-content:space-between"><h1>SQLD <span style="color:var(--accent)">오답킬러</span></h1></div>
     <div class="tabs" role="tablist">
-      ${[["study", "이론"], ["practice", "연습"], ["trap", "함정"], ["1", "실전 1"], ["2", "실전 2"]].map(([k, l]) => `<button role="tab" data-tab="${k}" aria-selected="${tab === k}">${l}</button>`).join("")}
+      ${[["study", "이론"], ["practice", "연습"], ["trap", "함정"], ["exam", "실전"]].map(([k, l]) => `<button role="tab" data-tab="${k}" aria-selected="${tab === k}">${l}</button>`).join("")}
     </div>
-    ${tab === "study" ? studyHome() : tab === "practice" ? practiceHome() : tab === "trap" ? trapHome() : examHome(+tab)}`, {
+    ${tab === "study" ? studyHome() : tab === "practice" ? practiceHome() : tab === "trap" ? trapHome() : examHome(1) + examHome(2)}`, {
     "[data-tab]": b => { store.tab = b.dataset.tab; save(); home(); },
     "#notes": () => notes("wrong"),
     "#review": () => notes("review"),
@@ -151,9 +152,9 @@ function home() {
     "[data-unit]": b => { prefs.unit = b.dataset.unit; list(); },
     "#tgo": () => { const todo = TRAPQ.filter(q => !(q.id in store.last)); start(todo.length ? todo : shuffle(TRAPQ), false); },
     "[data-trap]": b => start(TRAPQ.filter(q => q.trap === b.dataset.trap), false),
-    "#start": () => startExam(+tab, !store.runs[tab]),
-    "#restart": () => startExam(+tab, true),
-    "#result": () => review(+tab),
+    "[data-start]": b => { const n = +b.dataset.start; startExam(n, !store.runs[n]); },
+    "[data-restart]": b => startExam(+b.dataset.restart, true),
+    "[data-result]": b => review(+b.dataset.result),
   });
 }
 
@@ -226,7 +227,7 @@ function examHome(n) {
   const n1 = qs.filter(q => q.subject === 1).length;
   if (!qs.length) return `<p class="card muted center">실전 모의고사 ${n} 문제를 준비하고 있어요.</p>`;
   return `
-    <div class="card stack">
+    <div class="card stack"${n > 1 ? ' style="margin-top:1.2rem"' : ""}>
       <h2>실전 모의고사 ${n}</h2>
       <div class="stats" style="grid-template-columns:repeat(3,1fr)">
         <div><div class="big">${qs.length}</div><span class="muted">문항</span></div>
@@ -240,9 +241,9 @@ function examHome(n) {
       <div><div class="big">${rec.best}</div><span class="muted">최고 점수</span></div>
       <div><div class="big">${rec.count}회</div><span class="muted">응시</span></div>
     </div>` : ""}
-    <button id="start" class="main">${run ? `이어서 풀기 · 남은 시간 ${clock(run.endAt - Date.now())}` : rec ? "다시 응시하기" : "시험 시작"}</button>
-    ${run ? `<button id="restart" class="center">처음부터 다시 풀기</button>` : ""}
-    ${rec ? `<button id="result" class="center">지난 결과와 해설 보기</button>` : ""}`;
+    <button data-start="${n}" class="main">${run ? `이어서 풀기 · 남은 시간 ${clock(run.endAt - Date.now())}` : rec ? "다시 응시하기" : "시험 시작"}</button>
+    ${run ? `<button data-restart="${n}" class="center">처음부터 다시 풀기</button>` : ""}
+    ${rec ? `<button data-result="${n}" class="center">지난 결과와 해설 보기</button>` : ""}`;
 }
 
 // ---------- 연습 ----------
