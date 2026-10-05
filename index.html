@@ -257,7 +257,7 @@ function examHome(n) {
     </details>`;
 }
 
-// 분석 (전체/연습/실전 골라 보기): 연습·함정·실전에서 고른 답(실전은 최근 제출)으로 정답률 막대. 낮은 단원부터, 점선은 합격선 60%
+// 분석 (전체/연습/함정/실전 골라 보기): 연습·함정·실전에서 고른 답(실전은 최근 제출)으로 정답률 막대. 낮은 단원부터, 점선은 합격선 60%
 const GOAL = 60;
 const hue = r => (r < GOAL ? 8 : 225); // 합격선 아래는 코랄, 넘으면 파랑
 const pbar = (r, h = ".8rem", c = hue(r)) => `<div class="pbar" style="height:${h};background:hsl(${c} 70% 55% / .12)"><i style="width:${r}%;background:linear-gradient(90deg, hsl(${c} 80% 60% / .15), hsl(${c} 75% 55% / ${(.25 + r / 200).toFixed(2)}))"></i><b style="left:${GOAL}%"></b></div>`; // 반투명 그라데이션
@@ -265,8 +265,8 @@ const prate = r => `<strong style="color:hsl(${hue(r)} 50% var(--pl))">${r}%</st
 function statHome() {
   const res = { ...store.last };
   [1, 2].forEach(n => { const a = store.exams[n]?.last?.answers || {}; EXAM(n).forEach(q => { if (a[q.id]) res[q.id] = a[q.id] === q.answer; }); });
-  const sf = prefs.stat || "all", pool = sf === "practice" ? PRACTICE : sf === "exam" ? BANK.filter(q => q.exam) : BANK;
-  const chips = [["all", "전체"], ["practice", "연습"], ["exam", "실전"]].map(([v, l]) => `<button class="chip" data-sf="${v}" aria-pressed="${sf === v}">${l}</button>`).join("");
+  const sf = prefs.stat || "all", pool = sf === "practice" ? PRACTICE : sf === "trap" ? TRAPQ : sf === "exam" ? BANK.filter(q => q.exam) : BANK;
+  const chips = [["all", "전체"], ["practice", "연습"], ["trap", "함정"], ["exam", "실전"]].map(([v, l]) => `<button class="chip" data-sf="${v}" aria-pressed="${sf === v}">${l}</button>`).join("");
   const tally = qs => { const d = qs.filter(q => q.id in res && pool.includes(q)); return { n: d.length, r: pct(d.filter(q => res[q.id]).length, d.length) }; };
   const all = tally(BANK);
   if (!all.n) return `<div class="row">${chips}</div><p class="card muted center">${sf === "exam" ? "실전 모의고사를 제출하면" : "문제를 풀면"} 여기에 단원별 정답률 그래프가 나와요.</p>`;
