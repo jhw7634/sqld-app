@@ -56,7 +56,7 @@ details.card > summary, .part > summary { list-style:none; } details.card > summ
 .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:.25rem; text-align:center; }
 .stats .big { font-size:1.35rem; }
 .count { flex:none; font-weight:700; color:var(--accent); font-variant-numeric:tabular-nums; }
-.pbar { position:relative; background:var(--line); border-radius:99px; } .pbar i { display:block; height:100%; border-radius:99px; } .pbar b { position:absolute; top:-3px; bottom:-3px; border-left:2px dashed var(--muted); }
+.pbar { position:relative; background:var(--line); border-radius:99px; } .pbar i { display:block; height:100%; border-radius:99px; } .pbar b { position:absolute; top:-3px; bottom:-3px; border-left:2px dashed var(--muted); opacity:.6; }
 .pline { display:block; width:100%; text-align:left; background:none; border:0; padding:.45rem 0; color:inherit; font:inherit; }
 .tabs { display:grid; grid-template-columns:repeat(5,1fr); gap:.25rem; padding:.3rem; background:var(--line); border-radius:1rem; }
 .tabs button { border:0; background:none; padding:.65rem .4rem; text-align:center; font-weight:700; color:var(--muted); border-radius:.75rem; }
@@ -254,8 +254,8 @@ function examHome(n) {
 
 // 분석: 연습·함정·실전에서 고른 답(실전은 최근 제출)으로 정답률 막대. 낮은 단원부터, 점선은 합격선 60%
 const GOAL = 60;
-const hue = r => Math.round(Math.min(Math.max((r - 30) / 50, 0), 1) * 145); // 30% 이하 빨강 → 80% 이상 초록, 파스텔
-const pbar = (r, h = ".8rem") => `<div class="pbar" style="height:${h}"><i style="width:${r}%;background:hsl(${hue(r)} 65% 76%)"></i><b style="left:${GOAL}%"></b></div>`;
+const hue = r => Math.round(Math.min(Math.max((r - 30) / 50, 0), 1) * 145); // 30% 이하 빨강 → 80% 이상 초록
+const pbar = (r, h = ".8rem", c = hue(r)) => `<div class="pbar" style="height:${h};background:hsl(${c} 70% 55% / .12)"><i style="width:${r}%;background:linear-gradient(90deg, hsl(${c} 80% 60% / .2), hsl(${c} 75% 50% / .6))"></i><b style="left:${GOAL}%"></b></div>`; // 반투명 그라데이션
 const prate = r => `<strong style="color:hsl(${hue(r)} 50% var(--pl))">${r}%</strong>`;
 function statHome() {
   const res = { ...store.last };
