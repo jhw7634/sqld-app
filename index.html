@@ -190,9 +190,11 @@ const grid = (t, name) => `<div class="scroll"><table>${name ? `<caption>${esc(n
 const para = p => { const [lead, ...li] = p.split("\n"); return `<div><p>${esc(lead)}</p>${li.length ? `<ul class="pts">${li.map(x => { const k = x.indexOf(" : "); return `<li>${k > 0 ? `<strong>${esc(x.slice(0, k))}</strong> : ${esc(x.slice(k + 3))}` : esc(x)}</li>`; }).join("")}</ul>` : ""}</div>`; };
 function studyHome() {
   return `
-    ${[...new Set(STUDY.map(l => l.part))].map(part => { const ls = STUDY.filter(l => l.part === part); return `
+    ${[...new Set(STUDY.map(l => l.part))].map((part, i, all) => { const ls = STUDY.filter(l => l.part === part), [subj, name] = part.includes(" · ") ? part.split(" · ") : ["", part];
+      const head = subj && subj !== all[i - 1]?.split(" · ")[0] ? `<h2 style="margin-top:.6rem">${esc(subj)}</h2>` : ""; // 과목 이름은 위 제목으로 한 번만
+      return `${head}
     <details class="part">
-      <summary class="card row" style="justify-content:space-between;flex-wrap:nowrap;cursor:pointer;background:var(--accent-soft);border-color:var(--accent-soft)"><strong>${esc(part)}</strong><span class="row" style="flex:none"><span class="count">${ls.length}개</span><span class="chev" aria-hidden="true">▾</span></span></summary>
+      <summary class="card row" style="justify-content:space-between;flex-wrap:nowrap;cursor:pointer;background:var(--accent-soft);border-color:var(--accent-soft)"><strong>${esc(name)}</strong><span class="row" style="flex:none"><span class="count">${ls.length}개</span><span class="chev" aria-hidden="true">▾</span></span></summary>
       <div class="stack" style="margin-top:.6rem">
     ${ls.map(l => `
     <details class="card">
