@@ -49,7 +49,7 @@ progress { width:100%; height:.7rem; accent-color:var(--ok); }
 #dock h2 { color:var(--ok); } #dock.bad h2 { color:var(--bad); }
 .exp { max-height:42vh; overflow-y:auto; line-height:1.75; }
 details.card > summary, .part > summary { list-style:none; } details.card > summary::-webkit-details-marker, .part > summary::-webkit-details-marker { display:none; }
-.part[open] > summary .chev { transform:rotate(180deg); }
+.part[open] > summary .chev, details.card[open] > summary .chev { transform:rotate(180deg); }
 .why { display:flex; flex-direction:column; gap:.7rem; margin-top:1.1rem; padding-top:1rem; border-top:1px dashed var(--line); }
 .split { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; }
 .back { border:0; padding:.3rem; background:none; font-size:1.3rem; }
@@ -233,24 +233,28 @@ function examHome(n) {
   const qs = EXAM(n), rec = store.exams[n], run = store.runs[n];
   const n1 = qs.filter(q => q.subject === 1).length;
   if (!qs.length) return `<p class="card muted center">실전 모의고사 ${n} 문제를 준비하고 있어요.</p>`;
+  const sub = run ? `<span style="color:var(--accent)">푸는 중 · 남은 시간 ${clock(run.endAt - Date.now())}</span>` : rec ? `최근 ${rec.last.score}점 · <span style="color:var(--${rec.last.pass ? "ok" : "bad"})">${rec.last.pass ? "합격" : "불합격"}</span>` : `${qs.length}문항 · ${EXAM_MIN}분`;
+  // 처음엔 회차 이름과 한 줄 상태만, 누르면 안내와 버튼
   return `
-    <div class="card stack"${n > 1 ? ' style="margin-top:1.2rem"' : ""}>
-      <h2>실전 모의고사 ${n}</h2>
-      <div class="stats" style="grid-template-columns:repeat(3,1fr)">
-        <div><div class="big">${qs.length}</div><span class="muted">문항</span></div>
-        <div><div class="big">${EXAM_MIN}분</div><span class="muted">시험 시간</span></div>
-        <div><div class="big">60점</div><span class="muted">합격</span></div>
+    <details class="card">
+      <summary class="row" style="justify-content:space-between;flex-wrap:nowrap;cursor:pointer"><span class="stack" style="gap:.1rem"><h2>실전 모의고사 ${n}</h2><span class="muted">${sub}</span></span><span class="chev" aria-hidden="true">▾</span></summary>
+      <div class="stack" style="margin-top:1rem">
+        <div class="stats" style="grid-template-columns:repeat(3,1fr)">
+          <div><div class="big">${qs.length}</div><span class="muted">문항</span></div>
+          <div><div class="big">${EXAM_MIN}분</div><span class="muted">시험 시간</span></div>
+          <div><div class="big">60점</div><span class="muted">합격</span></div>
+        </div>
+        <p class="muted">1과목 ${n1}문항(${n1 * 2}점), 2과목 ${qs.length - n1}문항(${(qs.length - n1) * 2}점)이고 과목별 40% 미만이면 과락이에요. 다 풀고 제출하면 한 번에 채점해요.</p>
+        ${rec ? `<div class="stats" style="grid-template-columns:repeat(3,1fr)">
+          <div><div class="big" style="color:var(--${rec.last.pass ? "ok" : "bad"})">${rec.last.score}</div><span class="muted">최근 점수</span></div>
+          <div><div class="big">${rec.best}</div><span class="muted">최고 점수</span></div>
+          <div><div class="big">${rec.count}회</div><span class="muted">응시</span></div>
+        </div>` : ""}
+        <button data-start="${n}" class="main">${run ? "이어서 풀기" : rec ? "다시 응시하기" : "시험 시작"}</button>
+        ${run ? `<button data-restart="${n}" class="center">처음부터 다시 풀기</button>` : ""}
+        ${rec ? `<button data-result="${n}" class="center">지난 결과와 해설 보기</button>` : ""}
       </div>
-      <p class="muted">1과목 ${n1}문항(${n1 * 2}점), 2과목 ${qs.length - n1}문항(${(qs.length - n1) * 2}점)이고 과목별 40% 미만이면 과락이에요. 다 풀고 제출하면 한 번에 채점해요.</p>
-    </div>
-    ${rec ? `<div class="card stats" style="grid-template-columns:repeat(3,1fr)">
-      <div><div class="big" style="color:var(--${rec.last.pass ? "ok" : "bad"})">${rec.last.score}</div><span class="muted">최근 점수 · ${rec.last.pass ? "합격" : "불합격"}</span></div>
-      <div><div class="big">${rec.best}</div><span class="muted">최고 점수</span></div>
-      <div><div class="big">${rec.count}회</div><span class="muted">응시</span></div>
-    </div>` : ""}
-    <button data-start="${n}" class="main">${run ? `이어서 풀기 · 남은 시간 ${clock(run.endAt - Date.now())}` : rec ? "다시 응시하기" : "시험 시작"}</button>
-    ${run ? `<button data-restart="${n}" class="center">처음부터 다시 풀기</button>` : ""}
-    ${rec ? `<button data-result="${n}" class="center">지난 결과와 해설 보기</button>` : ""}`;
+    </details>`;
 }
 
 // 분석 (전체/연습/실전 골라 보기): 연습·함정·실전에서 고른 답(실전은 최근 제출)으로 정답률 막대. 낮은 단원부터, 점선은 합격선 60%
