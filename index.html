@@ -48,7 +48,8 @@ progress { width:100%; height:.7rem; accent-color:var(--ok); }
 #dock.ok .main { background:var(--ok); border-color:var(--ok); } #dock.bad .main { background:var(--bad); border-color:var(--bad); }
 #dock h2 { color:var(--ok); } #dock.bad h2 { color:var(--bad); }
 .exp { max-height:42vh; overflow-y:auto; line-height:1.75; }
-details.card > summary { list-style:none; } details.card > summary::-webkit-details-marker { display:none; }
+details.card > summary, .part > summary { list-style:none; } details.card > summary::-webkit-details-marker, .part > summary::-webkit-details-marker { display:none; }
+.part[open] > summary .chev { transform:rotate(180deg); }
 .why { display:flex; flex-direction:column; gap:.7rem; margin-top:1.1rem; padding-top:1rem; border-top:1px dashed var(--line); }
 .split { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; }
 .back { border:0; padding:.3rem; background:none; font-size:1.3rem; }
@@ -177,9 +178,12 @@ const grid = (t, name) => `<div class="scroll"><table>${name ? `<caption>${esc(n
   ${t.rows.length ? t.rows.map(r => `<tr>${r.map(v => (v === null ? '<td class="muted">NULL</td>' : `<td>${esc(v)}</td>`)).join("")}</tr>`).join("") : `<tr><td class="muted" colspan="${t.cols.length}">결과 없음 (0줄)</td></tr>`}</table></div>`;
 function studyHome() {
   return `
-    <p class="muted">1과목 이론과 2과목 SQL을 처음부터 쉽게 정리했어요. 제목을 누르면 설명이 열려요.</p>
-    ${[...new Set(STUDY.map(l => l.part))].map(part => `<h3 class="muted" style="margin:.4rem 0 0">${esc(part)}</h3>
-    ${STUDY.filter(l => l.part === part).map(l => `
+    <p class="muted">1과목 이론과 2과목 SQL을 처음부터 쉽게 정리했어요. 큰 제목을 누르면 목록이, 각 제목을 누르면 설명이 열려요.</p>
+    ${[...new Set(STUDY.map(l => l.part))].map(part => { const ls = STUDY.filter(l => l.part === part); return `
+    <details class="part">
+      <summary class="card row" style="justify-content:space-between;flex-wrap:nowrap;cursor:pointer;background:var(--accent-soft);border-color:var(--accent-soft)"><strong>${esc(part)}</strong><span class="row" style="flex:none"><span class="count">${ls.length}개</span><span class="chev" aria-hidden="true">▾</span></span></summary>
+      <div class="stack" style="margin-top:.6rem">
+    ${ls.map(l => `
     <details class="card">
       <summary style="cursor:pointer"><strong><span style="color:var(--accent)">${STUDY.indexOf(l) + 1}.</span> ${esc(l.title)}</strong><br><span class="muted">${esc(l.sum)}</span></summary>
       <div class="stack" style="margin-top:.8rem">
@@ -192,7 +196,9 @@ function studyHome() {
         </div>`).join("")}
         ${l.tip ? `<p class="card" style="background:var(--accent-soft);border:0"><strong>시험 포인트</strong><br>${esc(l.tip)}</p>` : ""}
       </div>
-    </details>`).join("")}`).join("")}`;
+    </details>`).join("")}
+      </div>
+    </details>`; }).join("")}`;
 }
 
 // 함정: 요약을 읽고 바로 그 함정 2문제로 확인. 정답률은 연습과 따로 (stats.t)
