@@ -101,11 +101,12 @@ const ans = (q, n) => `${C[n - 1]} ${esc(q.options[n - 1])}`;
 const more = q => (q.why ? `<div class="why"><span class="muted">다른 보기 풀이</span>${q.options.map((o, k) => (q.why[k] ? `<p><strong>${C[k]} ${esc(o)}</strong><br>${esc(q.why[k])}</p>` : "")).join("")}</div>` : "");
 const clock = ms => { const t = Math.max(0, Math.ceil(ms / 1000)); return `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`; };
 
-// 이 브라우저에만 저장: 연습 통계(stats, last), 오답(wrong), 실전 기록(exams), 푸는 중인 실전(runs)
-const store = { wrong: {}, stats: { 1: { s: 0, c: 0 }, 2: { s: 0, c: 0 } }, last: {}, exams: {}, runs: {}, tab: "study" };
+// 이 브라우저에만 저장: 연습 통계(stats, last), 오답(wrong), 맞혀도 다시 볼 문제(saved), 실전 기록(exams), 푸는 중인 실전(runs)
+const store = { saved: {}, wrong: {}, stats: { 1: { s: 0, c: 0 }, 2: { s: 0, c: 0 } }, last: {}, exams: {}, runs: {}, tab: "study" };
 try { Object.assign(store, JSON.parse(localStorage.getItem(KEY))); } catch (e) {}
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} };
 const reviewIds = () => Object.keys(store.wrong).filter(id => byId[id]); // 다시보기: 한 번이라도 틀린 문제
+const savedIds = () => Object.keys(store.saved).filter(id => byId[id]).sort((a, b) => store.saved[b] - store.saved[a]); // 저장: 맞혔지만 다음에 다시 볼 문제
 const wrongIds = () => reviewIds().filter(id => !store.wrong[id].cleared); // 오답노트: 아직 못 맞힌 문제
 
 const prefs = { status: "all", freq: "all" };
@@ -151,6 +152,7 @@ function home() {
     "[data-tab]": b => { store.tab = b.dataset.tab; save(); home(); },
     "#notes": () => notes("wrong"),
     "#review": () => notes("review"),
+    "#saved": () => notes("saved"),
     "#all": () => { prefs.unit = "all"; list(); },
     "#go": () => { const todo = PRACTICE.filter(q => !(q.id in store.last)); todo.length ? start(todo, false) : (prefs.unit = "all", list()); },
     "[data-unit]": b => { prefs.unit = b.dataset.unit; list(); },
@@ -174,6 +176,7 @@ function practiceHome() {
       <button id="go" class="main">${left ? (done ? `이어서 풀기 · 남은 ${left}문제` : "첫 문제 풀기") : "전체 문제 다시 보기"}</button>
     </div>
     <div class="split">${small("notes", "오답노트", wrongIds().length, "bad")}${small("review", "다시보기", reviewIds().length, "accent")}</div>
+    ${savedIds().length ? small("saved", "★ 저장한 문제", savedIds().length, "accent") : ""}
     <div class="row" style="justify-content:space-between;margin-top:.4rem"><h2>단원별로 풀기</h2><button id="all" class="chip">전체 ${PRACTICE.length}문제</button></div>
     ${[1, 2].map(k => `<h3 class="muted" style="margin:0">${k === 1 ? "1과목 · 데이터 모델링의 이해" : "2과목 · SQL 기본과 활용"}</h3>
       ${UNITS.filter(u => u.subject === k).map(unitCard).join("")}`).join("")}`;
@@ -367,8 +370,12 @@ function question() {
   const exp = `<strong>정답 ${ans(q, q.answer)}</strong><br>${esc(q.exp)}${more(q)}`;
   const next = () => { if (last) return result(); s.i++; s.picked = 0; s.checked = false; s.tried = []; question(); };
   if (!s.checked) return dock(`<button id="check" class="main" ${s.picked ? "" : "disabled"}>정답 확인</button>`, { "#check": check });
+  const kept = q.id in store.saved;
   if (s.ok) return dock(`<h2>정답이에요!</h2><div class="exp">${exp}</div>${note}
-    <button id="next" class="main">${last ? "결과 보기" : "다음 문제"}</button>`, { "#next": next }, "ok");
+    <div class="split"><button id="keep" class="center" aria-pressed="${kept}">${kept ? "★ 저장했어요" : "☆ 저장하고 다음에 보기"}</button><button id="next" class="main">${last ? "결과 보기" : "다음 문제"}</button></div>`, {
+    "#keep": () => { kept ? delete store.saved[q.id] : (store.saved[q.id] = Date.now()); save(); question(); },
+    "#next": next,
+  }, "ok");
   // 오답: 정답은 접어 두고, 같은 문제를 다시 풀거나 다음으로
   dock(`<h2>아쉬워요, 오답이에요</h2>${note}
     <details class="exp"><summary><strong>정답과 해설 보기</strong></summary>${exp}</details>
@@ -425,28 +432,29 @@ function result() {
 }
 
 function notes(mode) {
-  const review = mode === "review", ids = (review ? reviewIds() : wrongIds())
-    .sort((a, b) => store.wrong[b].count - store.wrong[a].count || store.wrong[b].at - store.wrong[a].at);
+  const review = mode === "review", saved = mode === "saved";
+  const ids = saved ? savedIds() : (review ? reviewIds() : wrongIds()).sort((a, b) => store.wrong[b].count - store.wrong[a].count || store.wrong[b].at - store.wrong[a].at);
   show(`
     <div class="row"><button id="back" aria-label="뒤로" class="back">←</button>
-      <button class="chip" data-mode="wrong" aria-pressed="${!review}">오답노트 ${wrongIds().length}</button>
-      <button class="chip" data-mode="review" aria-pressed="${review}">다시보기 ${reviewIds().length}</button></div>
-    <p class="muted">${review ? "한 번이라도 틀린 문제는 맞혀도 여기에 남아요." : "다시 풀어서 맞히면 오답노트에서 빠지고, 다시보기에는 남아요."}</p>
+      <button class="chip" data-mode="wrong" aria-pressed="${mode === "wrong"}">오답노트 ${wrongIds().length}</button>
+      <button class="chip" data-mode="review" aria-pressed="${review}">다시보기 ${reviewIds().length}</button>
+      <button class="chip" data-mode="saved" aria-pressed="${saved}">저장 ${savedIds().length}</button></div>
+    <p class="muted">${saved ? "맞힌 뒤 '저장하고 다음에 보기'를 누른 문제예요." : review ? "한 번이라도 틀린 문제는 맞혀도 여기에 남아요." : "다시 풀어서 맞히면 오답노트에서 빠지고, 다시보기에는 남아요."}</p>
     ${ids.length ? `<button id="retry" class="main">${ids.length}문제 다시 풀기</button>`
-      : `<p class="card muted center" style="padding:2.5rem 1rem">${review ? "아직 틀린 적 있는 문제가 없어요." : "지금 못 맞힌 문제가 없어요."}<br>문제를 풀다 틀리면 여기에 자동으로 저장돼요.</p>`}
-    ${ids.map(id => { const q = byId[id], w = store.wrong[id]; return `
+      : `<p class="card muted center" style="padding:2.5rem 1rem">${saved ? "저장한 문제가 없어요.<br>맞힌 문제에서 '저장하고 다음에 보기'를 누르면 여기에 모여요." : `${review ? "아직 틀린 적 있는 문제가 없어요." : "지금 못 맞힌 문제가 없어요."}<br>문제를 풀다 틀리면 여기에 자동으로 저장돼요.`}</p>`}
+    ${ids.map(id => { const q = byId[id], w = store.wrong[id] || {}; return `
       <div class="card stack">
-        <div class="row"><span class="tag">${q.subject}과목 · ${esc(q.topic)}</span>${q.exam ? `<span class="tag todo">실전 ${q.exam}</span>` : q.trap ? `<span class="tag todo">함정</span>` : ""}<span class="tag bad">${w.count}번 틀림</span>${w.cleared ? `<span class="tag ok">지금은 맞힘</span>` : ""}</div>
+        <div class="row"><span class="tag">${q.subject}과목 · ${esc(q.topic)}</span>${q.exam ? `<span class="tag todo">실전 ${q.exam}</span>` : q.trap ? `<span class="tag todo">함정</span>` : ""}${w.count ? `<span class="tag bad">${w.count}번 틀림</span>` : ""}${w.cleared ? `<span class="tag ok">지금은 맞힘</span>` : ""}</div>
         <strong>${esc(q.q)}</strong>${code(q)}
-        <span style="color:var(--bad)">마지막 오답 ${ans(q, w.picked)}</span>
+        ${saved ? "" : `<span style="color:var(--bad)">마지막 오답 ${ans(q, w.picked)}</span>`}
         <strong style="color:var(--ok)">정답 ${ans(q, q.answer)}</strong>
         <details><summary class="muted">해설 보기</summary><p style="margin-top:.4rem">${esc(q.exp)}</p>${more(q)}</details>
-        <button data-del="${id}" class="muted" style="align-self:flex-end;border:0;padding:.2rem;text-decoration:underline">${review ? "다시보기에서 빼기" : "오답노트에서 빼기"}</button>
+        <button data-del="${id}" class="muted" style="align-self:flex-end;border:0;padding:.2rem;text-decoration:underline">${saved ? "저장에서 빼기" : review ? "다시보기에서 빼기" : "오답노트에서 빼기"}</button>
       </div>`; }).join("")}`, {
     "#back": home,
     "[data-mode]": b => notes(b.dataset.mode),
     "#retry": () => start(shuffle(ids.map(id => byId[id])), true),
-    "[data-del]": b => { if (review) delete store.wrong[b.dataset.del]; else store.wrong[b.dataset.del].cleared = true; save(); notes(mode); },
+    "[data-del]": b => { if (saved) delete store.saved[b.dataset.del]; else if (review) delete store.wrong[b.dataset.del]; else store.wrong[b.dataset.del].cleared = true; save(); notes(mode); },
   });
 }
 
