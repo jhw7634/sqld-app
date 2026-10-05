@@ -178,7 +178,6 @@ const grid = (t, name) => `<div class="scroll"><table>${name ? `<caption>${esc(n
   ${t.rows.length ? t.rows.map(r => `<tr>${r.map(v => (v === null ? '<td class="muted">NULL</td>' : `<td>${esc(v)}</td>`)).join("")}</tr>`).join("") : `<tr><td class="muted" colspan="${t.cols.length}">결과 없음 (0줄)</td></tr>`}</table></div>`;
 function studyHome() {
   return `
-    <p class="muted">1과목 이론과 2과목 SQL을 처음부터 쉽게 정리했어요. 큰 제목을 누르면 목록이, 각 제목을 누르면 설명이 열려요.</p>
     ${[...new Set(STUDY.map(l => l.part))].map(part => { const ls = STUDY.filter(l => l.part === part); return `
     <details class="part">
       <summary class="card row" style="justify-content:space-between;flex-wrap:nowrap;cursor:pointer;background:var(--accent-soft);border-color:var(--accent-soft)"><strong>${esc(part)}</strong><span class="row" style="flex:none"><span class="count">${ls.length}개</span><span class="chev" aria-hidden="true">▾</span></span></summary>
