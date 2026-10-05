@@ -234,7 +234,7 @@ function examHome(n) {
         <div><div class="big">${EXAM_MIN}분</div><span class="muted">시험 시간</span></div>
         <div><div class="big">60점</div><span class="muted">합격</span></div>
       </div>
-      <p class="muted">실제 시험과 같아요. 1과목 ${n1}문항(${n1 * 2}점), 2과목 ${qs.length - n1}문항(${(qs.length - n1) * 2}점)이고 과목별 40% 미만이면 과락이에요. 다 풀고 제출하면 한 번에 채점해요.</p>
+      <p class="muted">1과목 ${n1}문항(${n1 * 2}점), 2과목 ${qs.length - n1}문항(${(qs.length - n1) * 2}점)이고 과목별 40% 미만이면 과락이에요. 다 풀고 제출하면 한 번에 채점해요.</p>
     </div>
     ${rec ? `<div class="card stats" style="grid-template-columns:repeat(3,1fr)">
       <div><div class="big" style="color:var(--${rec.last.pass ? "ok" : "bad"})">${rec.last.score}</div><span class="muted">최근 점수 · ${rec.last.pass ? "합격" : "불합격"}</span></div>
