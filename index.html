@@ -284,7 +284,7 @@ function statHome() {
       <span class="row" style="justify-content:space-between"><h2>단원별 정답률</h2><span class="muted">낮은 순</span></span>
       ${done.map(({ u, t }) => `<button data-unit="${u.id}" class="pline"><span class="row" style="justify-content:space-between;flex-wrap:nowrap"><span>${esc(u.title)}</span>${prate(t.r)}</span>${pbar(t.r)}</button>`).join("")}
       ${todo.length ? `<p class="muted" style="margin-top:.5rem">아직 안 푼 단원: ${todo.map(x => esc(x.u.title)).join(", ")}</p>` : ""}
-      <p class="muted" style="margin-top:.4rem">점선 = 합격선 ${GOAL}% · 단원을 누르면 그 단원 문제로 가요</p>
+      <p class="muted" style="margin-top:.4rem">단원을 눌러 복습하기</p>
     </div>`;
 }
 
