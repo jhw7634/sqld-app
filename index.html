@@ -269,7 +269,7 @@ function statHome() {
   const chips = [["all", "전체"], ["practice", "연습"], ["trap", "함정"], ["exam", "실전"]].map(([v, l]) => `<button class="chip" data-sf="${v}" aria-pressed="${sf === v}">${l}</button>`).join("");
   const tally = qs => { const d = qs.filter(q => q.id in res && pool.includes(q)); return { n: d.length, r: pct(d.filter(q => res[q.id]).length, d.length) }; };
   const all = tally(BANK);
-  if (!all.n) return `<div class="row">${chips}</div><p class="card muted center">${sf === "exam" ? "실전 모의고사를 제출하면" : "문제를 풀면"} 여기에 단원별 정답률 그래프가 나와요.</p>`;
+  if (!all.n) return `<div class="row">${chips}</div><p class="card muted center">${sf !== "exam" ? "문제를 풀면" : [1, 2].some(n => store.runs[n]) ? "푸는 중인 실전 모의고사를 끝까지 풀고 제출하면" : "실전 모의고사를 제출하면"} 여기에 단원별 정답률 그래프가 나와요.</p>`;
   const units = UNITS.map(u => ({ u, t: tally(BANK.filter(q => q.unit === u.id)) }));
   const done = units.filter(x => x.t.n).sort((a, b) => a.t.r - b.t.r), todo = units.filter(x => !x.t.n);
   return `
