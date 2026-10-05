@@ -194,7 +194,7 @@ function studyHome() {
       const head = subj && subj !== all[i - 1]?.split(" · ")[0] ? `<h2 style="margin-top:.6rem">${esc(subj)}</h2>` : ""; // 과목 이름은 위 제목으로 한 번만
       return `${head}
     <details class="part">
-      <summary class="card row" style="justify-content:space-between;flex-wrap:nowrap;cursor:pointer;background:var(--accent-soft);border-color:var(--accent-soft)"><strong>${esc(name)}</strong><span class="row" style="flex:none"><span class="count">${ls.length}개</span><span class="chev" aria-hidden="true">▾</span></span></summary>
+      <summary class="card row" style="justify-content:space-between;flex-wrap:nowrap;cursor:pointer"><span class="stack" style="gap:.1rem"><h2>${esc(name)}</h2><span class="muted">설명 ${ls.length}개</span></span><span class="chev" aria-hidden="true">▾</span></summary>
       <div class="stack" style="margin-top:.6rem">
     ${ls.map(l => `
     <details class="card">
