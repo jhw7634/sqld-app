@@ -254,8 +254,8 @@ function examHome(n) {
 
 // 분석: 연습·함정·실전에서 고른 답(실전은 최근 제출)으로 정답률 막대. 낮은 단원부터, 점선은 합격선 60%
 const GOAL = 60;
-const hue = r => Math.round(Math.min(Math.max((r - 30) / 50, 0), 1) * 145); // 30% 이하 빨강 → 80% 이상 초록
-const pbar = (r, h = ".8rem", c = hue(r)) => `<div class="pbar" style="height:${h};background:hsl(${c} 70% 55% / .12)"><i style="width:${r}%;background:linear-gradient(90deg, hsl(${c} 80% 60% / .2), hsl(${c} 75% 50% / .6))"></i><b style="left:${GOAL}%"></b></div>`; // 반투명 그라데이션
+const hue = r => (r < GOAL ? 8 : 225); // 합격선 아래는 코랄, 넘으면 파랑
+const pbar = (r, h = ".8rem", c = hue(r)) => `<div class="pbar" style="height:${h};background:hsl(${c} 70% 55% / .12)"><i style="width:${r}%;background:linear-gradient(90deg, hsl(${c} 80% 60% / .15), hsl(${c} 75% 55% / ${(.25 + r / 200).toFixed(2)}))"></i><b style="left:${GOAL}%"></b></div>`; // 반투명 그라데이션
 const prate = r => `<strong style="color:hsl(${hue(r)} 50% var(--pl))">${r}%</strong>`;
 function statHome() {
   const res = { ...store.last };
