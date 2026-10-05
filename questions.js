@@ -9510,7 +9510,7 @@ window.SQLD_STUDY = [
   "sum": "명령을 하는 일에 따라 네 가지로 나눠요",
   "unit": "manage",
   "body": [
-   "SQL 명령은 하는 일에 따라 네 가지로 나눠요.\nDML (데이터 조작어) : 표 안의 데이터를 보고 넣고 고치고 지워요. SELECT, INSERT, UPDATE, DELETE, MERGE\nDDL (데이터 정의어) : 표의 모양을 만들고 바꾸고 없애요. CREATE, ALTER, DROP, TRUNCATE, RENAME\nDCL (데이터 제어어) : 누가 무엇을 할 수 있는지 권한을 줘요. GRANT, REVOKE\nTCL (트랜잭션 제어어) : 바꾼 것을 확정하거나 취소해요. COMMIT, ROLLBACK, SAVEPOINT",
+   "SQL 명령은 하는 일에 따라 네 가지로 나눠요.\nDML (Data Manipulation Language, 데이터 조작어) : 표 안의 데이터를 보고 넣고 고치고 지워요. SELECT, INSERT, UPDATE, DELETE, MERGE\nDDL (Data Definition Language, 데이터 정의어) : 표의 모양을 만들고 바꾸고 없애요. CREATE, ALTER, DROP, TRUNCATE, RENAME\nDCL (Data Control Language, 데이터 제어어) : 누가 무엇을 할 수 있는지 권한을 줘요. GRANT, REVOKE\nTCL (Transaction Control Language, 트랜잭션 제어어) : 바꾼 것을 확정하거나 취소해요. COMMIT, ROLLBACK, SAVEPOINT",
    "헷갈리기 쉬운 것\nTRUNCATE : 줄을 모두 지우지만 DML이 아니라 DDL이에요. 그래서 ROLLBACK으로 되돌릴 수 없어요\nSELECT : 데이터를 보기만 하지만 DML에 넣어요"
   ],
   "ex": [],
