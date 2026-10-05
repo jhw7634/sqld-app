@@ -106,6 +106,7 @@ const store = { saved: {}, wrong: {}, stats: { 1: { s: 0, c: 0 }, 2: { s: 0, c: 
 try { Object.assign(store, JSON.parse(localStorage.getItem(KEY))); } catch (e) {}
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} };
 const reviewIds = () => Object.keys(store.wrong).filter(id => byId[id]); // 다시보기: 한 번이라도 틀린 문제
+const bm = on => `<svg width="14" height="17" viewBox="0 0 14 17" aria-hidden="true" style="vertical-align:-2px;margin-right:.35rem"><path d="M1.5 1.5h11v14L7 11.5l-5.5 4z" fill="${on ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>`; // 책갈피 아이콘
 const savedIds = () => Object.keys(store.saved).filter(id => byId[id]).sort((a, b) => store.saved[b] - store.saved[a]); // 저장: 맞혔지만 다음에 다시 볼 문제
 const wrongIds = () => reviewIds().filter(id => !store.wrong[id].cleared); // 오답노트: 아직 못 맞힌 문제
 
@@ -176,7 +177,7 @@ function practiceHome() {
       <button id="go" class="main">${left ? (done ? `이어서 풀기 · 남은 ${left}문제` : "첫 문제 풀기") : "전체 문제 다시 보기"}</button>
     </div>
     <div class="split">${small("notes", "오답노트", wrongIds().length, "bad")}${small("review", "다시보기", reviewIds().length, "accent")}</div>
-    ${savedIds().length ? small("saved", "저장한 문제", savedIds().length, "accent") : ""}
+    ${savedIds().length ? small("saved", `${bm(1)}저장한 문제`, savedIds().length, "accent") : ""}
     <div class="row" style="justify-content:space-between;margin-top:.4rem"><h2>단원별로 풀기</h2><button id="all" class="chip">전체 ${PRACTICE.length}문제</button></div>
     ${[1, 2].map(k => `<h3 class="muted" style="margin:0">${k === 1 ? "1과목 · 데이터 모델링의 이해" : "2과목 · SQL 기본과 활용"}</h3>
       ${UNITS.filter(u => u.subject === k).map(unitCard).join("")}`).join("")}`;
@@ -372,7 +373,7 @@ function question() {
   if (!s.checked) return dock(`<button id="check" class="main" ${s.picked ? "" : "disabled"}>정답 확인</button>`, { "#check": check });
   const kept = q.id in store.saved;
   if (s.ok) return dock(`<h2>정답이에요!</h2><div class="exp">${exp}</div>${note}
-    <div class="split" style="grid-template-columns:1.3fr 1fr"><button id="keep" class="center" style="font-weight:700;white-space:nowrap;padding-inline:.4rem;font-size:min(1rem, 4.1vw)" aria-pressed="${kept}">${kept ? "저장했어요" : "저장 (나중에 다시 보기)"}</button><button id="next" class="main">${last ? "결과 보기" : "다음 문제"}</button></div>`, {
+    <div class="split" style="grid-template-columns:1.3fr 1fr"><button id="keep" class="center" style="font-weight:700;white-space:nowrap;padding-inline:.4rem;font-size:min(1rem, 3.9vw)" aria-pressed="${kept}">${bm(kept)}${kept ? "저장했어요" : "저장 (나중에 다시 보기)"}</button><button id="next" class="main">${last ? "결과 보기" : "다음 문제"}</button></div>`, {
     "#keep": () => { kept ? delete store.saved[q.id] : (store.saved[q.id] = Date.now()); save(); question(); },
     "#next": next,
   }, "ok");
