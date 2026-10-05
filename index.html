@@ -176,7 +176,7 @@ function practiceHome() {
       <button id="go" class="main">${left ? (done ? `이어서 풀기 · 남은 ${left}문제` : "첫 문제 풀기") : "전체 문제 다시 보기"}</button>
     </div>
     <div class="split">${small("notes", "오답노트", wrongIds().length, "bad")}${small("review", "다시보기", reviewIds().length, "accent")}</div>
-    ${savedIds().length ? small("saved", "★ 저장한 문제", savedIds().length, "accent") : ""}
+    ${savedIds().length ? small("saved", "저장한 문제", savedIds().length, "accent") : ""}
     <div class="row" style="justify-content:space-between;margin-top:.4rem"><h2>단원별로 풀기</h2><button id="all" class="chip">전체 ${PRACTICE.length}문제</button></div>
     ${[1, 2].map(k => `<h3 class="muted" style="margin:0">${k === 1 ? "1과목 · 데이터 모델링의 이해" : "2과목 · SQL 기본과 활용"}</h3>
       ${UNITS.filter(u => u.subject === k).map(unitCard).join("")}`).join("")}`;
@@ -372,7 +372,7 @@ function question() {
   if (!s.checked) return dock(`<button id="check" class="main" ${s.picked ? "" : "disabled"}>정답 확인</button>`, { "#check": check });
   const kept = q.id in store.saved;
   if (s.ok) return dock(`<h2>정답이에요!</h2><div class="exp">${exp}</div>${note}
-    <div class="split"><button id="keep" class="center" aria-pressed="${kept}">${kept ? "★ 저장했어요" : "☆ 저장하고 다음에 보기"}</button><button id="next" class="main">${last ? "결과 보기" : "다음 문제"}</button></div>`, {
+    <div class="split" style="grid-template-columns:1.3fr 1fr"><button id="keep" class="center" style="font-weight:700;white-space:nowrap;padding-inline:.4rem;font-size:min(1rem, 4.1vw)" aria-pressed="${kept}">${kept ? "저장했어요" : "저장 (나중에 다시 보기)"}</button><button id="next" class="main">${last ? "결과 보기" : "다음 문제"}</button></div>`, {
     "#keep": () => { kept ? delete store.saved[q.id] : (store.saved[q.id] = Date.now()); save(); question(); },
     "#next": next,
   }, "ok");
@@ -439,9 +439,9 @@ function notes(mode) {
       <button class="chip" data-mode="wrong" aria-pressed="${mode === "wrong"}">오답노트 ${wrongIds().length}</button>
       <button class="chip" data-mode="review" aria-pressed="${review}">다시보기 ${reviewIds().length}</button>
       <button class="chip" data-mode="saved" aria-pressed="${saved}">저장 ${savedIds().length}</button></div>
-    <p class="muted">${saved ? "맞힌 뒤 '저장하고 다음에 보기'를 누른 문제예요." : review ? "한 번이라도 틀린 문제는 맞혀도 여기에 남아요." : "다시 풀어서 맞히면 오답노트에서 빠지고, 다시보기에는 남아요."}</p>
+    <p class="muted">${saved ? "맞힌 뒤 '저장'을 누른 문제예요." : review ? "한 번이라도 틀린 문제는 맞혀도 여기에 남아요." : "다시 풀어서 맞히면 오답노트에서 빠지고, 다시보기에는 남아요."}</p>
     ${ids.length ? `<button id="retry" class="main">${ids.length}문제 다시 풀기</button>`
-      : `<p class="card muted center" style="padding:2.5rem 1rem">${saved ? "저장한 문제가 없어요.<br>맞힌 문제에서 '저장하고 다음에 보기'를 누르면 여기에 모여요." : `${review ? "아직 틀린 적 있는 문제가 없어요." : "지금 못 맞힌 문제가 없어요."}<br>문제를 풀다 틀리면 여기에 자동으로 저장돼요.`}</p>`}
+      : `<p class="card muted center" style="padding:2.5rem 1rem">${saved ? "저장한 문제가 없어요.<br>맞힌 문제에서 '저장'을 누르면 여기에 모여요." : `${review ? "아직 틀린 적 있는 문제가 없어요." : "지금 못 맞힌 문제가 없어요."}<br>문제를 풀다 틀리면 여기에 자동으로 저장돼요.`}</p>`}
     ${ids.map(id => { const q = byId[id], w = store.wrong[id] || {}; return `
       <div class="card stack">
         <div class="row"><span class="tag">${q.subject}과목 · ${esc(q.topic)}</span>${q.exam ? `<span class="tag todo">실전 ${q.exam}</span>` : q.trap ? `<span class="tag todo">함정</span>` : ""}${w.count ? `<span class="tag bad">${w.count}번 틀림</span>` : ""}${w.cleared ? `<span class="tag ok">지금은 맞힘</span>` : ""}</div>
