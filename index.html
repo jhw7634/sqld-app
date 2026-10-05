@@ -66,6 +66,8 @@ table { border-collapse:collapse; font-size:.95rem; white-space:nowrap; }
 caption { text-align:left; font-weight:700; padding-bottom:.25rem; }
 th, td { border:1px solid var(--line); padding:.3rem .7rem; text-align:left; }
 th { background:var(--accent-soft); }
+.pts { margin:.3rem 0 0; padding-left:1.1rem; display:flex; flex-direction:column; gap:.35rem; }
+.pts li::marker { content:"•  "; font-size:.7em; color:var(--muted); }
 .sheet { display:grid; grid-template-columns:repeat(5,1fr); gap:.45rem; }
 .sheet button { padding:.45rem 0; text-align:center; font-weight:700; line-height:1.3; }
 .sheet small { display:block; font-weight:400; color:var(--muted); }
@@ -177,6 +179,8 @@ function practiceHome() {
 // 이론: 묶음별 설명 카드. 열면 쉬운 설명, 예시 표, SQL, 실행 결과
 const grid = (t, name) => `<div class="scroll"><table>${name ? `<caption>${esc(name)}</caption>` : ""}<tr>${t.cols.map(c => `<th>${esc(c)}</th>`).join("")}</tr>
   ${t.rows.length ? t.rows.map(r => `<tr>${r.map(v => (v === null ? '<td class="muted">NULL</td>' : `<td>${esc(v)}</td>`)).join("")}</tr>`).join("") : `<tr><td class="muted" colspan="${t.cols.length}">결과 없음 (0줄)</td></tr>`}</table></div>`;
+// 설명 문단: 줄바꿈이 있으면 첫 줄은 리드, 나머지는 작은 점 불릿 ("용어 : 설명"이면 용어를 굵게)
+const para = p => { const [lead, ...li] = p.split("\n"); return `<div><p>${esc(lead)}</p>${li.length ? `<ul class="pts">${li.map(x => { const k = x.indexOf(" : "); return `<li>${k > 0 ? `<strong>${esc(x.slice(0, k))}</strong> : ${esc(x.slice(k + 3))}` : esc(x)}</li>`; }).join("")}</ul>` : ""}</div>`; };
 function studyHome() {
   return `
     ${[...new Set(STUDY.map(l => l.part))].map(part => { const ls = STUDY.filter(l => l.part === part); return `
@@ -187,7 +191,7 @@ function studyHome() {
     <details class="card">
       <summary style="cursor:pointer"><strong><span style="color:var(--accent)">${STUDY.indexOf(l) + 1}.</span> ${esc(l.title)}</strong><br><span class="muted">${esc(l.sum)}</span></summary>
       <div class="stack" style="margin-top:.8rem">
-        ${l.body.map(p => `<p>${esc(p)}</p>`).join("")}
+        ${l.body.map(para).join("")}
         ${l.ex.map(e => `<div class="stack" style="border-top:1px dashed var(--line);padding-top:.8rem">
           <strong>${esc(e.say)}</strong>
           ${Object.entries(e.data).map(([n, t]) => grid(t, n)).join("")}
