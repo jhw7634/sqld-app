@@ -83,7 +83,7 @@ if (/KAKAOTALK/i.test(navigator.userAgent)) location.href = "kakaotalk://web/ope
 const BANK = window.SQLD_QUESTIONS || [], UNITS = window.SQLD_UNITS || [];
 const byId = Object.fromEntries(BANK.map(q => [q.id, q]));
 const PRACTICE = BANK.filter(q => !q.exam && !q.trap);
-const STUDY = window.SQLD_STUDY || []; // 공부 탭: 쉬운 1과목 이론·SQL 설명과 실행해 본 예시
+const STUDY = window.SQLD_STUDY || []; // 이론 탭: 쉬운 1과목 이론·SQL 설명과 실행해 본 예시
 const TRAPS = window.SQLD_TRAPS || [], TRAPQ = BANK.filter(q => q.trap); // 함정 요약 20장과 함정마다 2문제
 const EXAM = n => BANK.filter(q => q.exam === n).sort((a, b) => a.subject - b.subject); // 실제 시험처럼 1과목 먼저
 const EXAM_MIN = 90;
@@ -133,14 +133,14 @@ function dock(html, handlers, cls = "") {
   fit();
 }
 
-// ---------- 첫 화면: 공부 / 연습 / 함정 / 실전 1 / 실전 2 ----------
+// ---------- 첫 화면: 이론 / 연습 / 함정 / 실전 1 / 실전 2 ----------
 function home() {
   [1, 2].forEach(n => store.runs[n] && Date.now() >= store.runs[n].endAt && finish(n, true));
   const tab = store.tab;
   show(`
     <div class="row" style="justify-content:space-between"><h1>SQLD <span style="color:var(--accent)">오답킬러</span></h1></div>
     <div class="tabs" role="tablist">
-      ${[["study", "공부"], ["practice", "연습"], ["trap", "함정"], ["1", "실전 1"], ["2", "실전 2"]].map(([k, l]) => `<button role="tab" data-tab="${k}" aria-selected="${tab === k}">${l}</button>`).join("")}
+      ${[["study", "이론"], ["practice", "연습"], ["trap", "함정"], ["1", "실전 1"], ["2", "실전 2"]].map(([k, l]) => `<button role="tab" data-tab="${k}" aria-selected="${tab === k}">${l}</button>`).join("")}
     </div>
     ${tab === "study" ? studyHome() : tab === "practice" ? practiceHome() : tab === "trap" ? trapHome() : examHome(+tab)}`, {
     "[data-tab]": b => { store.tab = b.dataset.tab; save(); home(); },
@@ -173,7 +173,7 @@ function practiceHome() {
       ${UNITS.filter(u => u.subject === k).map(unitCard).join("")}`).join("")}`;
 }
 
-// 공부: 묶음별 설명 카드. 열면 쉬운 설명, 예시 표, SQL, 실행 결과
+// 이론: 묶음별 설명 카드. 열면 쉬운 설명, 예시 표, SQL, 실행 결과
 const grid = (t, name) => `<div class="scroll"><table>${name ? `<caption>${esc(name)}</caption>` : ""}<tr>${t.cols.map(c => `<th>${esc(c)}</th>`).join("")}</tr>
   ${t.rows.length ? t.rows.map(r => `<tr>${r.map(v => (v === null ? '<td class="muted">NULL</td>' : `<td>${esc(v)}</td>`)).join("")}</tr>`).join("") : `<tr><td class="muted" colspan="${t.cols.length}">결과 없음 (0줄)</td></tr>`}</table></div>`;
 function studyHome() {

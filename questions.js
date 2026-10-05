@@ -9476,7 +9476,7 @@ window.SQLD_QUESTIONS.push(...
     ]
   }
 ]);
-// 공부 탭: 초등학생도 이해할 수 있게 쓴 1과목 이론과 SQL 설명. 예시 결과(out)는 python3 check.py가 실제로 실행해서 확인
+// 이론 탭(공부 탭): 초등학생도 이해할 수 있게 쓴 1과목 이론과 SQL 설명. 예시 결과(out)는 python3 check.py가 실제로 실행해서 확인
 // 필드: id, part(묶음), title, sum(한 줄 요약), unit(관련 연습 단원), body(설명 문단), ex(예시: say, data{표: cols, rows}, sql?(없으면 표만), after?(실행 뒤 볼 SELECT), out?(결과), db?), tip?
 window.SQLD_STUDY = [
  {
