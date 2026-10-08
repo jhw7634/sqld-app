@@ -91,7 +91,7 @@ const PRACTICE = BANK.filter(q => !q.exam && !q.trap);
 const STUDY = window.SQLD_STUDY || []; // 이론 탭: 쉬운 1과목 이론·SQL 설명과 실행해 본 예시
 const TRAPS = window.SQLD_TRAPS || [], TRAPQ = BANK.filter(q => q.trap); // 함정 요약 20장과 함정마다 2문제
 const EXAM = n => BANK.filter(q => q.exam === n).sort((a, b) => a.subject - b.subject); // 실제 시험처럼 1과목 먼저
-const EXAM_MIN = 90;
+const EXAM_MIN = 90, EXAMS = [...new Set(BANK.filter(q => q.exam).map(q => q.exam))].sort(); // 실전 회차 [1, 2, 3]
 const C = "①②③④", KEY = "sqld-quiz-v1", $ = s => document.querySelector(s);
 const esc = t => String(t).replace(/[&<>"]/g, c => `&#${c.charCodeAt(0)};`);
 const pct = (c, n) => (n ? Math.round((c / n) * 100) : 0);
@@ -142,7 +142,7 @@ function dock(html, handlers, cls = "") {
 
 // ---------- 첫 화면: 이론 / 연습 / 함정 / 실전 (실전 1 아래 실전 2) ----------
 function home() {
-  [1, 2].forEach(n => store.runs[n] && Date.now() >= store.runs[n].endAt && finish(n, true));
+  EXAMS.forEach(n => store.runs[n] && Date.now() >= store.runs[n].endAt && finish(n, true));
   if (store.tab === "1" || store.tab === "2") store.tab = "exam"; // 예전 실전 1·2 탭은 합친 실전 탭으로
   const tab = store.tab;
   show(`
@@ -150,7 +150,7 @@ function home() {
     <div class="tabs" role="tablist">
       ${[["study", "이론"], ["practice", "연습"], ["trap", "함정"], ["exam", "실전"], ["stat", "분석"]].map(([k, l]) => `<button role="tab" data-tab="${k}" aria-selected="${tab === k}">${l}</button>`).join("")}
     </div>
-    ${tab === "study" ? studyHome() : tab === "practice" ? practiceHome() : tab === "trap" ? trapHome() : tab === "stat" ? statHome() : examHome(1) + examHome(2)}`, {
+    ${tab === "study" ? studyHome() : tab === "practice" ? practiceHome() : tab === "trap" ? trapHome() : tab === "stat" ? statHome() : EXAMS.map(examHome).join("")}`, {
     "[data-tab]": b => { store.tab = b.dataset.tab; save(); home(); },
     "#notes": () => notes("wrong"),
     "#review": () => notes("review"),
@@ -271,12 +271,12 @@ const pbar = (r, h = ".8rem", c = hue(r)) => `<div class="pbar" style="height:${
 const prate = r => `<strong style="color:hsl(${hue(r)} 50% var(--pl))">${r}%</strong>`;
 function statHome() {
   const res = { ...store.last };
-  [1, 2].forEach(n => { const a = store.exams[n]?.last?.answers || {}; EXAM(n).forEach(q => { if (a[q.id]) res[q.id] = a[q.id] === q.answer; }); });
+  EXAMS.forEach(n => { const a = store.exams[n]?.last?.answers || {}; EXAM(n).forEach(q => { if (a[q.id]) res[q.id] = a[q.id] === q.answer; }); });
   const sf = prefs.stat || "all", pool = sf === "practice" ? PRACTICE : sf === "trap" ? TRAPQ : sf === "exam" ? BANK.filter(q => q.exam) : BANK;
   const chips = [["all", "전체"], ["practice", "연습"], ["trap", "함정"], ["exam", "실전"]].map(([v, l]) => `<button class="chip" data-sf="${v}" aria-pressed="${sf === v}">${l}</button>`).join("");
   const tally = qs => { const d = qs.filter(q => q.id in res && pool.includes(q)); return { n: d.length, r: pct(d.filter(q => res[q.id]).length, d.length) }; };
   const all = tally(BANK);
-  if (!all.n) return `<div class="row">${chips}</div><p class="card muted center">${sf !== "exam" ? "문제를 풀면" : [1, 2].some(n => store.runs[n]) ? "푸는 중인 실전 모의고사를 끝까지 풀고 제출하면" : "실전 모의고사를 제출하면"} 여기에 단원별 정답률 그래프가 나와요.</p>`;
+  if (!all.n) return `<div class="row">${chips}</div><p class="card muted center">${sf !== "exam" ? "문제를 풀면" : EXAMS.some(n => store.runs[n]) ? "푸는 중인 실전 모의고사를 끝까지 풀고 제출하면" : "실전 모의고사를 제출하면"} 여기에 단원별 정답률 그래프가 나와요.</p>`;
   const units = UNITS.map(u => ({ u, t: tally(BANK.filter(q => q.unit === u.id)) }));
   const done = units.filter(x => x.t.n).sort((a, b) => a.t.r - b.t.r), todo = units.filter(x => !x.t.n);
   return `
