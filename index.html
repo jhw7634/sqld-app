@@ -271,7 +271,7 @@ function examHome(n) {
     </details>`;
 }
 
-// ---------- 실전 탭: 2주 합격 플랜(D-day), 자주 나와요 문제, 실전 1·2·3, 시험 전날 요약 카드 ----------
+// ---------- 실전 탭: 20일 합격 플랜(D-day), 자주 나와요 문제, 실전 1·2·3, 시험 전날 요약 카드 ----------
 const HIGH = PRACTICE.filter(q => q.freq === "high"); // 자주 나와요(빈도 높음) 연습 문제
 const goHigh = () => { const todo = HIGH.filter(q => !(q.id in store.last)); start(todo.length ? todo : shuffle(HIGH), false); };
 function examTab() {
@@ -283,7 +283,7 @@ function examTab() {
     ${go("brief", "시험 전날 요약 카드", `함정 ${TRAPS.length}장 + 틀렸던 문제 ${reviewIds().length}장`, "보기")}`;
 }
 
-// 2주 합격 플랜: 시험일(store.dday)까지 남은 날(최대 14일)에 할 일을 고르게 나눠 보여줌. 할 일의 ✓는 풀이 기록으로 판단
+// 20일 합격 플랜: 시험일(store.dday)까지 남은 날(최대 20일)에 할 일을 고르게 나눠 보여줌. 할 일의 ✓는 풀이 기록으로 판단
 const today = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; };
 const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
 const fmt = d => `${d.getMonth() + 1}월 ${d.getDate()}일(${"일월화수목금토"[d.getDay()]})`;
@@ -298,10 +298,10 @@ const tasks = () => {
 };
 function planCard() {
   const left = dleft();
-  if (left === null) return `<div class="card stack"><h2>2주 합격 플랜</h2><p class="muted">시험일을 넣으면 D-day와 날짜별 할 일이 나와요.</p><div class="split" style="grid-template-columns:1fr auto"><input id="dday" type="date" min="${iso(today())}" aria-label="시험일"><button id="plan" class="main">만들기</button></div></div>`;
+  if (left === null) return `<div class="card stack"><h2>20일 합격 플랜</h2><p class="muted">시험일을 넣으면 D-day와 날짜별 할 일이 나와요.</p><div class="split" style="grid-template-columns:1fr auto"><input id="dday" type="date" min="${iso(today())}" aria-label="시험일"><button id="plan" class="main">만들기</button></div></div>`;
   const head = `<span class="row" style="justify-content:space-between"><h2>${left > 0 ? `D-${left}` : left ? "시험이 지났어요" : "D-day"}</h2><button id="dchange" class="chip">${fmt(new Date(store.dday + "T00:00"))} 시험 · 바꾸기</button></span>`;
   if (left <= 0) return `<div class="card stack">${head}<p class="muted">${left ? "다음 시험일로 바꿔 주세요." : "오늘이 시험날이에요. 요약 카드만 한 번 훑고 가세요!"}</p></div>`;
-  const T = tasks(), span = Math.min(14, left), k = span - left; // k: 오늘이 플랜 며칠째인지 (음수면 아직 시작 전)
+  const T = tasks(), span = Math.min(20, left), k = span - left; // k: 오늘이 플랜 며칠째인지 (음수면 아직 시작 전)
   const day = j => T.slice(Math.floor((j * T.length) / span), Math.floor(((j + 1) * T.length) / span));
   const line = x => `<button data-task="${x.go}" class="pline row" style="display:flex;flex-wrap:nowrap"><span style="color:var(--${x.ok ? "ok" : "muted"})">${x.ok ? "✓" : "○"}</span><span style="flex:1">${esc(x.t)}</span><span class="muted">›</span></button>`;
   return `<div class="card stack" style="gap:.3rem">${head}
