@@ -11868,7 +11868,13 @@ window.SQLD_STUDY = [
    "모델링할 때 조심할 세 가지\n중복 : 같은 정보를 여러 곳에 저장해요\n비유연성 : 업무가 조금만 바뀌어도 모델을 크게 고쳐야 해요\n비일관성 : 서로 맞지 않는 데이터가 생겨요"
   ],
   "ex": [],
-  "tip": "특징(추상화·단순화·명확화), 관점(데이터·프로세스·상관), 중요성(파급효과·간결한 표현·데이터 품질), 유의점(중복·비유연성·비일관성)을 묶음으로 외워 두세요."
+  "tip": "특징(추상화·단순화·명확화), 관점(데이터·프로세스·상관), 중요성(파급효과·간결한 표현·데이터 품질), 유의점(중복·비유연성·비일관성)을 묶음으로 외워 두세요.",
+  "figs": [
+   {
+    "pic": "<svg viewBox='0 0 300 96'><defs><marker id='m' viewBox='0 0 10 10' refX='9' refY='5' markerWidth='6' markerHeight='6' orient='auto'><path d='M0 0L10 5L0 10z' fill='context-stroke'/></marker></defs><rect class='b' x='6' y='20' width='84' height='56' rx='3' rx='8'/><text class='k' x='48' y='48' >현실</text><text class='m' x='48' y='63' >학생, 수업…</text><rect class='h' x='108' y='20' width='84' height='56' rx='3' rx='8'/><text class='k' x='150' y='48' >모델 (ERD)</text><text class='m' x='150' y='63' >엔터티·관계</text><rect class='b' x='210' y='20' width='84' height='56' rx='3' rx='8'/><text class='k' x='252' y='48' >데이터베이스</text><text class='m' x='252' y='63' >표</text><path class='ar' d='M90 48L106 48' marker-end='url(#m)'/><path class='ar' d='M192 48L208 48' marker-end='url(#m)'/></svg>",
+    "memo": "모델링은 현실을 설계도(ERD)로 그리고, 그 설계도대로 표를 만드는 일이에요."
+   }
+  ]
  },
  {
   "id": "m02",
@@ -11932,6 +11938,16 @@ window.SQLD_STUDY = [
      }
     }
    }
+  ],
+  "figs": [
+   {
+    "pic": "<svg viewBox='0 0 300 118'><g data-s='0'><rect class='h' x='60' y='4' width='180' height='110' rx='3' rx='8'/><text class='k' x='150' y='20' >엔터티: 학생</text></g><g data-s='1'><rect class='h' x='74' y='34' width='52' height='18' rx='3' /><text class='t' x='100' y='47' >학번</text><rect class='h' x='126' y='34' width='52' height='18' rx='3' /><text class='t' x='152' y='47' >이름</text><rect class='h' x='178' y='34' width='48' height='18' rx='3' /><text class='t' x='202' y='47' >학년</text><rect class='b' x='74' y='52' width='52' height='18' rx='3' /><text class='t' x='100' y='65' >1001</text><rect class='b' x='126' y='52' width='52' height='18' rx='3' /><text class='t' x='152' y='65' >민지</text><rect class='b' x='178' y='52' width='48' height='18' rx='3' /><text class='t' x='202' y='65' >1</text><rect class='b' x='74' y='70' width='52' height='18' rx='3' /><text class='t' x='100' y='83' >1002</text><rect class='b' x='126' y='70' width='52' height='18' rx='3' /><text class='t' x='152' y='83' >도윤</text><rect class='b' x='178' y='70' width='48' height='18' rx='3' /><text class='t' x='202' y='83' >2</text><rect class='b' x='74' y='88' width='52' height='18' rx='3' /><text class='t' x='100' y='101' >1003</text><rect class='b' x='126' y='88' width='52' height='18' rx='3' /><text class='t' x='152' y='101' >서연</text><rect class='b' x='178' y='88' width='48' height='18' rx='3' /><text class='t' x='202' y='101' >1</text><rect class='ov' x='74' y='34' width='52' height='72' rx='3' data-o='1'/><rect class='ov' x='126' y='34' width='52' height='72' rx='3' data-o='1'/><rect class='ov' x='178' y='34' width='48' height='72' rx='3' data-o='1'/></g><g data-o='2'><rect class='ov' x='74' y='52' width='152' height='18' rx='3' /><rect class='ov' x='74' y='70' width='152' height='18' rx='3' /><rect class='ov' x='74' y='88' width='152' height='18' rx='3' /></g><text class='k' x='272' y='44' data-o='1'>속성</text><text class='k' x='266' y='80' data-o='2'>인스턴스</text></svg>",
+    "steps": [
+     "엔터티: 관리할 '것'들의 모임 (학생)",
+     "속성: 엔터티를 설명하는 칸 (학번, 이름, 학년)",
+     "인스턴스: 하나하나 (민지, 도윤, 서연) · 표의 한 줄"
+    ]
+   }
   ]
  },
  {
@@ -11948,7 +11964,17 @@ window.SQLD_STUDY = [
    "나눌 수 있는지, 값이 몇 개인지에 따라\n복합 속성 : 주소처럼 시·구·동으로 나눌 수 있는 것\n단일 속성 : 더 나눌 수 없는 것\n다중값 속성 : 한 인스턴스에 값이 여러 개 들어가는 것",
    "도메인은 속성에 들어갈 수 있는 값의 범위예요. 예를 들어 '학년은 1부터 6까지의 정수'처럼 타입, 길이, 허용 값을 정해요."
   ],
-  "ex": []
+  "ex": [],
+  "figs": [
+   {
+    "pic": "<svg viewBox='0 0 300 90'><rect class='h' x='30' y='24' width='48' height='18' rx='3' /><text class='t' x='54' y='37' >학번</text><rect class='h' x='78' y='24' width='48' height='18' rx='3' /><text class='t' x='102' y='37' >이름</text><rect class='h' x='126' y='24' width='48' height='18' rx='3' /><text class='t' x='150' y='37' >국어</text><rect class='h' x='174' y='24' width='48' height='18' rx='3' /><text class='t' x='198' y='37' >수학</text><rect class='h' x='222' y='24' width='48' height='18' rx='3' /><text class='t' x='246' y='37' >평균</text><rect class='b' x='30' y='42' width='48' height='18' rx='3' /><text class='t' x='54' y='55' >1001</text><rect class='b' x='78' y='42' width='48' height='18' rx='3' /><text class='t' x='102' y='55' >민지</text><rect class='b' x='126' y='42' width='48' height='18' rx='3' /><text class='t' x='150' y='55' >90</text><rect class='b' x='174' y='42' width='48' height='18' rx='3' /><text class='t' x='198' y='55' >80</text><rect class='b' x='222' y='42' width='48' height='18' rx='3' /><text class='t' x='246' y='55' >85</text><rect class='ov' x='30' y='24' width='48' height='36' rx='3' data-o='1'/><rect class='ov' x='78' y='24' width='48' height='36' rx='3' data-o='0'/><rect class='ov' x='222' y='24' width='48' height='36' rx='3' data-o='2'/><text class='m' x='150' y='78' >기본 속성 · 설계 속성 · 파생 속성</text></svg>",
+    "steps": [
+     "기본 속성: 이름처럼 업무에 원래 있는 것",
+     "설계 속성: 학번처럼 설계하면서 만든 것",
+     "파생 속성: 평균처럼 다른 칸으로 계산한 것"
+    ]
+   }
+  ]
  },
  {
   "id": "m05",
@@ -11999,6 +12025,13 @@ window.SQLD_STUDY = [
   "ex": [],
   "tip": "이름처럼 같은 값이 생기기 쉬운 속성은 주식별자로 알맞지 않아요.",
   "figs": [
+   {
+    "pic": "<svg viewBox='0 0 300 118'><rect class='h' x='40' y='24' width='60' height='18' rx='3' /><text class='t' x='70' y='37' >학번</text><rect class='h' x='100' y='24' width='60' height='18' rx='3' /><text class='t' x='130' y='37' >이름</text><rect class='h' x='160' y='24' width='48' height='18' rx='3' /><text class='t' x='184' y='37' >학년</text><rect class='b' x='40' y='42' width='60' height='18' rx='3' /><text class='t' x='70' y='55' >1001</text><rect class='b' x='100' y='42' width='60' height='18' rx='3' /><text class='t' x='130' y='55' >민지</text><rect class='b' x='160' y='42' width='48' height='18' rx='3' /><text class='t' x='184' y='55' >1</text><rect class='b' x='40' y='60' width='60' height='18' rx='3' /><text class='t' x='70' y='73' >1002</text><rect class='b' x='100' y='60' width='60' height='18' rx='3' /><text class='t' x='130' y='73' >민지</text><rect class='b' x='160' y='60' width='48' height='18' rx='3' /><text class='t' x='184' y='73' >2</text><rect class='b' x='40' y='78' width='60' height='18' rx='3' /><text class='t' x='70' y='91' >1003</text><rect class='b' x='100' y='78' width='60' height='18' rx='3' /><text class='t' x='130' y='91' >도윤</text><rect class='b' x='160' y='78' width='48' height='18' rx='3' /><text class='t' x='184' y='91' >1</text><rect class='ov' x='40' y='24' width='60' height='72' rx='3' data-o='1'/><rect class='ov' x='100' y='24' width='60' height='72' rx='3' data-o='0'/><g data-o='0'><rect class='no' x='100' y='42' width='60' height='36' rx='3' /><text class='k' x='150' y='112' >이름이 같아요 ✗</text></g><g data-o='1'><text class='k' x='150' y='112' >모두 달라요 ✓</text></g></svg>",
+    "steps": [
+     "이름으로 구별? 민지가 두 명이라 안 돼요",
+     "학번으로 구별! 겹치지 않으니 주식별자로 알맞아요"
+    ]
+   },
    {
     "memo": "주식별자 4조건은 '유·최·불·존': 유일성, 최소성, 불변성, 존재성."
    }
@@ -12177,6 +12210,13 @@ window.SQLD_STUDY = [
   ],
   "figs": [
    {
+    "pic": "<svg viewBox='0 0 300 170'><g data-s='0'><text class='m' x='115' y='15' >한 표에 다 넣으면</text><rect class='h' x='4' y='20' width='36' height='18' rx='3' /><text class='t' x='22' y='33' >학번</text><rect class='h' x='40' y='20' width='42' height='18' rx='3' /><text class='t' x='61' y='33' >이름</text><rect class='h' x='82' y='20' width='72' height='18' rx='3' /><text class='t' x='118' y='33' >동아리번호</text><rect class='h' x='154' y='20' width='72' height='18' rx='3' /><text class='t' x='190' y='33' >동아리이름</text><rect class='b' x='4' y='38' width='36' height='18' rx='3' /><text class='t' x='22' y='51' >1</text><rect class='b' x='40' y='38' width='42' height='18' rx='3' /><text class='t' x='61' y='51' >민지</text><rect class='b' x='82' y='38' width='72' height='18' rx='3' /><text class='t' x='118' y='51' >10</text><rect class='b' x='154' y='38' width='72' height='18' rx='3' /><text class='t' x='190' y='51' >축구</text><rect class='b' x='4' y='56' width='36' height='18' rx='3' /><text class='t' x='22' y='69' >2</text><rect class='b' x='40' y='56' width='42' height='18' rx='3' /><text class='t' x='61' y='69' >도윤</text><rect class='b' x='82' y='56' width='72' height='18' rx='3' /><text class='t' x='118' y='69' >20</text><rect class='b' x='154' y='56' width='72' height='18' rx='3' /><text class='t' x='190' y='69' >축구</text><rect class='b' x='4' y='74' width='36' height='18' rx='3' /><text class='t' x='22' y='87' >3</text><rect class='b' x='40' y='74' width='42' height='18' rx='3' /><text class='t' x='61' y='87' >서연</text><rect class='b' x='82' y='74' width='72' height='18' rx='3' /><text class='t' x='118' y='87' >20</text><rect class='b' x='154' y='74' width='72' height='18' rx='3' /><text class='t' x='190' y='87' >축구</text><rect class='ov' x='154' y='20' width='72' height='72' rx='3' data-o='0'/></g><g data-s='1'><path class='ar' d='M150 96L150 110' marker-end='url(#m)'/><text class='m' x='79' y='123' >학생</text><rect class='h' x='4' y='128' width='36' height='18' rx='3' /><text class='t' x='22' y='141' >학번</text><rect class='h' x='40' y='128' width='42' height='18' rx='3' /><text class='t' x='61' y='141' >이름</text><rect class='h' x='82' y='128' width='72' height='18' rx='3' /><text class='t' x='118' y='141' >동아리번호</text><rect class='b' x='4' y='146' width='36' height='18' rx='3' /><text class='t' x='22' y='159' >1</text><rect class='b' x='40' y='146' width='42' height='18' rx='3' /><text class='t' x='61' y='159' >민지</text><rect class='b' x='82' y='146' width='72' height='18' rx='3' /><text class='t' x='118' y='159' >10</text><rect class='b' x='4' y='164' width='36' height='18' rx='3' /><text class='t' x='22' y='177' >2</text><rect class='b' x='40' y='164' width='42' height='18' rx='3' /><text class='t' x='61' y='177' >도윤</text><rect class='b' x='82' y='164' width='72' height='18' rx='3' /><text class='t' x='118' y='177' >20</text><text class='m' x='232' y='123' >동아리</text><rect class='h' x='168' y='128' width='64' height='18' rx='3' /><text class='t' x='200' y='141' >동아리번호</text><rect class='h' x='232' y='128' width='64' height='18' rx='3' /><text class='t' x='264' y='141' >동아리이름</text><rect class='b' x='168' y='146' width='64' height='18' rx='3' /><text class='t' x='200' y='159' >10</text><rect class='b' x='232' y='146' width='64' height='18' rx='3' /><text class='t' x='264' y='159' >축구</text><rect class='b' x='168' y='164' width='64' height='18' rx='3' /><text class='t' x='200' y='177' >20</text><rect class='b' x='232' y='164' width='64' height='18' rx='3' /><text class='t' x='264' y='177' >미술</text></g></svg>",
+    "steps": [
+     "같은 동아리 이름이 여러 줄에 저장돼요. 이름을 바꾸면 다 고쳐야 해요 (갱신 이상)",
+     "동아리 정보를 따로 떼어 내요. 학생 표에는 번호만 남아요"
+    ]
+   },
+   {
     "table": {
      "cols": [
       "단계",
@@ -12221,7 +12261,16 @@ window.SQLD_STUDY = [
    "순서: 정규화를 정확하게 → 데이터 양(용량) 산정 → 트랜잭션 유형 파악 → 필요한 곳만 반정규화 → 이력 모델, PK·FK, 슈퍼타입·서브타입 조정 → 성능 관점에서 검증.",
    "반정규화는 조회를 빠르게 하거나 개발을 쉽게 하려고 일부러 중복을 허용하는 거예요. 데이터가 서로 안 맞을 위험(무결성 훼손)이 있어서, 정규화를 먼저 한 뒤 꼭 필요한 곳에만 써요."
   ],
-  "ex": []
+  "ex": [],
+  "figs": [
+   {
+    "pic": "<svg viewBox='0 0 300 164'><defs><marker id='m' viewBox='0 0 10 10' refX='9' refY='5' markerWidth='6' markerHeight='6' orient='auto'><path d='M0 0L10 5L0 10z' fill='context-stroke'/></marker></defs><text class='m' x='60' y='15' >주문</text><rect class='h' x='4' y='20' width='56' height='18' rx='3' /><text class='t' x='32' y='33' >주문번호</text><rect class='h' x='60' y='20' width='56' height='18' rx='3' /><text class='t' x='88' y='33' >고객번호</text><rect class='b' x='4' y='38' width='56' height='18' rx='3' /><text class='t' x='32' y='51' >1</text><rect class='b' x='60' y='38' width='56' height='18' rx='3' /><text class='t' x='88' y='51' >100</text><rect class='b' x='4' y='56' width='56' height='18' rx='3' /><text class='t' x='32' y='69' >2</text><rect class='b' x='60' y='56' width='56' height='18' rx='3' /><text class='t' x='88' y='69' >100</text><text class='m' x='176' y='15' >고객</text><rect class='h' x='124' y='20' width='56' height='18' rx='3' /><text class='t' x='152' y='33' >고객번호</text><rect class='h' x='180' y='20' width='48' height='18' rx='3' /><text class='t' x='204' y='33' >고객명</text><rect class='b' x='124' y='38' width='56' height='18' rx='3' /><text class='t' x='152' y='51' >100</text><rect class='b' x='180' y='38' width='48' height='18' rx='3' /><text class='t' x='204' y='51' >민지</text><g data-s='1'><path class='ar' d='M150 84L150 96' marker-end='url(#m)'/><rect class='h' x='40' y='104' width='56' height='18' rx='3' /><text class='t' x='68' y='117' >주문번호</text><rect class='h' x='96' y='104' width='56' height='18' rx='3' /><text class='t' x='124' y='117' >고객번호</text><rect class='h' x='152' y='104' width='48' height='18' rx='3' /><text class='t' x='176' y='117' >고객명</text><rect class='b' x='40' y='122' width='56' height='18' rx='3' /><text class='t' x='68' y='135' >1</text><rect class='b' x='96' y='122' width='56' height='18' rx='3' /><text class='t' x='124' y='135' >100</text><rect class='b' x='152' y='122' width='48' height='18' rx='3' /><text class='t' x='176' y='135' >민지</text><rect class='b' x='40' y='140' width='56' height='18' rx='3' /><text class='t' x='68' y='153' >2</text><rect class='b' x='96' y='140' width='56' height='18' rx='3' /><text class='t' x='124' y='153' >100</text><rect class='b' x='152' y='140' width='48' height='18' rx='3' /><text class='t' x='176' y='153' >민지</text><rect class='ov' x='152' y='104' width='48' height='54' rx='3' data-o='1'/></g></svg>",
+    "steps": [
+     "정규화된 모양: 고객명은 고객 표에 한 번만 있어요. 주문마다 이름을 보려면 조인이 필요해요",
+     "반정규화: 주문 표에 고객명을 일부러 복사해 두면 조인 없이 빨라요. 대신 이름이 바뀌면 다 고쳐야 해요"
+    ]
+   }
+  ]
  },
  {
   "id": "m10",
@@ -12236,7 +12285,13 @@ window.SQLD_STUDY = [
    "NULL 속성: 값이 아직 없거나 모르는 상태예요. 0이나 공백과 달라요. 꼭 있어야 하는 속성은 NOT NULL로 정해요.",
    "본질식별자 대신 인조식별자를 쓰면 같은 내용이 중복으로 들어가는 것을 막지 못할 수 있고, 본질식별자로 찾기 위한 인덱스가 더 필요할 수 있어요."
   ],
-  "ex": []
+  "ex": [],
+  "figs": [
+   {
+    "pic": "<svg viewBox='0 0 300 104'><defs><marker id='m' viewBox='0 0 10 10' refX='9' refY='5' markerWidth='6' markerHeight='6' orient='auto'><path d='M0 0L10 5L0 10z' fill='context-stroke'/></marker></defs><rect class='h' x='8' y='30' width='90' height='40' rx='3' rx='8'/><text class='k' x='53' y='55' >사원</text><path class='ln' d='M98 42c36 -34 36 44 2 22' marker-end='url(#m)'/><text class='m' x='53' y='92' >순환 관계: 자기 자신을 가리켜요</text><rect class='b' x='166' y='4' width='76' height='30' rx='3' rx='8'/><text class='k' x='204' y='24' >개인고객</text><rect class='b' x='166' y='70' width='76' height='30' rx='3' rx='8'/><text class='k' x='204' y='90' >법인고객</text><rect class='h' x='250' y='36' width='46' height='32' rx='3' rx='8'/><text class='k' x='273' y='57' >주문</text><path class='ln' d='M250 48L242 20M250 56L242 84'/><path class='ln' d='M240 34a26 26 0 0 0 0 36'/><text class='m' x='214' y='56' >Arc</text></svg>",
+    "memo": "순환 관계는 자기 자신을 가리키는 화살표, Arc(상호배타) 관계는 둘 중 하나만 고르는 호(弧) 모양이에요."
+   }
+  ]
  },
  {
   "id": "l01",
@@ -12337,7 +12392,16 @@ window.SQLD_STUDY = [
     }
    }
   ],
-  "tip": "실제 시험과 회사에서는 STUDENT, NAME처럼 영어 이름을 주로 써요. 여기서는 알아보기 쉽게 한글 이름을 썼어요. SQL 명령어는 대문자로 쓰든 소문자로 쓰든 똑같이 동작해요."
+  "tip": "실제 시험과 회사에서는 STUDENT, NAME처럼 영어 이름을 주로 써요. 여기서는 알아보기 쉽게 한글 이름을 썼어요. SQL 명령어는 대문자로 쓰든 소문자로 쓰든 똑같이 동작해요.",
+  "figs": [
+   {
+    "pic": "<svg viewBox='0 0 300 140'><text class='m' x='141' y='15' >학생 표</text><rect class='h' x='60' y='20' width='38' height='18' rx='3' /><text class='t' x='79' y='33' >번호</text><rect class='h' x='98' y='20' width='48' height='18' rx='3' /><text class='t' x='122' y='33' >이름</text><rect class='h' x='146' y='20' width='32' height='18' rx='3' /><text class='t' x='162' y='33' >반</text><rect class='h' x='178' y='20' width='44' height='18' rx='3' /><text class='t' x='200' y='33' >점수</text><rect class='b' x='60' y='38' width='38' height='18' rx='3' /><text class='t' x='79' y='51' >1</text><rect class='b' x='98' y='38' width='48' height='18' rx='3' /><text class='t' x='122' y='51' >민지</text><rect class='b' x='146' y='38' width='32' height='18' rx='3' /><text class='t' x='162' y='51' >1</text><rect class='b' x='178' y='38' width='44' height='18' rx='3' /><text class='t' x='200' y='51' >90</text><rect class='b' x='60' y='56' width='38' height='18' rx='3' /><text class='t' x='79' y='69' >2</text><rect class='b' x='98' y='56' width='48' height='18' rx='3' /><text class='t' x='122' y='69' >도윤</text><rect class='b' x='146' y='56' width='32' height='18' rx='3' /><text class='t' x='162' y='69' >1</text><rect class='b' x='178' y='56' width='44' height='18' rx='3' /><text class='t' x='200' y='69' >75</text><rect class='b' x='60' y='74' width='38' height='18' rx='3' /><text class='t' x='79' y='87' >3</text><rect class='b' x='98' y='74' width='48' height='18' rx='3' /><text class='t' x='122' y='87' >서연</text><rect class='b' x='146' y='74' width='32' height='18' rx='3' /><text class='t' x='162' y='87' >2</text><rect class='b' x='178' y='74' width='44' height='18' rx='3' /><text class='t' x='200' y='87' >85</text><rect class='b' x='60' y='92' width='38' height='18' rx='3' /><text class='t' x='79' y='105' >4</text><rect class='b' x='98' y='92' width='48' height='18' rx='3' /><text class='t' x='122' y='105' >하준</text><rect class='b' x='146' y='92' width='32' height='18' rx='3' /><text class='t' x='162' y='105' >2</text><rect class='b' x='178' y='92' width='44' height='18' rx='3' /><text class='t' x='200' y='105' >60</text><rect class='b' x='60' y='110' width='38' height='18' rx='3' /><text class='t' x='79' y='123' >5</text><rect class='b' x='98' y='110' width='48' height='18' rx='3' /><text class='t' x='122' y='123' >지우</text><rect class='b' x='146' y='110' width='32' height='18' rx='3' /><text class='t' x='162' y='123' >3</text><rect class='b' x='178' y='110' width='44' height='18' rx='3' /><text class='t' x='200' y='123' >95</text><rect class='ov' x='60' y='56' width='162' height='18' rx='3' data-o='0'/><rect class='ov' x='98' y='20' width='48' height='108' rx='3' data-o='1'/><text class='m' x='150' y='136' ></text></svg>",
+    "steps": [
+     "행(가로 한 줄): 도윤 한 명의 정보",
+     "열(세로 한 칸): 모든 학생의 이름"
+    ]
+   }
+  ]
  },
  {
   "id": "l02",
@@ -12562,7 +12626,16 @@ window.SQLD_STUDY = [
     }
    }
   ],
-  "tip": "결과의 줄 순서는 ORDER BY로 정렬하라고 하지 않으면 정해져 있지 않아요."
+  "tip": "결과의 줄 순서는 ORDER BY로 정렬하라고 하지 않으면 정해져 있지 않아요.",
+  "figs": [
+   {
+    "pic": "<svg viewBox='0 0 300 140'><text class='m' x='141' y='15' >SELECT 이름, 점수 FROM 학생</text><rect class='h' x='60' y='20' width='38' height='18' rx='3' /><text class='t' x='79' y='33' >번호</text><rect class='h' x='98' y='20' width='48' height='18' rx='3' /><text class='t' x='122' y='33' >이름</text><rect class='h' x='146' y='20' width='32' height='18' rx='3' /><text class='t' x='162' y='33' >반</text><rect class='h' x='178' y='20' width='44' height='18' rx='3' /><text class='t' x='200' y='33' >점수</text><rect class='b' x='60' y='38' width='38' height='18' rx='3' /><text class='t' x='79' y='51' >1</text><rect class='b' x='98' y='38' width='48' height='18' rx='3' /><text class='t' x='122' y='51' >민지</text><rect class='b' x='146' y='38' width='32' height='18' rx='3' /><text class='t' x='162' y='51' >1</text><rect class='b' x='178' y='38' width='44' height='18' rx='3' /><text class='t' x='200' y='51' >90</text><rect class='b' x='60' y='56' width='38' height='18' rx='3' /><text class='t' x='79' y='69' >2</text><rect class='b' x='98' y='56' width='48' height='18' rx='3' /><text class='t' x='122' y='69' >도윤</text><rect class='b' x='146' y='56' width='32' height='18' rx='3' /><text class='t' x='162' y='69' >1</text><rect class='b' x='178' y='56' width='44' height='18' rx='3' /><text class='t' x='200' y='69' >75</text><rect class='b' x='60' y='74' width='38' height='18' rx='3' /><text class='t' x='79' y='87' >3</text><rect class='b' x='98' y='74' width='48' height='18' rx='3' /><text class='t' x='122' y='87' >서연</text><rect class='b' x='146' y='74' width='32' height='18' rx='3' /><text class='t' x='162' y='87' >2</text><rect class='b' x='178' y='74' width='44' height='18' rx='3' /><text class='t' x='200' y='87' >85</text><rect class='b' x='60' y='92' width='38' height='18' rx='3' /><text class='t' x='79' y='105' >4</text><rect class='b' x='98' y='92' width='48' height='18' rx='3' /><text class='t' x='122' y='105' >하준</text><rect class='b' x='146' y='92' width='32' height='18' rx='3' /><text class='t' x='162' y='105' >2</text><rect class='b' x='178' y='92' width='44' height='18' rx='3' /><text class='t' x='200' y='105' >60</text><rect class='b' x='60' y='110' width='38' height='18' rx='3' /><text class='t' x='79' y='123' >5</text><rect class='b' x='98' y='110' width='48' height='18' rx='3' /><text class='t' x='122' y='123' >지우</text><rect class='b' x='146' y='110' width='32' height='18' rx='3' /><text class='t' x='162' y='123' >3</text><rect class='b' x='178' y='110' width='44' height='18' rx='3' /><text class='t' x='200' y='123' >95</text><rect class='ov' x='98' y='20' width='48' height='108' rx='3' data-o='0 1'/><rect class='ov' x='178' y='20' width='44' height='108' rx='3' data-o='0 1'/><g data-o='1'><rect class='no' x='60' y='38' width='38' height='90' rx='3' /><rect class='no' x='146' y='38' width='32' height='90' rx='3' /></g></svg>",
+    "steps": [
+     "SELECT 뒤에 적은 칸(이름, 점수)만 골라요",
+     "적지 않은 칸(번호, 반)은 결과에 안 나와요"
+    ]
+   }
+  ]
  },
  {
   "id": "l03",
@@ -12700,7 +12773,16 @@ window.SQLD_STUDY = [
     }
    }
   ],
-  "tip": "AND와 OR가 함께 있으면 AND를 먼저 계산해요. 헷갈리면 괄호로 묶어 순서를 정해 주세요."
+  "tip": "AND와 OR가 함께 있으면 AND를 먼저 계산해요. 헷갈리면 괄호로 묶어 순서를 정해 주세요.",
+  "figs": [
+   {
+    "pic": "<svg viewBox='0 0 300 140'><text class='m' x='141' y='15' >WHERE 점수 >= 80</text><rect class='h' x='60' y='20' width='38' height='18' rx='3' /><text class='t' x='79' y='33' >번호</text><rect class='h' x='98' y='20' width='48' height='18' rx='3' /><text class='t' x='122' y='33' >이름</text><rect class='h' x='146' y='20' width='32' height='18' rx='3' /><text class='t' x='162' y='33' >반</text><rect class='h' x='178' y='20' width='44' height='18' rx='3' /><text class='t' x='200' y='33' >점수</text><rect class='b' x='60' y='38' width='38' height='18' rx='3' /><text class='t' x='79' y='51' >1</text><rect class='b' x='98' y='38' width='48' height='18' rx='3' /><text class='t' x='122' y='51' >민지</text><rect class='b' x='146' y='38' width='32' height='18' rx='3' /><text class='t' x='162' y='51' >1</text><rect class='b' x='178' y='38' width='44' height='18' rx='3' /><text class='t' x='200' y='51' >90</text><rect class='b' x='60' y='56' width='38' height='18' rx='3' /><text class='t' x='79' y='69' >2</text><rect class='b' x='98' y='56' width='48' height='18' rx='3' /><text class='t' x='122' y='69' >도윤</text><rect class='b' x='146' y='56' width='32' height='18' rx='3' /><text class='t' x='162' y='69' >1</text><rect class='b' x='178' y='56' width='44' height='18' rx='3' /><text class='t' x='200' y='69' >75</text><rect class='b' x='60' y='74' width='38' height='18' rx='3' /><text class='t' x='79' y='87' >3</text><rect class='b' x='98' y='74' width='48' height='18' rx='3' /><text class='t' x='122' y='87' >서연</text><rect class='b' x='146' y='74' width='32' height='18' rx='3' /><text class='t' x='162' y='87' >2</text><rect class='b' x='178' y='74' width='44' height='18' rx='3' /><text class='t' x='200' y='87' >85</text><rect class='b' x='60' y='92' width='38' height='18' rx='3' /><text class='t' x='79' y='105' >4</text><rect class='b' x='98' y='92' width='48' height='18' rx='3' /><text class='t' x='122' y='105' >하준</text><rect class='b' x='146' y='92' width='32' height='18' rx='3' /><text class='t' x='162' y='105' >2</text><rect class='b' x='178' y='92' width='44' height='18' rx='3' /><text class='t' x='200' y='105' >60</text><rect class='b' x='60' y='110' width='38' height='18' rx='3' /><text class='t' x='79' y='123' >5</text><rect class='b' x='98' y='110' width='48' height='18' rx='3' /><text class='t' x='122' y='123' >지우</text><rect class='b' x='146' y='110' width='32' height='18' rx='3' /><text class='t' x='162' y='123' >3</text><rect class='b' x='178' y='110' width='44' height='18' rx='3' /><text class='t' x='200' y='123' >95</text><rect class='ov' x='60' y='38' width='162' height='18' rx='3' data-o='1'/><rect class='ov' x='60' y='74' width='162' height='18' rx='3' data-o='1'/><rect class='ov' x='60' y='110' width='162' height='18' rx='3' data-o='1'/><g data-o='1'><rect class='no' x='60' y='56' width='162' height='18' rx='3' /><rect class='no' x='60' y='92' width='162' height='18' rx='3' /></g></svg>",
+    "steps": [
+     "줄마다 조건을 물어봐요: 점수가 80 이상인가요?",
+     "맞는 줄(민지, 서연, 지우)만 남고 나머지는 빠져요"
+    ]
+   }
+  ]
  },
  {
   "id": "l04",
@@ -12955,6 +13037,16 @@ window.SQLD_STUDY = [
      ]
     }
    }
+  ],
+  "figs": [
+   {
+    "pic": "<svg viewBox='0 0 300 120'><path class='ln' d='M20 40H280'/><circle class='o' cx='40' cy='40' r='5'/><text class='t' x='40' y='62' >5</text><circle class='o' cx='95' cy='40' r='5'/><text class='t' x='95' y='62' >10</text><circle class='o' cx='150' cy='40' r='5'/><text class='t' x='150' y='62' >15</text><circle class='o' cx='205' cy='40' r='5'/><text class='t' x='205' y='62' >20</text><circle class='o' cx='260' cy='40' r='5'/><text class='t' x='260' y='62' >25</text><g data-o='0'><rect class='ov' x='80' y='24' width='134' height='32' rx='3' rx='16'/><text class='k' x='150' y='90' >BETWEEN 10 AND 20 → 10, 15, 20 (양 끝 포함)</text></g><g data-o='1'><circle class='ov' cx='95' cy='40' r='12'/><circle class='ov' cx='260' cy='40' r='12'/><text class='k' x='150' y='90' >IN (10, 25) → 10, 25 (딱 그 값만)</text></g><g data-o='2'><text class='k' x='150' y='90' >LIKE &#39;민%&#39; → 민지, 민수 (민으로 시작)</text><text class='m' x='150' y='110' >_는 한 글자, %는 0글자 이상</text></g></svg>",
+    "steps": [
+     "BETWEEN: 10부터 20까지, 양 끝도 포함해요",
+     "IN: 목록에 적은 값만 골라요",
+     "LIKE: 글자 모양으로 찾아요"
+    ]
+   }
   ]
  },
  {
@@ -13124,7 +13216,16 @@ window.SQLD_STUDY = [
     }
    }
   ],
-  "tip": "Oracle에서 NULL은 가장 큰 값처럼 취급돼서 ASC면 맨 뒤, DESC면 맨 앞에 와요."
+  "tip": "Oracle에서 NULL은 가장 큰 값처럼 취급돼서 ASC면 맨 뒤, DESC면 맨 앞에 와요.",
+  "figs": [
+   {
+    "pic": "<svg viewBox='0 0 300 140'><text class='m' x='50' y='15' >원래 순서</text><rect class='h' x='4' y='20' width='48' height='18' rx='3' /><text class='t' x='28' y='33' >이름</text><rect class='h' x='52' y='20' width='44' height='18' rx='3' /><text class='t' x='74' y='33' >점수</text><rect class='b' x='4' y='38' width='48' height='18' rx='3' /><text class='t' x='28' y='51' >민지</text><rect class='b' x='52' y='38' width='44' height='18' rx='3' /><text class='t' x='74' y='51' >90</text><rect class='b' x='4' y='56' width='48' height='18' rx='3' /><text class='t' x='28' y='69' >도윤</text><rect class='b' x='52' y='56' width='44' height='18' rx='3' /><text class='t' x='74' y='69' >75</text><rect class='b' x='4' y='74' width='48' height='18' rx='3' /><text class='t' x='28' y='87' >서연</text><rect class='b' x='52' y='74' width='44' height='18' rx='3' /><text class='t' x='74' y='87' >85</text><rect class='b' x='4' y='92' width='48' height='18' rx='3' /><text class='t' x='28' y='105' >하준</text><rect class='b' x='52' y='92' width='44' height='18' rx='3' /><text class='t' x='74' y='105' >60</text><rect class='b' x='4' y='110' width='48' height='18' rx='3' /><text class='t' x='28' y='123' >지우</text><rect class='b' x='52' y='110' width='44' height='18' rx='3' /><text class='t' x='74' y='123' >95</text><g data-s='1'><path class='ar' d='M108 74L136 74' marker-end='url(#m)'/><text class='m' x='192' y='15' >ORDER BY 점수 DESC</text><rect class='h' x='146' y='20' width='48' height='18' rx='3' /><text class='t' x='170' y='33' >이름</text><rect class='h' x='194' y='20' width='44' height='18' rx='3' /><text class='t' x='216' y='33' >점수</text><rect class='b' x='146' y='38' width='48' height='18' rx='3' /><text class='t' x='170' y='51' >지우</text><rect class='b' x='194' y='38' width='44' height='18' rx='3' /><text class='t' x='216' y='51' >95</text><rect class='b' x='146' y='56' width='48' height='18' rx='3' /><text class='t' x='170' y='69' >민지</text><rect class='b' x='194' y='56' width='44' height='18' rx='3' /><text class='t' x='216' y='69' >90</text><rect class='b' x='146' y='74' width='48' height='18' rx='3' /><text class='t' x='170' y='87' >서연</text><rect class='b' x='194' y='74' width='44' height='18' rx='3' /><text class='t' x='216' y='87' >85</text><rect class='b' x='146' y='92' width='48' height='18' rx='3' /><text class='t' x='170' y='105' >도윤</text><rect class='b' x='194' y='92' width='44' height='18' rx='3' /><text class='t' x='216' y='105' >75</text><rect class='b' x='146' y='110' width='48' height='18' rx='3' /><text class='t' x='170' y='123' >하준</text><rect class='b' x='194' y='110' width='44' height='18' rx='3' /><text class='t' x='216' y='123' >60</text></g><g data-o='1'><rect class='ov' x='146' y='38' width='92' height='18' rx='3' /></g></svg>",
+    "steps": [
+     "표에 넣은 순서 그대로예요",
+     "점수가 큰 것부터 (DESC) 줄을 다시 세워요. 맨 위가 지우 95점"
+    ]
+   }
+  ]
  },
  {
   "id": "l06",
@@ -13426,6 +13527,14 @@ window.SQLD_STUDY = [
   "tip": "SUBSTR의 시작 위치는 0이 아니라 1부터 세요.",
   "figs": [
    {
+    "pic": "<svg viewBox='0 0 300 100'><rect class='b' x='30' y='20' width='36' height='36' rx='3' /><text class='k' x='48' y='44' >데</text><text class='m' x='48' y='70' >1</text><rect class='b' x='70' y='20' width='36' height='36' rx='3' /><text class='k' x='88' y='44' >이</text><text class='m' x='88' y='70' >2</text><rect class='b' x='110' y='20' width='36' height='36' rx='3' /><text class='k' x='128' y='44' >터</text><text class='m' x='128' y='70' >3</text><rect class='b' x='150' y='20' width='36' height='36' rx='3' /><text class='k' x='168' y='44' >베</text><text class='m' x='168' y='70' >4</text><rect class='b' x='190' y='20' width='36' height='36' rx='3' /><text class='k' x='208' y='44' >이</text><text class='m' x='208' y='70' >5</text><rect class='b' x='230' y='20' width='36' height='36' rx='3' /><text class='k' x='248' y='44' >스</text><text class='m' x='248' y='70' >6</text><g data-o='0'><rect class='ov' x='30' y='20' width='116' height='36' rx='3' /><text class='k' x='150' y='92' >SUBSTR(&#39;데이터베이스&#39;, 1, 3) → &#39;데이터&#39;</text></g><g data-o='1'><rect class='ov' x='150' y='20' width='116' height='36' rx='3' /><text class='k' x='150' y='92' >SUBSTR(&#39;데이터베이스&#39;, 4, 3) → &#39;베이스&#39;</text></g><g data-o='2'><rect class='ov' x='30' y='20' width='236' height='36' rx='3' /><text class='k' x='150' y='92' >LENGTH(&#39;데이터베이스&#39;) → 6</text></g></svg>",
+    "steps": [
+     "SUBSTR(글자, 시작, 개수): 1번째부터 3글자",
+     "4번째부터 3글자. 시작 위치는 0이 아니라 1부터 세요",
+     "LENGTH: 글자 수"
+    ]
+   },
+   {
     "table": {
      "cols": [
       "함수",
@@ -13639,6 +13748,16 @@ window.SQLD_STUDY = [
      ]
     }
    }
+  ],
+  "figs": [
+   {
+    "pic": "<svg viewBox='0 0 300 120'><defs><marker id='m' viewBox='0 0 10 10' refX='9' refY='5' markerWidth='6' markerHeight='6' orient='auto'><path d='M0 0L10 5L0 10z' fill='context-stroke'/></marker></defs><rect class='b' x='6' y='40' width='60' height='36' rx='3' rx='8'/><text class='k' x='36' y='63' >점수</text><rect class='h' x='96' y='4' width='76' height='30' rx='3' rx='8'/><text class='k' x='134' y='24' >90 이상?</text><rect class='h' x='96' y='44' width='76' height='30' rx='3' rx='8'/><text class='k' x='134' y='64' >80 이상?</text><rect class='b' x='96' y='84' width='76' height='30' rx='3' rx='8'/><text class='k' x='134' y='104' >그 외</text><rect class='b' x='220' y='4' width='50' height='30' rx='3' rx='8'/><text class='k' x='245' y='24' >&#39;A&#39;</text><rect class='b' x='220' y='44' width='50' height='30' rx='3' rx='8'/><text class='k' x='245' y='64' >&#39;B&#39;</text><rect class='b' x='220' y='84' width='50' height='30' rx='3' rx='8'/><text class='k' x='245' y='104' >&#39;C&#39;</text><path class='ar' d='M66 58L94 20' marker-end='url(#m)'/><path class='ar' d='M66 58L94 58' marker-end='url(#m)'/><path class='ar' d='M66 58L94 98' marker-end='url(#m)'/><path class='ar' d='M172 19L218 19' marker-end='url(#m)'/><path class='ar' d='M172 59L218 59' marker-end='url(#m)'/><path class='ar' d='M172 99L218 99' marker-end='url(#m)'/><g data-o='0'><rect class='ov' x='96' y='4' width='76' height='30' rx='3' rx='8'/><rect class='ov' x='220' y='4' width='50' height='30' rx='3' rx='8'/></g><g data-o='1'><rect class='no' x='96' y='4' width='76' height='30' rx='3' rx='8'/><rect class='ov' x='96' y='44' width='76' height='30' rx='3' rx='8'/><rect class='ov' x='220' y='44' width='50' height='30' rx='3' rx='8'/></g><g data-o='2'><rect class='no' x='96' y='4' width='76' height='30' rx='3' rx='8'/><rect class='no' x='96' y='44' width='76' height='30' rx='3' rx='8'/><rect class='ov' x='96' y='84' width='76' height='30' rx='3' rx='8'/><rect class='ov' x='220' y='84' width='50' height='30' rx='3' rx='8'/></g></svg>",
+    "steps": [
+     "점수 95: 첫 WHEN(90 이상)이 맞아요 → 'A'. 아래는 안 봐요",
+     "점수 85: 첫 WHEN은 아니고, 둘째 WHEN(80 이상)이 맞아요 → 'B'",
+     "점수 60: 맞는 WHEN이 없어요 → ELSE 'C' (ELSE가 없으면 NULL)"
+    ]
+   }
   ]
  },
  {
@@ -13704,7 +13823,17 @@ window.SQLD_STUDY = [
     }
    }
   ],
-  "tip": "평균이 80인 이유: 240을 4명이 아니라 점수가 있는 3명으로 나눴기 때문이에요. 빈칸을 0점으로 치고 싶다면 AVG(NVL(점수, 0))처럼 써요."
+  "tip": "평균이 80인 이유: 240을 4명이 아니라 점수가 있는 3명으로 나눴기 때문이에요. 빈칸을 0점으로 치고 싶다면 AVG(NVL(점수, 0))처럼 써요.",
+  "figs": [
+   {
+    "pic": "<svg viewBox='0 0 300 120'><defs><marker id='m' viewBox='0 0 10 10' refX='9' refY='5' markerWidth='6' markerHeight='6' orient='auto'><path d='M0 0L10 5L0 10z' fill='context-stroke'/></marker></defs><rect class='h' x='10' y='20' width='48' height='18' rx='3' /><text class='t' x='34' y='33' >이름</text><rect class='h' x='58' y='20' width='44' height='18' rx='3' /><text class='t' x='80' y='33' >점수</text><rect class='b' x='10' y='38' width='48' height='18' rx='3' /><text class='t' x='34' y='51' >민지</text><rect class='b' x='58' y='38' width='44' height='18' rx='3' /><text class='t' x='80' y='51' >90</text><rect class='b' x='10' y='56' width='48' height='18' rx='3' /><text class='t' x='34' y='69' >도윤</text><rect class='b' x='58' y='56' width='44' height='18' rx='3' /><text class='t' x='80' y='69' >70</text><rect class='b' x='10' y='74' width='48' height='18' rx='3' /><text class='t' x='34' y='87' >하준</text><rect class='b' x='58' y='74' width='44' height='18' rx='3' /><text class='m' x='80' y='87' >NULL</text><rect class='b' x='10' y='92' width='48' height='18' rx='3' /><text class='t' x='34' y='105' >지우</text><rect class='b' x='58' y='92' width='44' height='18' rx='3' /><text class='t' x='80' y='105' >80</text><g data-s='1'><path class='ar' d='M108 65L140 65' marker-end='url(#m)'/><rect class='h' x='150' y='20' width='68' height='18' rx='3' /><text class='t' x='184' y='33' >COUNT(*)</text><rect class='h' x='218' y='20' width='76' height='18' rx='3' /><text class='t' x='256' y='33' >COUNT(점수)</text><rect class='b' x='150' y='38' width='68' height='18' rx='3' /><text class='t' x='184' y='51' >4</text><rect class='b' x='218' y='38' width='76' height='18' rx='3' /><text class='t' x='256' y='51' >3</text></g><g data-s='2'><rect class='h' x='150' y='74' width='68' height='18' rx='3' /><text class='t' x='184' y='87' >SUM</text><rect class='h' x='218' y='74' width='76' height='18' rx='3' /><text class='t' x='256' y='87' >AVG</text><rect class='b' x='150' y='92' width='68' height='18' rx='3' /><text class='t' x='184' y='105' >240</text><rect class='b' x='218' y='92' width='76' height='18' rx='3' /><text class='t' x='256' y='105' >80</text></g><g data-o='0'><rect class='ov' x='10' y='38' width='92' height='72' rx='3' /></g><g data-o='1'><rect class='no' x='10' y='74' width='92' height='18' rx='3' /></g><g data-o='2'><rect class='ov' x='58' y='38' width='44' height='36' rx='3' /><rect class='ov' x='58' y='92' width='44' height='18' rx='3' /></g></svg>",
+    "steps": [
+     "COUNT(*): 줄 수를 모두 세요 → 4",
+     "COUNT(점수): 비어 있는 하준이는 안 세요 → 3",
+     "SUM 240, AVG 240 ÷ 3 = 80. NULL은 빼고 계산해요"
+    ]
+   }
+  ]
  },
  {
   "id": "l10",
@@ -13788,6 +13917,15 @@ window.SQLD_STUDY = [
      ]
     }
    }
+  ],
+  "figs": [
+   {
+    "pic": "<svg viewBox='0 0 300 130'><defs><marker id='m' viewBox='0 0 10 10' refX='9' refY='5' markerWidth='6' markerHeight='6' orient='auto'><path d='M0 0L10 5L0 10z' fill='context-stroke'/></marker></defs><rect class='h' x='4' y='20' width='46' height='18' rx='3' /><text class='t' x='27' y='33' >이름</text><rect class='h' x='50' y='20' width='30' height='18' rx='3' /><text class='t' x='65' y='33' >반</text><rect class='h' x='80' y='20' width='40' height='18' rx='3' /><text class='t' x='100' y='33' >점수</text><rect class='b' x='4' y='38' width='46' height='18' rx='3' /><text class='t' x='27' y='51' >민지</text><rect class='b' x='50' y='38' width='30' height='18' rx='3' /><text class='t' x='65' y='51' >1</text><rect class='b' x='80' y='38' width='40' height='18' rx='3' /><text class='t' x='100' y='51' >90</text><rect class='b' x='4' y='56' width='46' height='18' rx='3' /><text class='t' x='27' y='69' >도윤</text><rect class='b' x='50' y='56' width='30' height='18' rx='3' /><text class='t' x='65' y='69' >1</text><rect class='b' x='80' y='56' width='40' height='18' rx='3' /><text class='t' x='100' y='69' >75</text><rect class='b' x='4' y='74' width='46' height='18' rx='3' /><text class='t' x='27' y='87' >서연</text><rect class='b' x='50' y='74' width='30' height='18' rx='3' /><text class='t' x='65' y='87' >2</text><rect class='b' x='80' y='74' width='40' height='18' rx='3' /><text class='t' x='100' y='87' >85</text><rect class='b' x='4' y='92' width='46' height='18' rx='3' /><text class='t' x='27' y='105' >하준</text><rect class='b' x='50' y='92' width='30' height='18' rx='3' /><text class='t' x='65' y='105' >2</text><rect class='b' x='80' y='92' width='40' height='18' rx='3' /><text class='t' x='100' y='105' >60</text><rect class='b' x='4' y='110' width='46' height='18' rx='3' /><text class='t' x='27' y='123' >지우</text><rect class='b' x='50' y='110' width='30' height='18' rx='3' /><text class='t' x='65' y='123' >3</text><rect class='b' x='80' y='110' width='40' height='18' rx='3' /><text class='t' x='100' y='123' >95</text><g data-s='1'><path class='ar' d='M124 74L150 74' marker-end='url(#m)'/><text class='m' x='225' y='15' >GROUP BY 반</text><rect class='h' x='162' y='20' width='30' height='18' rx='3' /><text class='t' x='177' y='33' >반</text><rect class='h' x='192' y='20' width='48' height='18' rx='3' /><text class='t' x='216' y='33' >학생수</text><rect class='h' x='240' y='20' width='48' height='18' rx='3' /><text class='t' x='264' y='33' >평균</text><rect class='b' x='162' y='38' width='30' height='18' rx='3' /><text class='t' x='177' y='51' >1</text><rect class='b' x='192' y='38' width='48' height='18' rx='3' /><text class='t' x='216' y='51' >2</text><rect class='b' x='240' y='38' width='48' height='18' rx='3' /><text class='t' x='264' y='51' >82.5</text><rect class='b' x='162' y='56' width='30' height='18' rx='3' /><text class='t' x='177' y='69' >2</text><rect class='b' x='192' y='56' width='48' height='18' rx='3' /><text class='t' x='216' y='69' >2</text><rect class='b' x='240' y='56' width='48' height='18' rx='3' /><text class='t' x='264' y='69' >72.5</text><rect class='b' x='162' y='74' width='30' height='18' rx='3' /><text class='t' x='177' y='87' >3</text><rect class='b' x='192' y='74' width='48' height='18' rx='3' /><text class='t' x='216' y='87' >1</text><rect class='b' x='240' y='74' width='48' height='18' rx='3' /><text class='t' x='264' y='87' >95</text></g><g data-o='0'><rect class='ov' x='4' y='38' width='116' height='36' rx='3' /><rect class='no' x='4' y='74' width='116' height='36' rx='3' /><rect class='ov' x='4' y='110' width='116' height='18' rx='3' /></g><g data-o='1'><rect class='ov' x='4' y='38' width='116' height='36' rx='3' /><rect class='ov' x='162' y='38' width='126' height='18' rx='3' /></g></svg>",
+    "steps": [
+     "반이 같은 줄끼리 모둠으로 묶어요 (1반 2명, 2반 2명, 3반 1명)",
+     "모둠 하나가 결과 한 줄이 돼요. 평균은 모둠마다 따로 계산해요"
+    ]
+   }
   ]
  },
  {
@@ -13862,6 +14000,15 @@ window.SQLD_STUDY = [
       ]
      ]
     }
+   }
+  ],
+  "figs": [
+   {
+    "pic": "<svg viewBox='0 0 300 100'><defs><marker id='m' viewBox='0 0 10 10' refX='9' refY='5' markerWidth='6' markerHeight='6' orient='auto'><path d='M0 0L10 5L0 10z' fill='context-stroke'/></marker></defs><text class='m' x='58' y='15' >GROUP BY 반</text><rect class='h' x='10' y='20' width='40' height='18' rx='3' /><text class='t' x='30' y='33' >반</text><rect class='h' x='50' y='20' width='56' height='18' rx='3' /><text class='t' x='78' y='33' >평균</text><rect class='b' x='10' y='38' width='40' height='18' rx='3' /><text class='t' x='30' y='51' >1</text><rect class='b' x='50' y='38' width='56' height='18' rx='3' /><text class='t' x='78' y='51' >82.5</text><rect class='b' x='10' y='56' width='40' height='18' rx='3' /><text class='t' x='30' y='69' >2</text><rect class='b' x='50' y='56' width='56' height='18' rx='3' /><text class='t' x='78' y='69' >72.5</text><rect class='b' x='10' y='74' width='40' height='18' rx='3' /><text class='t' x='30' y='87' >3</text><rect class='b' x='50' y='74' width='56' height='18' rx='3' /><text class='t' x='78' y='87' >95</text><g data-s='1'><path class='ar' d='M110 60L150 60' marker-end='url(#m)'/><text class='m' x='208' y='15' >HAVING AVG(점수) >= 80</text><rect class='h' x='160' y='20' width='40' height='18' rx='3' /><text class='t' x='180' y='33' >반</text><rect class='h' x='200' y='20' width='56' height='18' rx='3' /><text class='t' x='228' y='33' >평균</text><rect class='b' x='160' y='38' width='40' height='18' rx='3' /><text class='t' x='180' y='51' >1</text><rect class='b' x='200' y='38' width='56' height='18' rx='3' /><text class='t' x='228' y='51' >82.5</text><rect class='b' x='160' y='56' width='40' height='18' rx='3' /><text class='t' x='180' y='69' >3</text><rect class='b' x='200' y='56' width='56' height='18' rx='3' /><text class='t' x='228' y='69' >95</text></g><g data-o='1'><rect class='no' x='10' y='56' width='96' height='18' rx='3' /></g></svg>",
+    "steps": [
+     "먼저 반별로 묶어서 평균을 구해요",
+     "HAVING으로 모둠을 걸러요: 평균 80 미만인 2반은 빠져요"
+    ]
    }
   ]
  },
@@ -14130,7 +14277,17 @@ window.SQLD_STUDY = [
     }
    }
   ],
-  "tip": "짝짓는 기준이 =이면 EQUI JOIN, BETWEEN이나 >처럼 =이 아니면 NON-EQUI JOIN이라고 불러요."
+  "tip": "짝짓는 기준이 =이면 EQUI JOIN, BETWEEN이나 >처럼 =이 아니면 NON-EQUI JOIN이라고 불러요.",
+  "figs": [
+   {
+    "pic": "<svg viewBox='0 0 300 140'><defs><marker id='m' viewBox='0 0 10 10' refX='9' refY='5' markerWidth='6' markerHeight='6' orient='auto'><path d='M0 0L10 5L0 10z' fill='context-stroke'/></marker></defs><text class='m' x='61' y='15' >학생</text><rect class='h' x='4' y='20' width='44' height='18' rx='3' /><text class='t' x='26' y='33' >이름</text><rect class='h' x='48' y='20' width='70' height='18' rx='3' /><text class='t' x='83' y='33' >동아리번호</text><rect class='b' x='4' y='38' width='44' height='18' rx='3' /><text class='t' x='26' y='51' >민지</text><rect class='b' x='48' y='38' width='70' height='18' rx='3' /><text class='t' x='83' y='51' >10</text><rect class='b' x='4' y='56' width='44' height='18' rx='3' /><text class='t' x='26' y='69' >도윤</text><rect class='b' x='48' y='56' width='70' height='18' rx='3' /><text class='t' x='83' y='69' >20</text><rect class='b' x='4' y='74' width='44' height='18' rx='3' /><text class='t' x='26' y='87' >서연</text><rect class='b' x='48' y='74' width='70' height='18' rx='3' /><text class='t' x='83' y='87' >10</text><rect class='b' x='4' y='92' width='44' height='18' rx='3' /><text class='t' x='26' y='105' >하준</text><rect class='b' x='48' y='92' width='70' height='18' rx='3' /><text class='m' x='83' y='105' >NULL</text><text class='m' x='234' y='15' >동아리</text><rect class='h' x='172' y='20' width='64' height='18' rx='3' /><text class='t' x='204' y='33' >동아리번호</text><rect class='h' x='236' y='20' width='60' height='18' rx='3' /><text class='t' x='266' y='33' >동아리이름</text><rect class='b' x='172' y='38' width='64' height='18' rx='3' /><text class='t' x='204' y='51' >10</text><rect class='b' x='236' y='38' width='60' height='18' rx='3' /><text class='t' x='266' y='51' >축구</text><rect class='b' x='172' y='56' width='64' height='18' rx='3' /><text class='t' x='204' y='69' >20</text><rect class='b' x='236' y='56' width='60' height='18' rx='3' /><text class='t' x='266' y='69' >미술</text><rect class='b' x='172' y='74' width='64' height='18' rx='3' /><text class='t' x='204' y='87' >30</text><rect class='b' x='236' y='74' width='60' height='18' rx='3' /><text class='t' x='266' y='87' >독서</text><g data-o='0'><path class='ln' d='M118 47H172M118 83H172'/><rect class='ov' x='4' y='38' width='114' height='18' rx='3' /><rect class='ov' x='4' y='74' width='114' height='18' rx='3' /><rect class='ov' x='172' y='38' width='124' height='18' rx='3' /></g><g data-o='1'><path class='ln' d='M118 65H172'/><rect class='ov' x='4' y='56' width='114' height='18' rx='3' /><rect class='ov' x='172' y='56' width='124' height='18' rx='3' /></g><g data-o='2'><rect class='no' x='4' y='92' width='114' height='18' rx='3' /><rect class='no' x='172' y='74' width='124' height='18' rx='3' /></g><text class='m' x='150' y='134' >ON 학생.동아리번호 = 동아리.동아리번호</text></svg>",
+    "steps": [
+     "번호가 같은 줄끼리 짝지어요: 민지·서연 ↔ 10 축구",
+     "도윤 ↔ 20 미술",
+     "짝이 없는 하준(NULL)과 30 독서는 INNER JOIN 결과에서 빠져요"
+    ]
+   }
+  ]
  },
  {
   "id": "l14",
@@ -14575,6 +14732,13 @@ window.SQLD_STUDY = [
   "tip": "답이 여러 줄인 서브쿼리에 =를 쓰면 오류가 나요.",
   "figs": [
    {
+    "pic": "<svg viewBox='0 0 300 120'><defs><marker id='m' viewBox='0 0 10 10' refX='9' refY='5' markerWidth='6' markerHeight='6' orient='auto'><path d='M0 0L10 5L0 10z' fill='context-stroke'/></marker></defs><rect class='b' x='10' y='10' width='280' height='100' rx='3' rx='10'/><text class='t' x='150' y='30' >SELECT 이름, 점수 FROM 학생 WHERE 점수 ></text><rect class='h' x='60' y='42' width='180' height='28' rx='3' rx='8'/><text class='t' x='150' y='60' >( SELECT AVG(점수) FROM 학생 )</text><g data-o='0'><rect class='ov' x='60' y='42' width='180' height='28' rx='3' rx='8'/><text class='k' x='150' y='96' >괄호 안을 먼저 계산 → 81</text></g><g data-o='1'><rect class='ov' x='10' y='10' width='280' height='100' rx='3' rx='10'/><text class='k' x='150' y='96' >WHERE 점수 > 81 → 민지, 서연, 지우</text></g></svg>",
+    "steps": [
+     "괄호 안(서브쿼리)을 먼저 풀어요: 평균 81",
+     "그 답을 바깥에서 써요: 81점보다 높은 학생"
+    ]
+   },
+   {
     "table": {
      "cols": [
       "들어간 곳",
@@ -14966,12 +15130,20 @@ window.SQLD_STUDY = [
   ],
   "figs": [
    {
+    "pic": "<svg viewBox='0 0 300 128'><text class='t' x='30' y='32' >민지</text><rect class='h' x='54' y='20' width='160' height='16' rx='3' /><text class='t l' x='220' y='32' >100</text><text class='t' x='30' y='54' >도윤</text><rect class='h' x='54' y='42' width='144' height='16' rx='3' /><text class='t l' x='204' y='54' >90</text><text class='t' x='30' y='76' >서연</text><rect class='h' x='54' y='64' width='144' height='16' rx='3' /><text class='t l' x='204' y='76' >90</text><text class='t' x='30' y='98' >하준</text><rect class='h' x='54' y='86' width='128' height='16' rx='3' /><text class='t l' x='188' y='98' >80</text><g data-o='0'><text class='k' x='270' y='32' >1</text><text class='k' x='270' y='54' >2</text><text class='k' x='270' y='76' >2</text><text class='k' x='270' y='98' >4</text><text class='m' x='150' y='122' >RANK: 2등이 둘이라 다음은 4등 (3등 건너뜀)</text></g><g data-o='1'><text class='k' x='270' y='32' >1</text><text class='k' x='270' y='54' >2</text><text class='k' x='270' y='76' >2</text><text class='k' x='270' y='98' >3</text><text class='m' x='150' y='122' >DENSE_RANK: 건너뛰지 않고 3등</text></g><g data-o='2'><text class='k' x='270' y='32' >1</text><text class='k' x='270' y='54' >2</text><text class='k' x='270' y='76' >3</text><text class='k' x='270' y='98' >4</text><text class='m' x='150' y='122' >ROW_NUMBER: 같은 점수도 다른 번호</text></g></svg>",
+    "steps": [
+     "RANK: 같은 점수는 같은 등수, 그다음 등수는 건너뛰어요",
+     "DENSE_RANK: 같은 등수 다음을 건너뛰지 않아요",
+     "ROW_NUMBER: 무조건 1, 2, 3, 4"
+    ]
+   },
+   {
     "table": {
      "cols": [
       "점수",
       "RANK",
-      "DENSE_\u200bRANK",
-      "ROW_\u200bNUMBER"
+      "DENSE_​RANK",
+      "ROW_​NUMBER"
      ],
      "rows": [
       [
@@ -15152,7 +15324,17 @@ window.SQLD_STUDY = [
     }
    }
   ],
-  "tip": "LAG는 바로 앞 줄 값, LEAD는 바로 다음 줄 값을 가져와요."
+  "tip": "LAG는 바로 앞 줄 값, LEAD는 바로 다음 줄 값을 가져와요.",
+  "figs": [
+   {
+    "pic": "<svg viewBox='0 0 300 130'><defs><marker id='m' viewBox='0 0 10 10' refX='9' refY='5' markerWidth='6' markerHeight='6' orient='auto'><path d='M0 0L10 5L0 10z' fill='context-stroke'/></marker></defs><rect class='h' x='4' y='20' width='30' height='18' rx='3' /><text class='t' x='19' y='33' >반</text><rect class='h' x='34' y='20' width='46' height='18' rx='3' /><text class='t' x='57' y='33' >이름</text><rect class='h' x='80' y='20' width='40' height='18' rx='3' /><text class='t' x='100' y='33' >점수</text><rect class='b' x='4' y='38' width='30' height='18' rx='3' /><text class='t' x='19' y='51' >1</text><rect class='b' x='34' y='38' width='46' height='18' rx='3' /><text class='t' x='57' y='51' >민지</text><rect class='b' x='80' y='38' width='40' height='18' rx='3' /><text class='t' x='100' y='51' >90</text><rect class='b' x='4' y='56' width='30' height='18' rx='3' /><text class='t' x='19' y='69' >1</text><rect class='b' x='34' y='56' width='46' height='18' rx='3' /><text class='t' x='57' y='69' >도윤</text><rect class='b' x='80' y='56' width='40' height='18' rx='3' /><text class='t' x='100' y='69' >75</text><rect class='b' x='4' y='74' width='30' height='18' rx='3' /><text class='t' x='19' y='87' >2</text><rect class='b' x='34' y='74' width='46' height='18' rx='3' /><text class='t' x='57' y='87' >서연</text><rect class='b' x='80' y='74' width='40' height='18' rx='3' /><text class='t' x='100' y='87' >85</text><rect class='b' x='4' y='92' width='30' height='18' rx='3' /><text class='t' x='19' y='105' >2</text><rect class='b' x='34' y='92' width='46' height='18' rx='3' /><text class='t' x='57' y='105' >하준</text><rect class='b' x='80' y='92' width='40' height='18' rx='3' /><text class='t' x='100' y='105' >60</text><rect class='b' x='4' y='110' width='30' height='18' rx='3' /><text class='t' x='19' y='123' >3</text><rect class='b' x='34' y='110' width='46' height='18' rx='3' /><text class='t' x='57' y='123' >지우</text><rect class='b' x='80' y='110' width='40' height='18' rx='3' /><text class='t' x='100' y='123' >95</text><rect class='h' x='150' y='20' width='56' height='18' rx='3' /><text class='t' x='178' y='33' >반등수</text><rect class='b' x='150' y='38' width='56' height='18' rx='3' /><text class='t' x='178' y='51' >1</text><rect class='b' x='150' y='56' width='56' height='18' rx='3' /><text class='t' x='178' y='69' >2</text><rect class='b' x='150' y='74' width='56' height='18' rx='3' /><text class='t' x='178' y='87' >1</text><rect class='b' x='150' y='92' width='56' height='18' rx='3' /><text class='t' x='178' y='105' >2</text><rect class='b' x='150' y='110' width='56' height='18' rx='3' /><text class='t' x='178' y='123' >1</text><g data-o='0'><rect class='ov' x='4' y='38' width='116' height='36' rx='3' /><rect class='ov' x='150' y='38' width='56' height='36' rx='3' /></g><g data-o='1'><rect class='ov' x='4' y='74' width='116' height='36' rx='3' /><rect class='ov' x='150' y='74' width='56' height='36' rx='3' /></g><g data-o='2'><rect class='ov' x='4' y='110' width='116' height='18' rx='3' /><rect class='ov' x='150' y='110' width='56' height='18' rx='3' /></g><text class='m' x='258' y='60' >PARTITION</text><text class='m' x='258' y='74' >BY 반</text><text class='m' x='258' y='100' >줄은 그대로</text></svg>",
+    "steps": [
+     "1반 안에서만 등수: 민지 1, 도윤 2",
+     "2반 안에서만 다시 1부터: 서연 1, 하준 2",
+     "3반: 지우 1. GROUP BY와 달리 줄이 합쳐지지 않아요"
+    ]
+   }
+  ]
  },
  {
   "id": "l20",
@@ -15232,6 +15414,15 @@ window.SQLD_STUDY = [
       ]
      ]
     }
+   }
+  ],
+  "figs": [
+   {
+    "pic": "<svg viewBox='0 0 300 130'><defs><marker id='m' viewBox='0 0 10 10' refX='9' refY='5' markerWidth='6' markerHeight='6' orient='auto'><path d='M0 0L10 5L0 10z' fill='context-stroke'/></marker></defs><text class='m' x='76' y='15' >점수 순으로 순번 붙이기</text><rect class='h' x='10' y='20' width='48' height='18' rx='3' /><text class='t' x='34' y='33' >이름</text><rect class='h' x='58' y='20' width='44' height='18' rx='3' /><text class='t' x='80' y='33' >점수</text><rect class='h' x='102' y='20' width='40' height='18' rx='3' /><text class='t' x='122' y='33' >순번</text><rect class='b' x='10' y='38' width='48' height='18' rx='3' /><text class='t' x='34' y='51' >지우</text><rect class='b' x='58' y='38' width='44' height='18' rx='3' /><text class='t' x='80' y='51' >95</text><rect class='b' x='102' y='38' width='40' height='18' rx='3' /><text class='t' x='122' y='51' >1</text><rect class='b' x='10' y='56' width='48' height='18' rx='3' /><text class='t' x='34' y='69' >민지</text><rect class='b' x='58' y='56' width='44' height='18' rx='3' /><text class='t' x='80' y='69' >90</text><rect class='b' x='102' y='56' width='40' height='18' rx='3' /><text class='t' x='122' y='69' >2</text><rect class='b' x='10' y='74' width='48' height='18' rx='3' /><text class='t' x='34' y='87' >서연</text><rect class='b' x='58' y='74' width='44' height='18' rx='3' /><text class='t' x='80' y='87' >85</text><rect class='b' x='102' y='74' width='40' height='18' rx='3' /><text class='t' x='122' y='87' >3</text><rect class='b' x='10' y='92' width='48' height='18' rx='3' /><text class='t' x='34' y='105' >도윤</text><rect class='b' x='58' y='92' width='44' height='18' rx='3' /><text class='t' x='80' y='105' >75</text><rect class='b' x='102' y='92' width='40' height='18' rx='3' /><text class='t' x='122' y='105' >4</text><rect class='b' x='10' y='110' width='48' height='18' rx='3' /><text class='t' x='34' y='123' >하준</text><rect class='b' x='58' y='110' width='44' height='18' rx='3' /><text class='t' x='80' y='123' >60</text><rect class='b' x='102' y='110' width='40' height='18' rx='3' /><text class='t' x='122' y='123' >5</text><g data-o='1'><rect class='ov' x='10' y='38' width='132' height='54' rx='3' /><rect class='no' x='10' y='92' width='132' height='36' rx='3' /><text class='k' x='222' y='60' >WHERE 순번 &lt;= 3</text><text class='m' x='222' y='80' >위에서 3명만</text></g></svg>",
+    "steps": [
+     "점수 순으로 줄을 세우고 1, 2, 3… 순번을 붙여요",
+     "바깥에서 순번 3 이하만 남겨요 → 지우, 민지, 서연"
+    ]
    }
   ]
  },
@@ -15368,6 +15559,14 @@ window.SQLD_STUDY = [
   ],
   "tip": "GROUPING(칸) 함수는 그 칸이 소계나 총계 때문에 NULL이 된 줄이면 1, 아니면 0을 돌려줘요.",
   "figs": [
+   {
+    "pic": "<svg viewBox='0 0 300 150'><defs><marker id='m' viewBox='0 0 10 10' refX='9' refY='5' markerWidth='6' markerHeight='6' orient='auto'><path d='M0 0L10 5L0 10z' fill='context-stroke'/></marker></defs><rect class='h' x='4' y='20' width='40' height='18' rx='3' /><text class='t' x='24' y='33' >가게</text><rect class='h' x='44' y='20' width='44' height='18' rx='3' /><text class='t' x='66' y='33' >과일</text><rect class='h' x='88' y='20' width='40' height='18' rx='3' /><text class='t' x='108' y='33' >판매</text><rect class='b' x='4' y='38' width='40' height='18' rx='3' /><text class='t' x='24' y='51' >A</text><rect class='b' x='44' y='38' width='44' height='18' rx='3' /><text class='t' x='66' y='51' >사과</text><rect class='b' x='88' y='38' width='40' height='18' rx='3' /><text class='t' x='108' y='51' >10</text><rect class='b' x='4' y='56' width='40' height='18' rx='3' /><text class='t' x='24' y='69' >A</text><rect class='b' x='44' y='56' width='44' height='18' rx='3' /><text class='t' x='66' y='69' >배</text><rect class='b' x='88' y='56' width='40' height='18' rx='3' /><text class='t' x='108' y='69' >20</text><rect class='b' x='4' y='74' width='40' height='18' rx='3' /><text class='t' x='24' y='87' >B</text><rect class='b' x='44' y='74' width='44' height='18' rx='3' /><text class='t' x='66' y='87' >사과</text><rect class='b' x='88' y='74' width='40' height='18' rx='3' /><text class='t' x='108' y='87' >30</text><text class='m' x='212' y='15' >ROLLUP(가게, 과일)</text><rect class='h' x='150' y='20' width='40' height='18' rx='3' /><text class='t' x='170' y='33' >가게</text><rect class='h' x='190' y='20' width='44' height='18' rx='3' /><text class='t' x='212' y='33' >과일</text><rect class='h' x='234' y='20' width='40' height='18' rx='3' /><text class='t' x='254' y='33' >합계</text><rect class='b' x='150' y='38' width='40' height='18' rx='3' /><text class='t' x='170' y='51' >A</text><rect class='b' x='190' y='38' width='44' height='18' rx='3' /><text class='t' x='212' y='51' >사과</text><rect class='b' x='234' y='38' width='40' height='18' rx='3' /><text class='t' x='254' y='51' >10</text><rect class='b' x='150' y='56' width='40' height='18' rx='3' /><text class='t' x='170' y='69' >A</text><rect class='b' x='190' y='56' width='44' height='18' rx='3' /><text class='t' x='212' y='69' >배</text><rect class='b' x='234' y='56' width='40' height='18' rx='3' /><text class='t' x='254' y='69' >20</text><g data-s='1'><rect class='b' x='150' y='74' width='40' height='18' rx='3' /><text class='t' x='170' y='87' >A</text><rect class='b' x='190' y='74' width='44' height='18' rx='3' /><text class='m' x='212' y='87' >NULL</text><rect class='b' x='234' y='74' width='40' height='18' rx='3' /><text class='t' x='254' y='87' >30</text></g><rect class='b' x='150' y='92' width='40' height='18' rx='3' /><text class='t' x='170' y='105' >B</text><rect class='b' x='190' y='92' width='44' height='18' rx='3' /><text class='t' x='212' y='105' >사과</text><rect class='b' x='234' y='92' width='40' height='18' rx='3' /><text class='t' x='254' y='105' >30</text><g data-s='1'><rect class='b' x='150' y='110' width='40' height='18' rx='3' /><text class='t' x='170' y='123' >B</text><rect class='b' x='190' y='110' width='44' height='18' rx='3' /><text class='m' x='212' y='123' >NULL</text><rect class='b' x='234' y='110' width='40' height='18' rx='3' /><text class='t' x='254' y='123' >30</text></g><g data-s='2'><rect class='b' x='150' y='128' width='40' height='18' rx='3' /><text class='m' x='170' y='141' >NULL</text><rect class='b' x='190' y='128' width='44' height='18' rx='3' /><text class='m' x='212' y='141' >NULL</text><rect class='b' x='234' y='128' width='40' height='18' rx='3' /><text class='t' x='254' y='141' >60</text></g><g data-o='0'><rect class='ov' x='150' y='38' width='124' height='18' rx='3' /><rect class='ov' x='150' y='56' width='124' height='18' rx='3' /><rect class='ov' x='150' y='92' width='124' height='18' rx='3' /></g><g data-o='1'><rect class='ov' x='150' y='74' width='124' height='18' rx='3' /><rect class='ov' x='150' y='110' width='124' height='18' rx='3' /></g><g data-o='2'><rect class='ov' x='150' y='128' width='124' height='18' rx='3' /></g></svg>",
+    "steps": [
+     "(가게, 과일)별 합계: 보통 GROUP BY와 같아요",
+     "가게별 소계 줄이 붙어요. 과일 칸은 NULL",
+     "맨 아래 전체 총계 줄. 가게·과일 둘 다 NULL"
+    ]
+   },
    {
     "table": {
      "cols": [
@@ -15606,6 +15805,14 @@ window.SQLD_STUDY = [
   ],
   "figs": [
    {
+    "pic": "<svg viewBox='0 0 300 100'><defs><marker id='m' viewBox='0 0 10 10' refX='9' refY='5' markerWidth='6' markerHeight='6' orient='auto'><path d='M0 0L10 5L0 10z' fill='context-stroke'/></marker></defs><rect class='h' x='10' y='20' width='48' height='18' rx='3' /><text class='t' x='34' y='33' >이름</text><rect class='h' x='58' y='20' width='44' height='18' rx='3' /><text class='t' x='80' y='33' >개수</text><rect class='b' x='10' y='38' width='48' height='18' rx='3' /><text class='t' x='34' y='51' >과자</text><rect class='b' x='58' y='38' width='44' height='18' rx='3' /><text class='t' x='80' y='51' >3</text><rect class='b' x='10' y='56' width='48' height='18' rx='3' /><text class='t' x='34' y='69' >사탕</text><rect class='b' x='58' y='56' width='44' height='18' rx='3' /><text class='t' x='80' y='69' >5</text><g data-s='0'><rect class='b' x='10' y='74' width='48' height='18' rx='3' /><text class='t' x='34' y='87' >젤리</text><rect class='b' x='58' y='74' width='44' height='18' rx='3' /><text class='t' x='80' y='87' >2</text></g><g data-o='0'><rect class='ov' x='10' y='74' width='92' height='18' rx='3' /><text class='k' x='205' y='48' >INSERT: 새 줄 넣기</text></g><g data-o='1'><rect class='ov' x='58' y='56' width='44' height='18' rx='3' /><text class='k' x='205' y='48' >UPDATE: 사탕 5 → 0</text></g><g data-o='2'><rect class='no' x='10' y='38' width='92' height='18' rx='3' /><text class='k' x='205' y='48' >DELETE: 과자 줄 지우기</text></g><text class='m' x='205' y='70' data-s='1'>WHERE를 빼면 모든 줄이!</text></svg>",
+    "steps": [
+     "INSERT INTO 간식 VALUES ('젤리', 2)",
+     "UPDATE 간식 SET 개수 = 0 WHERE 이름 = '사탕'",
+     "DELETE FROM 간식 WHERE 이름 = '과자'"
+    ]
+   },
+   {
     "table": {
      "cols": [
       "",
@@ -15700,6 +15907,14 @@ window.SQLD_STUDY = [
   "tip": "COMMIT, ROLLBACK, SAVEPOINT를 TCL이라고 불러요.",
   "figs": [
    {
+    "pic": "<svg viewBox='0 0 300 110'><defs><marker id='m' viewBox='0 0 10 10' refX='9' refY='5' markerWidth='6' markerHeight='6' orient='auto'><path d='M0 0L10 5L0 10z' fill='context-stroke'/></marker></defs><path class='ln' d='M20 50H280'/><circle class='o' cx='40' cy='50' r='6'/><text class='m' x='40' y='30' >UPDATE 1</text><circle class='o' cx='115' cy='50' r='6'/><text class='m' x='115' y='30' >SAVEPOINT</text><circle class='o' cx='190' cy='50' r='6'/><text class='m' x='190' y='30' >UPDATE 2</text><circle class='o' cx='265' cy='50' r='6'/><text class='m' x='265' y='30' >ROLLBACK</text><g data-o='0'><rect class='ov' x='20' y='60' width='190' height='20' rx='3' rx='10'/><text class='k' x='150' y='100' >UPDATE 두 번: 아직 확정 전이에요</text></g><g data-o='1'><rect class='no' x='135' y='60' width='130' height='20' rx='3' rx='10'/><text class='k' x='150' y='100' >ROLLBACK TO 저장점: 그 뒤(UPDATE 2)만 취소</text></g><g data-o='2'><rect class='ov' x='20' y='60' width='115' height='20' rx='3' rx='10'/><text class='k' x='150' y='100' >COMMIT: 남은 UPDATE 1이 확정돼요</text></g></svg>",
+    "steps": [
+     "바꾸는 중: UPDATE 1 → SAVEPOINT → UPDATE 2",
+     "ROLLBACK TO 저장점: 저장점 뒤의 변경만 취소해요",
+     "COMMIT: 지금까지 남은 변경을 확정해요"
+    ]
+   },
+   {
     "table": {
      "cols": [
       "성질",
@@ -15746,6 +15961,10 @@ window.SQLD_STUDY = [
    }
   ],
   "figs": [
+   {
+    "pic": "<svg viewBox='0 0 300 100'><rect class='h' x='20' y='36' width='60' height='18' rx='3' /><text class='t' x='50' y='49' >번호</text><rect class='h' x='80' y='36' width='80' height='18' rx='3' /><text class='t' x='120' y='49' >이름</text><rect class='h' x='160' y='36' width='60' height='18' rx='3' /><text class='t' x='190' y='49' >점수</text><rect class='b' x='20' y='54' width='60' height='18' rx='3' /><text class='t' x='50' y='67' >1</text><rect class='b' x='80' y='54' width='80' height='18' rx='3' /><text class='t' x='120' y='67' >민지</text><rect class='b' x='160' y='54' width='60' height='18' rx='3' /><text class='t' x='190' y='67' >90</text><rect class='b' x='20' y='72' width='60' height='18' rx='3' /><text class='t' x='50' y='85' >2</text><rect class='b' x='80' y='72' width='80' height='18' rx='3' /><text class='t' x='120' y='85' >도윤</text><rect class='b' x='160' y='72' width='60' height='18' rx='3' /><text class='t' x='190' y='85' >75</text><rect class='h' x='14' y='6' width='72' height='20' rx='3' rx='10'/><text class='m' x='50' y='20' >PRIMARY KEY</text><rect class='h' x='94' y='6' width='72' height='20' rx='3' rx='10'/><text class='m' x='130' y='20' >NOT NULL</text><rect class='h' x='174' y='6' width='72' height='20' rx='3' rx='10'/><text class='m' x='210' y='20' >CHECK (>= 0)</text><text class='k' x='260' y='60' >약속</text><text class='m' x='260' y='76' >(제약조건)</text></svg>",
+    "memo": "칸마다 약속을 붙여요: 번호는 겹치지도 비지도 않게(PK), 이름은 꼭 쓰게(NOT NULL), 점수는 0 이상만(CHECK)."
+   },
    {
     "table": {
      "cols": [
@@ -15802,6 +16021,15 @@ window.SQLD_STUDY = [
     "sql": "GRANT SELECT ON 학생 TO 민지;\nREVOKE SELECT ON 학생 FROM 민지;"
    }
   ],
-  "tip": "명령어가 DML, DDL, DCL, TCL 중 어디에 속하는지 묻는 문제가 자주 나와요."
+  "tip": "명령어가 DML, DDL, DCL, TCL 중 어디에 속하는지 묻는 문제가 자주 나와요.",
+  "figs": [
+   {
+    "pic": "<svg viewBox='0 0 300 104'><defs><marker id='m' viewBox='0 0 10 10' refX='9' refY='5' markerWidth='6' markerHeight='6' orient='auto'><path d='M0 0L10 5L0 10z' fill='context-stroke'/></marker></defs><rect class='b' x='10' y='36' width='80' height='40' rx='3' rx='8'/><text class='k' x='50' y='61' >관리자</text><rect class='b' x='210' y='36' width='80' height='40' rx='3' rx='8'/><text class='k' x='250' y='61' >민지</text><g data-o='0'><path class='ar' d='M90 56L208 56' marker-end='url(#m)'/><text class='k' x='150' y='22' >GRANT SELECT ON 학생</text><text class='m' x='150' y='96' >민지가 학생 표를 볼 수 있게 돼요</text></g><g data-o='1'><path class='x' d='M90 56H208'/><text class='k' x='150' y='22' >REVOKE SELECT ON 학생</text><text class='m' x='150' y='96' >준 권한을 다시 빼앗아요</text></g></svg>",
+    "steps": [
+     "GRANT: 권한을 줘요",
+     "REVOKE: 권한을 빼앗아요"
+    ]
+   }
+  ]
  }
 ];

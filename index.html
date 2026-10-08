@@ -77,7 +77,7 @@ th { background:var(--accent-soft); }
 .pic text { fill:currentColor; text-anchor:middle; } .pic .l { text-anchor:start; } .pic .k { font-size:14px; font-weight:700; } .pic .m { font-size:11px; fill:var(--muted); }
 .pic .b { fill:var(--card); stroke:var(--line); stroke-width:1.5; } .pic .h { fill:var(--accent-soft); stroke:var(--accent); stroke-width:1.5; }
 .pic .ln, .pic .ar { fill:none; stroke:var(--accent); stroke-width:2; } .pic .ar { stroke:var(--muted); } .pic .o { fill:var(--card); stroke:var(--accent); stroke-width:2; }
-.pic .f { fill:var(--accent-soft); } .pic [data-s], .pic [data-o] { transition:opacity .5s; }
+.pic .f { fill:var(--accent-soft); } .pic .t { font-size:12px; } .pic .ov { fill:var(--accent); fill-opacity:.15; stroke:var(--accent); stroke-width:1.5; } .pic .no { fill:var(--bad); fill-opacity:.12; stroke:var(--bad); stroke-width:1.5; } .pic .x { stroke:var(--bad); stroke-width:2; fill:none; } .pic .g { fill:var(--ok); } .pic [data-s], .pic [data-o] { transition:opacity .5s; }
 .memo table { white-space:normal; width:100%; font-size:.85rem; } .memo th, .memo td { padding:.3rem .35rem; } .memo td:first-child { font-weight:700; }
 .sheet { display:grid; grid-template-columns:repeat(5,1fr); gap:.45rem; }
 .sheet button { padding:.45rem 0; text-align:center; font-weight:700; line-height:1.3; }
@@ -240,8 +240,8 @@ function studyHome() {
 const fig = (f, top) => { const i = FIGS.indexOf(f); return top ? (f.pic ? `<div class="stack">
   <div id="fig${i}">${f.pic.replace("<svg", '<svg class="pic" role="img" aria-label="그림"')}</div>
   ${f.steps ? `<strong id="cap${i}" style="color:var(--accent)">${esc(f.steps[0])}</strong><button data-play="${i}" class="center">▶ 움직여 보기</button>` : ""}</div>` : "")
-  : `<div class="stack memo">${f.table ? grid(f.table) : ""}${f.table2 ? grid(f.table2) : ""}
-  <p class="card" style="background:var(--ok-soft);border:0"><strong>외우기 팁</strong><br>${esc(f.memo)}</p></div>`; };
+  : f.table || f.memo ? `<div class="stack memo">${f.table ? grid(f.table) : ""}${f.table2 ? grid(f.table2) : ""}
+  ${f.memo ? `<p class="card" style="background:var(--ok-soft);border:0"><strong>외우기 팁</strong><br>${esc(f.memo)}</p>` : ""}</div>` : ""; };
 // 그림의 k단계 보여 주기: data-s는 k단계부터, data-o는 적힌 단계에서만 보임
 function stepTo(i, k) {
   const fig = $("#fig" + i);
