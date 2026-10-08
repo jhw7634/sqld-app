@@ -89,7 +89,7 @@ const BANK = window.SQLD_QUESTIONS || [], UNITS = window.SQLD_UNITS || [];
 const byId = Object.fromEntries(BANK.map(q => [q.id, q]));
 const PRACTICE = BANK.filter(q => !q.exam && !q.trap);
 const STUDY = window.SQLD_STUDY || []; // 이론 탭: 쉬운 1과목 이론·SQL 설명과 실행해 본 예시
-const TRAPS = window.SQLD_TRAPS || [], TRAPQ = BANK.filter(q => q.trap); // 함정 요약 20장과 함정마다 2문제
+const TRAPS = window.SQLD_TRAPS || [], TRAPQ = BANK.filter(q => q.trap); // 함정 요약 30장과 함정마다 3문제
 const EXAM = n => BANK.filter(q => q.exam === n).sort((a, b) => a.subject - b.subject); // 실제 시험처럼 1과목 먼저
 const EXAM_MIN = 90, EXAMS = [...new Set(BANK.filter(q => q.exam).map(q => q.exam))].sort(); // 실전 회차 [1, 2, 3]
 const C = "①②③④", KEY = "sqld-quiz-v1", $ = s => document.querySelector(s);
@@ -215,7 +215,7 @@ function studyHome() {
     </details>`; }).join("")}`;
 }
 
-// 함정: 요약을 읽고 바로 그 함정 2문제로 확인. 정답률은 연습과 따로 (stats.t)
+// 함정: 요약을 읽고 바로 그 함정 3문제로 확인. 정답률은 연습과 따로 (stats.t)
 function trapHome() {
   const st = store.stats.t || { s: 0, c: 0 }, done = TRAPQ.filter(q => q.id in store.last).length, left = TRAPQ.length - done;
   return `
@@ -224,7 +224,7 @@ function trapHome() {
       <progress value="${done}" max="${TRAPQ.length}"></progress>
       <button id="tgo" class="main">${left ? (done ? `이어서 풀기 · 남은 ${left}문제` : `함정 퀴즈 ${TRAPQ.length}문제 풀기`) : "섞어서 다시 풀기"}</button>
     </div>
-    <p class="muted">시험 직전에 훑어보는 함정 ${TRAPS.length}개예요. 제목을 누르면 요약이 열리고, 바로 2문제로 확인할 수 있어요.</p>
+    <p class="muted">시험 직전에 훑어보는 함정 ${TRAPS.length}개예요. 제목을 누르면 요약이 열리고, 바로 3문제(마지막은 어려운 문제)로 확인할 수 있어요.</p>
     ${TRAPS.map((t, i) => { const qs = TRAPQ.filter(q => q.trap === t.id); return `
     <details class="card">
       <summary class="row" style="justify-content:space-between;flex-wrap:nowrap;cursor:pointer"><strong><span style="color:var(--bad)">${i + 1}.</span> ${esc(t.title)}</strong><span class="count">${qs.filter(q => q.id in store.last).length} / ${qs.length}</span></summary>
