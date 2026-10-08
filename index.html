@@ -25,6 +25,7 @@ button:disabled { cursor:default; opacity:.5; }
 .main { background:var(--accent); border-color:var(--accent); color:var(--card); font-weight:700; text-align:center; }
 .main:disabled { background:var(--line); border-color:var(--line); color:var(--muted); opacity:1; }
 .center { text-align:center; }
+input[type="date"] { font:inherit; color:inherit; background:var(--card); border:2px solid var(--line); border-radius:1rem; padding:.8rem 1rem; min-width:0; }
 .row { display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; }
 .chip { border-radius:99px; padding:.45rem .9rem; font-size:.9rem; }
 [aria-pressed="true"], [aria-checked="true"] { border-color:var(--accent); background:var(--accent-soft); }
@@ -146,11 +147,11 @@ function home() {
   if (store.tab === "1" || store.tab === "2") store.tab = "exam"; // 예전 실전 1·2 탭은 합친 실전 탭으로
   const tab = store.tab;
   show(`
-    <div class="row" style="justify-content:space-between"><h1>SQLD <span style="color:var(--accent)">오답킬러</span></h1></div>
+    <div class="row" style="justify-content:space-between"><h1>SQLD <span style="color:var(--accent)">오답킬러</span></h1>${dleft() !== null && dleft() >= 0 ? `<span class="tag" style="font-size:1rem;padding:.25rem .7rem">${dleft() ? "D-" + dleft() : "D-day"}</span>` : ""}</div>
     <div class="tabs" role="tablist">
       ${[["study", "이론"], ["practice", "연습"], ["trap", "함정"], ["exam", "실전"], ["stat", "분석"]].map(([k, l]) => `<button role="tab" data-tab="${k}" aria-selected="${tab === k}">${l}</button>`).join("")}
     </div>
-    ${tab === "study" ? studyHome() : tab === "practice" ? practiceHome() : tab === "trap" ? trapHome() : tab === "stat" ? statHome() : EXAMS.map(examHome).join("")}`, {
+    ${tab === "study" ? studyHome() : tab === "practice" ? practiceHome() : tab === "trap" ? trapHome() : tab === "stat" ? statHome() : examTab()}`, {
     "[data-tab]": b => { store.tab = b.dataset.tab; save(); home(); },
     "#notes": () => notes("wrong"),
     "#review": () => notes("review"),
@@ -164,6 +165,11 @@ function home() {
     "[data-restart]": b => startExam(+b.dataset.restart, true),
     "[data-result]": b => review(+b.dataset.result),
     "[data-sf]": b => { prefs.stat = b.dataset.sf; home(); },
+    "#plan": () => { if ($("#dday").value) { store.dday = $("#dday").value; save(); home(); } },
+    "#dchange": () => { delete store.dday; save(); home(); },
+    "[data-task]": b => { const [k, v] = b.dataset.task.split(":"); k === "unit" ? (prefs.unit = v, list()) : k === "exam" ? startExam(+v, !store.runs[+v]) : k === "high" ? goHigh() : k === "notes" ? notes("wrong") : k === "brief" ? brief() : (store.tab = k, save(), home()); },
+    "#hgo": goHigh,
+    "#brief": () => brief(),
     "#reset": () => { if (confirm("푼 기록·오답노트·저장·실전 결과를 모두 지우고 처음부터 시작할까요?")) { localStorage.removeItem(KEY); location.reload(); } },
   });
 }
@@ -265,6 +271,62 @@ function examHome(n) {
     </details>`;
 }
 
+// ---------- 실전 탭: 2주 합격 플랜(D-day), 자주 나와요 문제, 실전 1·2·3, 시험 전날 요약 카드 ----------
+const HIGH = PRACTICE.filter(q => q.freq === "high"); // 자주 나와요(빈도 높음) 연습 문제
+const goHigh = () => { const todo = HIGH.filter(q => !(q.id in store.last)); start(todo.length ? todo : shuffle(HIGH), false); };
+function examTab() {
+  const hd = HIGH.filter(q => q.id in store.last).length;
+  const go = (id, h2, sub, act) => `<button id="${id}" class="card row" style="justify-content:space-between;flex-wrap:nowrap"><span class="stack" style="gap:.1rem"><h2>${h2}</h2><span class="muted">${sub}</span></span><span class="count">${act} ›</span></button>`;
+  return `${planCard()}
+    ${go("hgo", `자주 나와요 ${HIGH.length}문제`, `${hd} / ${HIGH.length} 풀었어요`, hd < HIGH.length ? "풀기" : "다시 풀기")}
+    ${EXAMS.map(examHome).join("")}
+    ${go("brief", "시험 전날 요약 카드", `함정 ${TRAPS.length}장 + 틀렸던 문제 ${reviewIds().length}장`, "보기")}`;
+}
+
+// 2주 합격 플랜: 시험일(store.dday)까지 남은 날(최대 14일)에 할 일을 고르게 나눠 보여줌. 할 일의 ✓는 풀이 기록으로 판단
+const today = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; };
+const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+const fmt = d => `${d.getMonth() + 1}월 ${d.getDate()}일(${"일월화수목금토"[d.getDay()]})`;
+const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const dleft = () => (store.dday ? Math.round((new Date(store.dday + "T00:00") - today()) / 864e5) : null);
+const allDone = qs => qs.every(q => q.id in store.last);
+const tasks = () => {
+  const units = k => UNITS.filter(u => u.subject === k).map(u => ({ t: `연습 · ${u.title}`, go: "unit:" + u.id, ok: allDone(PRACTICE.filter(q => q.unit === u.id)) }));
+  const mids = [{ t: "오답노트 다시 풀기", go: "notes", ok: reviewIds().length > 0 && !wrongIds().length }, { t: `함정 퀴즈 ${TRAPQ.length}문제`, go: "trap", ok: allDone(TRAPQ) }, { t: `자주 나와요 ${HIGH.length}문제`, go: "high", ok: allDone(HIGH) }];
+  return [{ t: "이론 1과목 읽기", go: "study" }, ...units(1), { t: "이론 2과목 읽기", go: "study" }, ...units(2),
+    ...EXAMS.flatMap((n, i) => [{ t: `실전 모의고사 ${n}`, go: "exam:" + n, ok: !!store.exams[n] }, ...(mids[i] ? [mids[i]] : [])]), { t: "시험 전날 요약 카드 보기", go: "brief" }];
+};
+function planCard() {
+  const left = dleft();
+  if (left === null) return `<div class="card stack"><h2>2주 합격 플랜</h2><p class="muted">시험일을 넣으면 D-day와 날짜별 할 일이 나와요.</p><div class="split" style="grid-template-columns:1fr auto"><input id="dday" type="date" min="${iso(today())}" aria-label="시험일"><button id="plan" class="main">만들기</button></div></div>`;
+  const head = `<span class="row" style="justify-content:space-between"><h2>${left > 0 ? `D-${left}` : left ? "시험이 지났어요" : "D-day"}</h2><button id="dchange" class="chip">${fmt(new Date(store.dday + "T00:00"))} 시험 · 바꾸기</button></span>`;
+  if (left <= 0) return `<div class="card stack">${head}<p class="muted">${left ? "다음 시험일로 바꿔 주세요." : "오늘이 시험날이에요. 요약 카드만 한 번 훑고 가세요!"}</p></div>`;
+  const T = tasks(), span = Math.min(14, left), k = span - left; // k: 오늘이 플랜 며칠째인지 (음수면 아직 시작 전)
+  const day = j => T.slice(Math.floor((j * T.length) / span), Math.floor(((j + 1) * T.length) / span));
+  const line = x => `<button data-task="${x.go}" class="pline row" style="display:flex;flex-wrap:nowrap"><span style="color:var(--${x.ok ? "ok" : "muted"})">${x.ok ? "✓" : "○"}</span><span style="flex:1">${esc(x.t)}</span><span class="muted">›</span></button>`;
+  return `<div class="card stack" style="gap:.3rem">${head}
+    ${k < 0 ? `<p class="muted">${span}일 플랜은 ${fmt(addDays(today(), -k))}부터 시작해요. 그때까지 이론 탭을 읽어 두세요.</p>` : `<strong style="margin-top:.4rem">오늘 할 일 · ${k + 1}일째</strong>${day(k).map(line).join("")}`}
+    <details><summary class="muted" style="cursor:pointer;margin-top:.4rem">전체 일정 보기</summary>${[...Array(span)].map((_, j) => `<p class="muted" style="margin-top:.3rem${j < k ? ";opacity:.5" : ""}"><strong>${fmt(addDays(today(), j - k))}</strong> ${day(j).map(x => esc(x.t)).join(", ")}</p>`).join("")}</details></div>`;
+}
+
+// 시험 전날 요약 카드: 함정 요약과 틀렸던 문제의 핵심을 한 장씩 넘겨 보기
+function brief(i = 0) {
+  const cards = [...TRAPS.map(t => ({ tag: "함정", head: t.title, body: t.body, ex: t.ex })), ...reviewIds().map(id => { const q = byId[id]; return { tag: `${q.subject}과목 · ${q.topic}`, head: q.q, code: q.code, ans: ans(q, q.answer), body: q.exp }; })];
+  const c = cards[i], trap = i < TRAPS.length;
+  show(`
+    <div class="row bar"><button id="out" aria-label="나가기" class="back">✕</button><strong>${i + 1} / ${cards.length}</strong><span class="muted">${trap ? "함정" : "틀렸던 문제"}</span></div>
+    <div class="card stack" style="padding:1.5rem 1.25rem">
+      <span class="tag ${trap ? "bad" : ""}" style="align-self:flex-start">${esc(c.tag)}</span>
+      <h2>${esc(c.head)}</h2>
+      ${c.code ? `<pre>${esc(c.code)}</pre>` : ""}
+      ${c.ans ? `<strong style="color:var(--ok)">정답 ${c.ans}</strong>` : ""}
+      <p>${esc(c.body)}</p>
+      ${c.ex ? `<pre>${esc(c.ex)}</pre>` : ""}
+    </div>`, { "#out": home });
+  dock(`<div class="split"><button id="prev" class="center" ${i ? "" : "disabled"}>이전</button><button id="next" class="main">${i + 1 < cards.length ? "다음 카드" : "끝 · 돌아가기"}</button></div>`,
+    { "#prev": () => brief(i - 1), "#next": () => (i + 1 < cards.length ? brief(i + 1) : home()) });
+}
+
 // 분석 (전체/연습/함정/실전 골라 보기): 연습·함정·실전에서 고른 답(실전은 최근 제출)으로 정답률 막대. 낮은 단원부터, 점선은 합격선 60%
 const GOAL = 60;
 const hue = r => (r < GOAL ? 8 : 225); // 합격선 아래는 코랄, 넘으면 파랑
@@ -280,7 +342,15 @@ function statHome() {
   if (!all.n) return `<div class="row">${chips}</div><p class="card muted center">${sf !== "exam" ? "문제를 풀면" : EXAMS.some(n => store.runs[n]) ? "푸는 중인 실전 모의고사를 끝까지 풀고 제출하면" : "실전 모의고사를 제출하면"} 여기에 단원별 정답률 그래프가 나와요.</p>`;
   const units = UNITS.map(u => ({ u, t: tally(BANK.filter(q => q.unit === u.id)) }));
   const done = units.filter(x => x.t.n).sort((a, b) => a.t.r - b.t.r), todo = units.filter(x => !x.t.n);
+  // 합격 예측: 과목별 정답률을 실제 배점(1과목 20점, 2과목 80점)으로 환산
+  const sub = k => { const d = BANK.filter(q => q.subject === k && q.id in res); return { n: d.length, r: pct(d.filter(q => res[q.id]).length, d.length) }; };
+  const s1 = sub(1), s2 = sub(2), guess = Math.round(s1.r * 0.2 + s2.r * 0.8), enough = s1.n >= 5 && s2.n >= 10;
+  const verdict = guess < GOAL ? `합격선(60점)까지 ${GOAL - guess}점 모자라요` : s1.r < 40 || s2.r < 40 ? `${s1.r < 40 ? 1 : 2}과목 과락(40% 미만) 위험이 있어요` : "지금 실력이면 합격권이에요";
   return `
+    <div class="card stack" style="gap:.3rem">
+      <span class="row" style="justify-content:space-between"><h2>합격 예측</h2>${enough ? `<span class="big" style="color:hsl(${hue(guess)} 50% var(--pl))">${guess}점</span>` : ""}</span>
+      ${enough ? `<span>${verdict}</span><span class="muted">1과목 ${s1.r}% × 20점 + 2과목 ${s2.r}% × 80점으로 계산한 예상 점수예요</span>` : `<span class="muted">1과목 5문제, 2과목 10문제 이상 풀면 예상 점수가 나와요 (지금 ${s1.n}개, ${s2.n}개)</span>`}
+    </div>
     <div class="row">${chips}</div>
     <div class="card stack">
       <span class="row" style="justify-content:space-between"><h2>합격선까지</h2><span class="muted">전체 ${prate(all.r)}</span></span>
