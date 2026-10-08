@@ -164,6 +164,7 @@ function home() {
     "[data-restart]": b => startExam(+b.dataset.restart, true),
     "[data-result]": b => review(+b.dataset.result),
     "[data-sf]": b => { prefs.stat = b.dataset.sf; home(); },
+    "#reset": () => { if (confirm("푼 기록·오답노트·저장·실전 결과를 모두 지우고 처음부터 시작할까요?")) { localStorage.removeItem(KEY); location.reload(); } },
   });
 }
 
@@ -292,7 +293,8 @@ function statHome() {
       ${done.map(({ u, t }) => `<button data-unit="${u.id}" class="pline"><span class="row" style="justify-content:space-between;flex-wrap:nowrap"><span>${esc(u.title)}</span>${prate(t.r)}</span>${pbar(t.r)}</button>`).join("")}
       ${todo.length ? `<p class="muted" style="margin-top:.5rem">아직 안 푼 단원: ${todo.map(x => esc(x.u.title)).join(", ")}</p>` : ""}
       <p class="muted" style="margin-top:.4rem">단원을 눌러 복습하기</p>
-    </div>`;
+    </div>
+    <button id="reset" class="center muted" style="border:none;background:none;font-size:.9rem">기록 모두 지우기 (점수 0점으로)</button>`;
 }
 
 // ---------- 연습 ----------
