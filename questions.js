@@ -15079,3 +15079,160 @@ window.SQLD_STUDY = [
   "tip": "명령어가 DML, DDL, DCL, TCL 중 어디에 속하는지 묻는 문제가 자주 나와요."
  }
 ];
+
+// 암기 탭: 헷갈리는 것을 그림·비교표·외우기 팁으로 한 장씩. 그림은 직접 그린 SVG (색은 앱 색 변수를 따름)
+// steps가 있으면 움직이는 그림: data-s="k"는 k단계부터 보이고, data-o="k ..."는 그 단계에서만 보여요
+window.SQLD_MEMO = [
+ {
+  "part": "1과목 · 데이터 모델링",
+  "title": "모델링 3단계",
+  "sum": "집 짓기처럼: 스케치 → 설계도 → 공사",
+  "pic": "<svg viewBox='0 0 300 108'><rect class='h' x='4' y='8' width='84' height='64' rx='10'/><rect class='h' x='108' y='8' width='84' height='64' rx='10'/><rect class='h' x='212' y='8' width='84' height='64' rx='10'/><path class='ar' d='M93 40h11m-4-4l4 4-4 4M197 40h11m-4-4l4 4-4 4'/><text x='46' y='36' class='k'>개념적</text><text x='150' y='36' class='k'>논리적</text><text x='254' y='36' class='k'>물리적</text><text x='46' y='57' class='m'>큰 그림</text><text x='150' y='57' class='m'>키·정규화</text><text x='254' y='57' class='m'>실제 테이블</text><text x='150' y='98' class='m'>추상적 ─────── 점점 자세하게 ─────── 구체적</text></svg>",
+  "table": { "cols": ["단계", "하는 일"], "rows": [["개념적", "중요한 엔터티와 관계를 큰 그림으로"], ["논리적", "키·속성·관계를 정확히, 정규화"], ["물리적", "테이블·컬럼 타입·인덱스, 성능까지"]] },
+  "memo": "'개·논·물' 순서. 집 짓기로 떠올려요: 스케치(개념) → 설계도(논리) → 실제 공사(물리)."
+ },
+ {
+  "part": "1과목 · 데이터 모델링",
+  "title": "3단계 스키마와 독립성",
+  "sum": "바깥(외부) → 가운데(개념) → 안(내부)",
+  "pic": "<svg viewBox='0 0 300 180'><rect class='b' x='8' y='6' width='170' height='40' rx='8'/><rect class='h' x='8' y='70' width='170' height='40' rx='8'/><rect class='b' x='8' y='134' width='170' height='40' rx='8'/><text x='93' y='23' class='k'>외부 스키마</text><text x='93' y='39' class='m'>사용자마다 보는 모습</text><text x='93' y='87' class='k'>개념 스키마</text><text x='93' y='103' class='m'>전체를 합친 설계도</text><text x='93' y='151' class='k'>내부 스키마</text><text x='93' y='167' class='m'>실제 저장 방법</text><path class='ar' d='M93 49v18m-4-14l4-4 4 4m-8 10l4 4 4-4M93 113v18m-4-14l4-4 4 4m-8 10l4 4 4-4'/><text x='190' y='62' class='k l'>논리적 독립성</text><text x='190' y='126' class='k l'>물리적 독립성</text></svg>",
+  "table": { "cols": ["독립성", "어디가 바뀌어도", "어디는 그대로"], "rows": [["논리적", "개념 스키마", "외부 스키마"], ["물리적", "내부 스키마", "개념 스키마"]] },
+  "memo": "위쪽 칸(외부↔개념)은 '논리', 아래쪽 칸(개념↔내부)은 '물리'. 내부는 실제 디스크라서 물리라고 기억해요."
+ },
+ {
+  "part": "1과목 · 데이터 모델링",
+  "title": "IE 표기법: 선 끝 모양",
+  "sum": "세로줄은 1, 동그라미는 0, 까마귀발은 여러 개",
+  "pic": "<svg viewBox='0 0 300 132'><rect class='h' x='8' y='30' width='80' height='40' rx='8'/><rect class='h' x='212' y='30' width='80' height='40' rx='8'/><text x='48' y='55' class='k'>부서</text><text x='252' y='55' class='k'>사원</text><path class='ln' d='M88 50h124M98 41v18M105 41v18M198 50l14-10M198 50l14 10'/><circle class='o' cx='188' cy='50' r='6'/><text x='102' y='88' class='m'>꼭 1개</text><text x='192' y='88' class='m'>0개 이상, 여러 개</text><path class='ln' d='M14 110v14M206 117l12-7M206 117l12 7M200 117h18'/><circle class='o' cx='112' cy='117' r='5'/><text x='22' y='121' class='m l'>필수 (1)</text><text x='122' y='121' class='m l'>선택 (0)</text><text x='224' y='121' class='m l'>여러 개</text></svg>",
+  "table": { "cols": ["그림 읽기", "뜻"], "rows": [["부서 쪽 ||", "사원은 반드시 한 부서에 속해요"], ["사원 쪽 O와 까마귀발", "부서에는 사원이 없을 수도, 여러 명일 수도 있어요"]] },
+  "memo": "동그라미는 숫자 0처럼 생겼고(없어도 됨), 세로줄은 숫자 1처럼 생겼어요(꼭 있음). 까마귀발은 갈래가 여러 개라서 '여러 개'."
+ },
+ {
+  "part": "1과목 · 데이터 모델링",
+  "title": "식별자 4가지 분류",
+  "sum": "짝으로 외우기: 주/보조, 내부/외부, 단일/복합, 본질/인조",
+  "table": { "cols": ["나누는 기준", "이쪽", "저쪽"], "rows": [["대표성", "주식별자", "보조식별자"], ["생성 방식", "내부식별자", "외부식별자"], ["속성 수", "단일식별자", "복합식별자"], ["대체 여부", "본질식별자", "인조식별자"]] },
+  "memo": "주식별자 4조건은 '유·최·불·존': 유일성, 최소성, 불변성, 존재성. 이름처럼 겹칠 수 있는 값은 주식별자가 될 수 없어요."
+ },
+ {
+  "part": "1과목 · 데이터 모델링",
+  "title": "식별 관계와 비식별 관계",
+  "sum": "식별은 실선, 비식별은 점선",
+  "pic": "<svg viewBox='0 0 300 104'><rect class='h' x='8' y='8' width='62' height='34' rx='8'/><rect class='h' x='230' y='8' width='62' height='34' rx='8'/><rect class='b' x='8' y='62' width='62' height='34' rx='8'/><rect class='b' x='230' y='62' width='62' height='34' rx='8'/><text x='39' y='30' class='k'>부모</text><text x='261' y='30' class='k'>자식</text><text x='39' y='84' class='k'>부모</text><text x='261' y='84' class='k'>자식</text><path class='ln' d='M70 25h160'/><path class='ln' stroke-dasharray='6 5' d='M70 79h160'/><text x='150' y='19' class='m'>식별 관계 · 실선</text><text x='150' y='73' class='m'>비식별 관계 · 점선</text></svg>",
+  "table": { "cols": ["", "식별 관계", "비식별 관계"], "rows": [["부모 키가 가는 곳", "자식의 주식별자 일부", "자식의 일반 속성(FK)"], ["선", "실선", "점선"], ["연결", "강함 (부모 없이 자식 없음)", "약함"]] },
+  "memo": "'식별'과 '실선'은 둘 다 ㅅ으로 시작해요. 식별 관계만 계속 쓰면 자식으로 갈수록 키가 길어져서, 비식별로 끊어 줘요."
+ },
+ {
+  "part": "1과목 · 데이터 모델링",
+  "title": "정규화 단계",
+  "sum": "도·부·이·결 순서로 하나씩 없애기",
+  "table": { "cols": ["단계", "없애는 것", "외우기"], "rows": [["1정규형", "한 칸에 값 여러 개", "도 (도메인 원자값)"], ["2정규형", "부분 종속", "부"], ["3정규형", "이행 종속 (A → B → C)", "이"], ["BCNF", "후보키가 아닌 결정자", "결"]] },
+  "memo": "'도부이결'만 외우면 1·2·3정규형과 BCNF가 한 번에 나와요. 이상 현상은 '삽입·갱신·삭제' 세 가지예요."
+ },
+ {
+  "part": "2과목 · SQL 기본",
+  "title": "SQL 명령 4종류",
+  "sum": "데이터는 DML, 모양은 DDL, 권한은 DCL, 확정은 TCL",
+  "table": { "cols": ["종류", "다루는 것", "명령"], "rows": [["DML", "데이터", "SELECT, INSERT, UPDATE, DELETE, MERGE"], ["DDL", "표 모양", "CREATE, ALTER, DROP, RENAME, TRUNCATE"], ["DCL", "권한", "GRANT, REVOKE"], ["TCL", "트랜잭션", "COMMIT, ROLLBACK, SAVEPOINT"]] },
+  "memo": "DCL은 '주고(GRANT) 뺏기(REVOKE)', TCL은 '커·롤·세'. TRUNCATE는 데이터를 지우지만 DDL이라는 점이 단골 함정이에요."
+ },
+ {
+  "part": "2과목 · SQL 기본",
+  "title": "DELETE · TRUNCATE · DROP",
+  "sum": "지우개 · 통째로 비우기 · 표까지 버리기",
+  "table": { "cols": ["", "DELETE", "TRUNCATE", "DROP"], "rows": [["종류", "DML", "DDL", "DDL"], ["지우는 것", "고른 줄 (WHERE 가능)", "모든 줄", "표 자체"], ["표 모양", "남음", "남음", "사라짐"], ["ROLLBACK (Oracle)", "가능", "불가 (자동 COMMIT)", "불가 (자동 COMMIT)"]] },
+  "memo": "DELETE는 지우개로 골라 지우기, TRUNCATE는 공책을 새것처럼 비우기, DROP은 공책을 버리기. Oracle에서 DDL은 자동으로 COMMIT돼서 되돌릴 수 없어요."
+ },
+ {
+  "part": "2과목 · SQL 기본",
+  "title": "SELECT 실행 순서",
+  "sum": "프 · 웨 · 그 · 해 · 셀 · 오",
+  "pic": "<svg viewBox='0 0 300 120'><g data-s='0'><rect class='h' x='6' y='6' width='88' height='46' rx='8'/><text x='50' y='35' class='k'>1 FROM</text></g><g data-s='1'><rect class='h' x='106' y='6' width='88' height='46' rx='8'/><text x='150' y='35' class='k'>2 WHERE</text></g><g data-s='2'><rect class='h' x='206' y='6' width='88' height='46' rx='8'/><text x='250' y='35' class='k'>3 GROUP BY</text></g><g data-s='3'><rect class='h' x='6' y='66' width='88' height='46' rx='8'/><text x='50' y='95' class='k'>4 HAVING</text></g><g data-s='4'><rect class='h' x='106' y='66' width='88' height='46' rx='8'/><text x='150' y='95' class='k'>5 SELECT</text></g><g data-s='5'><rect class='h' x='206' y='66' width='88' height='46' rx='8'/><text x='250' y='95' class='k'>6 ORDER BY</text></g></svg>",
+  "steps": ["1. FROM: 표를 가져와요", "2. WHERE: 줄을 걸러요", "3. GROUP BY: 모둠으로 묶어요", "4. HAVING: 모둠을 걸러요", "5. SELECT: 보여 줄 칸을 골라요", "6. ORDER BY: 줄을 세워요"],
+  "memo": "'프웨그해셀오'를 소리 내어 다섯 번! SELECT의 별명은 더 늦게 실행되는 ORDER BY에서만 쓸 수 있고, WHERE에서는 못 써요."
+ },
+ {
+  "part": "2과목 · SQL 기본",
+  "title": "NULL 계산 규칙",
+  "sum": "NULL은 '모르는 값'이라 계산해도 모름",
+  "table": { "cols": ["이렇게 하면", "결과"], "rows": [["NULL + 10", "NULL"], ["칸 = NULL", "어떤 줄도 안 맞음 (IS NULL을 써요)"], ["COUNT(*)", "NULL 있는 줄도 세요"], ["COUNT(칸), SUM, AVG", "NULL은 빼고 계산"], ["AVG(10, NULL, 20)", "15 (둘로 나눔)"], ["'' (Oracle)", "NULL로 취급"], ["'A' || NULL (Oracle)", "'A'"]] },
+  "memo": "NULL이 끼면 계산은 NULL, 집계 함수는 NULL을 못 본 척해요. 단 COUNT(*)만 줄 자체를 세서 NULL 줄도 셉니다."
+ },
+ {
+  "part": "2과목 · SQL 기본",
+  "title": "NULL 함수 4총사",
+  "sum": "NVL · NVL2 · NULLIF · COALESCE",
+  "table": { "cols": ["함수", "하는 일", "예 → 결과"], "rows": [["NVL(a, b)", "a가 NULL이면 b", "NVL(NULL, 0) → 0"], ["NVL2(a, b, c)", "a가 있으면 b, NULL이면 c", "NVL2(5, '있음', '없음') → '있음'"], ["NULLIF(a, b)", "a와 b가 같으면 NULL, 다르면 a", "NULLIF(3, 3) → NULL"], ["COALESCE(a, b, ...)", "처음으로 NULL이 아닌 값", "COALESCE(NULL, NULL, 7) → 7"]] },
+  "memo": "NVL2는 숫자 2가 붙어서 답이 두 개(있을 때, 없을 때). NULLIF는 '같으면(IF) NULL'로 읽어요."
+ },
+ {
+  "part": "2과목 · SQL 기본",
+  "title": "숫자 자르기 함수",
+  "sum": "CEIL은 천장, FLOOR는 바닥",
+  "table": { "cols": ["함수", "뜻", "결과"], "rows": [["ROUND(15.67, 1)", "소수 첫째 자리까지 반올림", "15.7"], ["TRUNC(15.67, 1)", "소수 첫째 자리까지 버림", "15.6"], ["ROUND(15.67, -1)", "일의 자리에서 반올림", "20"], ["CEIL(15.1)", "올려서 정수", "16"], ["FLOOR(15.9)", "내려서 정수", "15"], ["CEIL(-1.5)", "올리면 0 쪽으로", "-1"], ["FLOOR(-1.5)", "내리면 더 작은 쪽으로", "-2"]] },
+  "memo": "CEIL(ceiling)은 천장이라 늘 위로, FLOOR는 바닥이라 늘 아래로. 음수에서도 '위 = 더 큰 수'예요."
+ },
+ {
+  "part": "2과목 · SQL 기본",
+  "title": "제약조건 비교",
+  "sum": "PK = UNIQUE + NOT NULL",
+  "table": { "cols": ["제약조건", "겹쳐도?", "NULL?", "표마다"], "rows": [["PRIMARY KEY", "안 됨", "안 됨", "1개만"], ["UNIQUE", "안 됨", "됨", "여러 개"], ["NOT NULL", "됨", "안 됨", "여러 개"], ["FOREIGN KEY", "됨", "됨", "여러 개"]] },
+  "memo": "PK는 'UNIQUE + NOT NULL'을 합친 것, 표마다 딱 하나. FK는 부모 표에 있는 값이나 NULL만 들어가요. CHECK는 '점수 0 이상' 같은 조건이에요."
+ },
+ {
+  "part": "2과목 · SQL 활용",
+  "title": "JOIN 종류",
+  "sum": "짝 있는 것만, 왼쪽 다, 오른쪽 다, 양쪽 다",
+  "pic": "<svg viewBox='0 0 300 140'><defs><clipPath id='mjA'><circle cx='115' cy='80' r='54'/></clipPath></defs><circle class='f' data-o='0' cx='185' cy='80' r='54' clip-path='url(#mjA)'/><circle class='f' data-o='1 3' cx='115' cy='80' r='54'/><circle class='f' data-o='2 3' cx='185' cy='80' r='54'/><circle class='ln' cx='115' cy='80' r='54'/><circle class='ln' cx='185' cy='80' r='54'/><text x='95' y='16' class='k'>왼쪽 표</text><text x='205' y='16' class='k'>오른쪽 표</text><text x='150' y='84' class='m'>짝</text></svg>",
+  "steps": ["INNER JOIN: 양쪽에 짝이 있는 줄만", "LEFT OUTER JOIN: 왼쪽 표는 전부, 짝이 없으면 오른쪽 칸은 NULL", "RIGHT OUTER JOIN: 오른쪽 표는 전부, 짝이 없으면 왼쪽 칸은 NULL", "FULL OUTER JOIN: 양쪽 다 전부, 짝이 없는 칸은 NULL"],
+  "table": { "cols": ["JOIN", "남는 줄"], "rows": [["INNER", "짝이 있는 줄만"], ["LEFT OUTER", "왼쪽 전부"], ["RIGHT OUTER", "오른쪽 전부"], ["FULL OUTER", "양쪽 전부"], ["CROSS", "모든 짝 (3줄 × 2줄 = 6줄)"]] },
+  "memo": "LEFT는 '왼쪽 표는 한 줄도 안 버린다'. 짝이 없는 쪽 칸은 NULL로 채워져요."
+ },
+ {
+  "part": "2과목 · SQL 활용",
+  "title": "집합 연산",
+  "sum": "A = {1, 2, 3}, B = {2, 3, 4}로 외우기",
+  "pic": "<svg viewBox='0 0 300 140'><defs><clipPath id='msA'><circle cx='115' cy='80' r='54'/></clipPath><mask id='msB'><rect width='300' height='140' fill='#fff'/><circle cx='185' cy='80' r='54' fill='#000'/></mask></defs><g data-o='0 1'><circle class='f' cx='115' cy='80' r='54'/><circle class='f' cx='185' cy='80' r='54'/></g><circle class='f' data-o='2' cx='185' cy='80' r='54' clip-path='url(#msA)'/><circle class='f' data-o='3' cx='115' cy='80' r='54' mask='url(#msB)'/><circle class='ln' cx='115' cy='80' r='54'/><circle class='ln' cx='185' cy='80' r='54'/><text x='95' y='16' class='k'>A</text><text x='205' y='16' class='k'>B</text><text x='88' y='85' class='k'>1</text><text x='150' y='70' class='k'>2</text><text x='150' y='100' class='k'>3</text><text x='212' y='85' class='k'>4</text></svg>",
+  "steps": ["A UNION B → 1, 2, 3, 4 (겹친 것은 한 번)", "A UNION ALL B → 1, 2, 3, 2, 3, 4 (겹쳐도 모두)", "A INTERSECT B → 2, 3 (양쪽에 다 있는 것)", "A MINUS B → 1 (A에만 있는 것)"],
+  "table": { "cols": ["연산", "결과", "중복"], "rows": [["UNION", "1, 2, 3, 4", "한 번만"], ["UNION ALL", "1, 2, 3, 2, 3, 4", "그대로"], ["INTERSECT", "2, 3", "한 번만"], ["MINUS", "1", "한 번만"]] },
+  "memo": "ALL이 붙으면 '다(ALL) 남긴다'. 결과 순서는 정해져 있지 않으니, 순서가 필요하면 맨 끝에 ORDER BY를 써요."
+ },
+ {
+  "part": "2과목 · SQL 활용",
+  "title": "순위 함수",
+  "sum": "같은 점수 다음 등수를 건너뛰나?",
+  "table": { "cols": ["점수", "RANK", "DENSE_RANK", "ROW_NUMBER"], "rows": [["100", "1", "1", "1"], ["90", "2", "2", "2"], ["90", "2", "2", "3"], ["80", "4", "3", "4"]] },
+  "memo": "RANK는 건너뛰고(4), DENSE(빽빽한)_RANK는 빈틈없이(3), ROW_NUMBER는 줄 번호라 무조건 다르게(1, 2, 3, 4)."
+ },
+ {
+  "part": "2과목 · SQL 활용",
+  "title": "ROLLUP · CUBE · GROUPING SETS",
+  "sum": "칸 두 개(A, B)일 때 나오는 묶음",
+  "table": { "cols": ["쓰는 법", "나오는 묶음", "개수"], "rows": [["ROLLUP(A, B)", "(A, B), (A), 전체", "3"], ["CUBE(A, B)", "(A, B), (A), (B), 전체", "4"], ["GROUPING SETS(A, B)", "(A), (B)", "2"]] },
+  "memo": "ROLLUP은 오른쪽 칸부터 하나씩 말아 올려요. CUBE는 모든 조합(칸 2개면 2×2 = 4개). GROUPING SETS는 내가 적은 것만, 전체 합계도 없어요."
+ },
+ {
+  "part": "2과목 · SQL 활용",
+  "title": "계층 쿼리",
+  "sum": "PRIOR 사번 = 상사사번이면 위에서 아래로",
+  "pic": "<svg viewBox='0 0 300 146'><text x='4' y='27' class='m l'>LEVEL 1</text><text x='4' y='77' class='m l'>LEVEL 2</text><text x='4' y='127' class='m l'>LEVEL 3</text><g data-s='0'><rect class='h' x='115' y='8' width='70' height='30' rx='8'/><text x='150' y='28' class='k'>사장</text></g><g data-s='1'><path class='ln' d='M150 38v20'/><rect class='h' x='115' y='58' width='70' height='30' rx='8'/><text x='150' y='78' class='k'>김팀장</text></g><g data-s='2'><path class='ln' d='M150 88v10H95v10M150 98h60v10'/><rect class='h' x='60' y='108' width='70' height='30' rx='8'/><rect class='h' x='175' y='108' width='70' height='30' rx='8'/><text x='95' y='128' class='k'>이사원</text><text x='210' y='128' class='k'>박사원</text></g></svg>",
+  "steps": ["START WITH: 시작할 사람(사장)을 정해요 · LEVEL 1", "CONNECT BY PRIOR 사번 = 상사사번: 사장이 상사인 김팀장 · LEVEL 2", "다시 한 칸 아래: 김팀장이 상사인 이사원, 박사원 · LEVEL 3"],
+  "table": { "cols": ["쓰는 법", "방향"], "rows": [["CONNECT BY PRIOR 사번 = 상사사번", "위에서 아래로 (순방향)"], ["CONNECT BY PRIOR 상사사번 = 사번", "아래에서 위로 (역방향)"]] },
+  "memo": "PRIOR는 '방금 본 사람'. 방금 본 사람의 사번이 내 상사사번이면 나는 그 사람의 부하, 그래서 아래로 내려가요. 맨 위 LEVEL은 1이에요."
+ },
+ {
+  "part": "2과목 · SQL 활용",
+  "title": "서브쿼리 이름과 ANY · ALL",
+  "sum": "어디에 들어가느냐로 이름이 바뀌어요",
+  "table": { "cols": ["들어간 곳", "이름"], "rows": [["SELECT 절", "스칼라 서브쿼리 (값 하나)"], ["FROM 절", "인라인 뷰"], ["WHERE 절", "중첩 서브쿼리"]] },
+  "table2": { "cols": ["(10, 20, 30)과 비교", "뜻"], "rows": [["> ANY", "10보다 크면 (가장 작은 값보다)"], ["> ALL", "30보다 크면 (가장 큰 값보다)"], ["< ANY", "30보다 작으면"], ["< ALL", "10보다 작으면"], ["= ANY", "IN과 같아요"]] },
+  "memo": "ANY는 '하나만 이기면 돼', ALL은 '전부 이겨야 해'. FROM 안의 서브쿼리는 SQL 안에 바로(인라인) 만든 뷰라서 인라인 뷰예요."
+ },
+ {
+  "part": "2과목 · SQL 활용",
+  "title": "트랜잭션 ACID",
+  "sum": "원 · 일 · 고 · 지",
+  "table": { "cols": ["성질", "한 줄 뜻"], "rows": [["원자성 (A)", "전부 되거나 전부 안 되거나"], ["일관성 (C)", "처리 전후에 규칙이 지켜져요"], ["고립성 (I)", "다른 작업과 섞이지 않아요"], ["지속성 (D)", "COMMIT하면 사라지지 않아요"]] },
+  "memo": "돈 보내기로 떠올려요: 빼기와 넣기는 함께(원자성), 잔액 규칙 지키기(일관성), 남의 이체와 안 섞이기(고립성), 보낸 기록은 영원히(지속성)."
+ }
+];
