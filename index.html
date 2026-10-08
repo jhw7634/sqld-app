@@ -259,6 +259,12 @@ function play(b) {
 }
 document.addEventListener("toggle", e => e.target.querySelectorAll?.("[id^=fig]").forEach(f => FIGS[+f.id.slice(3)].steps && stepTo(+f.id.slice(3), 0)), true); // 열 때 첫 단계로
 
+// 함정 그림·표: 예시가 모두 '식 → 결과' 줄이면 표로 (맨 앞 줄에 →가 없으면 표 제목), 아니면 코드 상자
+const exTable = ex => { const ls = ex.split("\n"), cap = ls[0].includes("→") ? "" : ls.shift();
+  if (!ls.length || !ls.every(x => x.includes("→"))) return `<pre>${esc(ex)}</pre>`;
+  return `<div class="memo">${grid({ cols: ["이렇게 하면", "결과"], rows: ls.map(x => { const k = x.indexOf("→"); return [x.slice(0, k).trim(), x.slice(k + 1).trim()]; }) }, cap)}</div>`; };
+const trapMore = t => `${t.pic ? t.pic.replace("<svg", '<svg class="pic" role="img" aria-label="그림"') : ""}${t.table ? `<div class="memo">${grid(t.table, t.table.cap)}</div>` : ""}${t.ex ? exTable(t.ex) : ""}`;
+
 // 함정: 요약을 읽고 바로 그 함정 3문제로 확인. 정답률은 연습과 따로 (stats.t)
 function trapHome() {
   const st = store.stats.t || { s: 0, c: 0 }, done = TRAPQ.filter(q => q.id in store.last).length, left = TRAPQ.length - done;
@@ -274,7 +280,7 @@ function trapHome() {
       <summary class="row" style="justify-content:space-between;flex-wrap:nowrap;cursor:pointer"><strong><span style="color:var(--bad)">${i + 1}.</span> ${esc(t.title)}</strong><span class="count">${qs.filter(q => q.id in store.last).length} / ${qs.length}</span></summary>
       <div class="stack" style="margin-top:.8rem">
         <p>${esc(t.body)}</p>
-        ${t.ex ? `<pre>${esc(t.ex)}</pre>` : ""}
+        ${trapMore(t)}
         <button data-trap="${t.id}" class="center">이 함정 ${qs.length}문제 풀기</button>
       </div>
     </details>`; }).join("")}`;
@@ -348,7 +354,7 @@ function planCard() {
 
 // 시험 전날 요약 카드: 함정 요약과 틀렸던 문제의 핵심을 한 장씩 넘겨 보기
 function brief(i = 0) {
-  const cards = [...TRAPS.map(t => ({ tag: "함정", head: t.title, body: t.body, ex: t.ex })), ...reviewIds().map(id => { const q = byId[id]; return { tag: `${q.subject}과목 · ${q.topic}`, head: q.q, code: q.code, ans: ans(q, q.answer), body: q.exp }; })];
+  const cards = [...TRAPS.map(t => ({ tag: "함정", head: t.title, body: t.body, t })), ...reviewIds().map(id => { const q = byId[id]; return { tag: `${q.subject}과목 · ${q.topic}`, head: q.q, code: q.code, ans: ans(q, q.answer), body: q.exp }; })];
   const c = cards[i], trap = i < TRAPS.length;
   show(`
     <div class="row bar"><button id="out" aria-label="나가기" class="back">✕</button><strong>${i + 1} / ${cards.length}</strong><span class="muted">${trap ? "함정" : "틀렸던 문제"}</span></div>
@@ -358,7 +364,7 @@ function brief(i = 0) {
       ${c.code ? `<pre>${esc(c.code)}</pre>` : ""}
       ${c.ans ? `<strong style="color:var(--ok)">정답 ${c.ans}</strong>` : ""}
       <p>${esc(c.body)}</p>
-      ${c.ex ? `<pre>${esc(c.ex)}</pre>` : ""}
+      ${c.t ? trapMore(c.t) : ""}
     </div>`, { "#out": home });
   dock(`<div class="split"><button id="prev" class="center" ${i ? "" : "disabled"}>이전</button><button id="next" class="main">${i + 1 < cards.length ? "다음 카드" : "끝 · 돌아가기"}</button></div>`,
     { "#prev": () => brief(i - 1), "#next": () => (i + 1 < cards.length ? brief(i + 1) : home()) });

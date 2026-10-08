@@ -9027,7 +9027,31 @@ window.SQLD_TRAPS = [
     "id": "t03",
     "title": "COUNT·SUM·AVG와 NULL",
     "body": "COUNT(*)는 NULL이 있는 행까지 모두 세지만 COUNT(컬럼)·SUM·AVG·MAX·MIN은 NULL을 빼고 계산해요. 그래서 AVG는 NULL을 뺀 개수로 나눠요.",
-    "ex": "값 10, 20, NULL\nCOUNT(*) 3 · COUNT(C) 2 · AVG(C) 15"
+    "table": {
+      "cap": "값: 10, 20, NULL",
+      "cols": [
+        "함수",
+        "결과"
+      ],
+      "rows": [
+        [
+          "COUNT(*)",
+          "3"
+        ],
+        [
+          "COUNT(C)",
+          "2"
+        ],
+        [
+          "SUM(C)",
+          "30"
+        ],
+        [
+          "AVG(C)",
+          "15 (30 ÷ 2)"
+        ]
+      ]
+    }
   },
   {
     "id": "t04",
@@ -9051,25 +9075,103 @@ window.SQLD_TRAPS = [
     "id": "t07",
     "title": "RANK · DENSE_RANK · ROW_NUMBER",
     "body": "값이 같을 때 RANK는 같은 순위를 주고 다음 순위를 건너뛰어요(1, 1, 3). DENSE_RANK는 건너뛰지 않고(1, 1, 2), ROW_NUMBER는 값이 같아도 서로 다른 번호를 줘요(1, 2, 3).",
-    "ex": "점수 100, 100, 90\nRANK        1, 1, 3\nDENSE_RANK  1, 1, 2\nROW_NUMBER  1, 2, 3"
+    "table": {
+      "cap": "",
+      "cols": [
+        "점수",
+        "RANK",
+        "DENSE_​RANK",
+        "ROW_​NUMBER"
+      ],
+      "rows": [
+        [
+          "100",
+          "1",
+          "1",
+          "1"
+        ],
+        [
+          "100",
+          "1",
+          "1",
+          "2"
+        ],
+        [
+          "90",
+          "3",
+          "2",
+          "3"
+        ]
+      ]
+    }
   },
   {
     "id": "t08",
     "title": "ROLLUP은 n+1단계",
     "body": "ROLLUP(A, B)는 (A, B)별 소계, A별 소계, 전체 합계의 3단계를 만들어요. 인자가 n개면 n+1단계이고, 괄호 안 순서를 바꾸면 결과도 달라져요.",
-    "ex": "ROLLUP(A, B) = GROUPING SETS((A, B), (A), ())"
+    "ex": "ROLLUP(A, B) = GROUPING SETS((A, B), (A), ())",
+    "table": {
+      "cap": "",
+      "cols": [
+        "쓰는 법",
+        "만들어지는 묶음"
+      ],
+      "rows": [
+        [
+          "ROLLUP(A, B)",
+          "(A, B), (A), 전체"
+        ],
+        [
+          "ROLLUP(B, A)",
+          "(B, A), (B), 전체"
+        ]
+      ]
+    }
   },
   {
     "id": "t09",
     "title": "CUBE는 모든 조합",
     "body": "CUBE(A, B)는 (A, B), (A), (B), () 네 가지 조합을 모두 집계해요. 인자가 n개면 2ⁿ가지 조합이고, ROLLUP과 달리 괄호 안 순서를 바꿔도 결과 행은 같아요.",
-    "ex": "CUBE(A, B) = GROUPING SETS((A, B), (A), (B), ())"
+    "ex": "CUBE(A, B) = GROUPING SETS((A, B), (A), (B), ())",
+    "table": {
+      "cap": "",
+      "cols": [
+        "쓰는 법",
+        "만들어지는 묶음"
+      ],
+      "rows": [
+        [
+          "CUBE(A, B)",
+          "(A, B), (A), (B), 전체"
+        ],
+        [
+          "CUBE(B, A)",
+          "같은 4가지"
+        ]
+      ]
+    }
   },
   {
     "id": "t10",
     "title": "UNION은 중복 제거, UNION ALL은 그대로",
     "body": "UNION은 두 결과를 합친 뒤 중복 행을 없애고, UNION ALL은 중복까지 그대로 붙여요. UNION 결과가 정렬된 것처럼 보일 때도 있지만 순서는 보장되지 않으니, 순서가 필요하면 맨 끝에 ORDER BY를 써요.",
-    "ex": "A: 1, 1, 2   B: 2, 3\nUNION     → 1, 2, 3\nUNION ALL → 1, 1, 2, 2, 3"
+    "table": {
+      "cap": "A: 1, 1, 2   B: 2, 3",
+      "cols": [
+        "연산",
+        "결과"
+      ],
+      "rows": [
+        [
+          "UNION",
+          "1, 2, 3"
+        ],
+        [
+          "UNION ALL",
+          "1, 1, 2, 2, 3"
+        ]
+      ]
+    }
   },
   {
     "id": "t11",
@@ -9087,7 +9189,8 @@ window.SQLD_TRAPS = [
     "id": "t13",
     "title": "CONNECT BY PRIOR 방향",
     "body": "CONNECT BY PRIOR EMPNO = MGR처럼 PRIOR가 자식 쪽 키(자기 번호)에 붙으면 위에서 아래로 내려가는 순방향이에요. PRIOR MGR = EMPNO처럼 부모 쪽 키에 붙으면 아래에서 위로 올라가는 역방향이에요. PRIOR는 '방금 읽은 행'이라고 읽으면 쉬워요.",
-    "ex": "CONNECT BY PRIOR EMPNO = MGR  → 부하 방향(순방향)\nCONNECT BY PRIOR MGR = EMPNO  → 상사 방향(역방향)"
+    "ex": "CONNECT BY PRIOR EMPNO = MGR  → 부하 방향(순방향)\nCONNECT BY PRIOR MGR = EMPNO  → 상사 방향(역방향)",
+    "pic": "<svg viewBox='0 0 300 150'><rect class='h' x='110' y='8' width='80' height='30' rx='8'/><rect class='h' x='110' y='60' width='80' height='30' rx='8'/><rect class='h' x='110' y='112' width='80' height='30' rx='8'/><text x='150' y='28' class='k'>사장</text><text x='150' y='80' class='k'>팀장</text><text x='150' y='132' class='k'>사원</text><path class='ln' d='M150 38v22M150 90v22'/><path class='ln' d='M94 14v120m-6-8l6 8 6-8'/><path class='ar' d='M206 136v-120m-6 8l6-8 6 8'/><text x='48' y='72' class='k'>순방향</text><text x='48' y='90' class='m'>부하 쪽으로</text><text x='254' y='72' class='k'>역방향</text><text x='254' y='90' class='m'>상사 쪽으로</text></svg>"
   },
   {
     "id": "t14",
@@ -9111,7 +9214,27 @@ window.SQLD_TRAPS = [
     "id": "t17",
     "title": "COUNT(DISTINCT)는 NULL을 안 세요",
     "body": "COUNT(DISTINCT 컬럼)은 같은 값을 하나로 센 뒤 NULL은 빼요. 값이 A, A, B, NULL이면 COUNT(*) 4, COUNT(컬럼) 3, COUNT(DISTINCT 컬럼) 2예요.",
-    "ex": "A, A, B, NULL\nCOUNT(*) 4 · COUNT(C) 3 · COUNT(DISTINCT C) 2"
+    "table": {
+      "cap": "C: A, A, B, NULL",
+      "cols": [
+        "함수",
+        "결과"
+      ],
+      "rows": [
+        [
+          "COUNT(*)",
+          "4"
+        ],
+        [
+          "COUNT(C)",
+          "3"
+        ],
+        [
+          "COUNT(DISTINCT C)",
+          "2"
+        ]
+      ]
+    }
   },
   {
     "id": "t18",
@@ -9123,7 +9246,27 @@ window.SQLD_TRAPS = [
     "id": "t19",
     "title": "NULL 정렬 위치",
     "body": "Oracle은 NULL을 가장 큰 값처럼 다뤄서 오름차순이면 맨 뒤, 내림차순이면 맨 앞에 와요. SQL Server는 반대로 가장 작은 값처럼 다뤄 오름차순이면 맨 앞이에요. Oracle에서는 NULLS FIRST, NULLS LAST로 위치를 바꿀 수 있어요.",
-    "ex": "C: 20, NULL, 10\nOracle ORDER BY C       → 10, 20, NULL\nOracle ORDER BY C DESC  → NULL, 20, 10"
+    "ex": "C: 20, NULL, 10\nOracle ORDER BY C       → 10, 20, NULL\nOracle ORDER BY C DESC  → NULL, 20, 10",
+    "table": {
+      "cap": "",
+      "cols": [
+        "정렬",
+        "Oracle",
+        "SQL Server"
+      ],
+      "rows": [
+        [
+          "오름차순 (ASC)",
+          "NULL 맨 뒤",
+          "NULL 맨 앞"
+        ],
+        [
+          "내림차순 (DESC)",
+          "NULL 맨 앞",
+          "NULL 맨 뒤"
+        ]
+      ]
+    }
   },
   {
     "id": "t20",
@@ -9159,7 +9302,7 @@ window.SQLD_TRAPS = [
     "id": "t25",
     "title": "CROSS JOIN은 행 수의 곱",
     "body": "CROSS JOIN이나 조인 조건을 빠뜨린 조인은 모든 행끼리 짝을 지어요(카티션 곱). 결과 행 수는 두 테이블 행 수를 곱한 값이에요.",
-    "ex": "EMP 4행 × DEPT 3행 → 12행"
+    "pic": "<svg viewBox='0 0 300 132'><text x='120' y='16' class='m'>D1</text><text x='160' y='16' class='m'>D2</text><text x='200' y='16' class='m'>D3</text><text x='84' y='40' class='m'>E1</text><rect class='h' x='104' y='26' width='32' height='20' rx='4'/><rect class='h' x='144' y='26' width='32' height='20' rx='4'/><rect class='h' x='184' y='26' width='32' height='20' rx='4'/><text x='84' y='64' class='m'>E2</text><rect class='h' x='104' y='50' width='32' height='20' rx='4'/><rect class='h' x='144' y='50' width='32' height='20' rx='4'/><rect class='h' x='184' y='50' width='32' height='20' rx='4'/><text x='84' y='88' class='m'>E3</text><rect class='h' x='104' y='74' width='32' height='20' rx='4'/><rect class='h' x='144' y='74' width='32' height='20' rx='4'/><rect class='h' x='184' y='74' width='32' height='20' rx='4'/><text x='84' y='112' class='m'>E4</text><rect class='h' x='104' y='98' width='32' height='20' rx='4'/><rect class='h' x='144' y='98' width='32' height='20' rx='4'/><rect class='h' x='184' y='98' width='32' height='20' rx='4'/><text x='40' y='70' class='k'>EMP</text><text x='40' y='86' class='m'>4행</text><text x='160' y='130' class='m'>DEPT 3행</text><text x='266' y='70' class='k'>12행</text><text x='266' y='86' class='m'>4 × 3</text></svg>"
   },
   {
     "id": "t26",
@@ -9183,13 +9326,38 @@ window.SQLD_TRAPS = [
     "id": "t29",
     "title": "GRANT OPTION은 연쇄 회수, ADMIN OPTION은 아니에요",
     "body": "객체 권한을 WITH GRANT OPTION으로 받은 사람이 남에게 다시 준 권한은, 처음 권한을 회수하면 함께 회수돼요. 시스템 권한을 WITH ADMIN OPTION으로 받은 경우는 회수해도 그 사람이 남에게 준 권한이 그대로 남아요.",
-    "ex": "객체 권한 (SELECT ON EMP) + WITH GRANT OPTION → 연쇄 회수\n시스템 권한 (CREATE TABLE) + WITH ADMIN OPTION → 연쇄 회수 없음"
+    "table": {
+      "cap": "",
+      "cols": [
+        "",
+        "객체 권한",
+        "시스템 권한"
+      ],
+      "rows": [
+        [
+          "예",
+          "SELECT ON EMP",
+          "CREATE TABLE"
+        ],
+        [
+          "다시 줄 수 있게",
+          "WITH GRANT OPTION",
+          "WITH ADMIN OPTION"
+        ],
+        [
+          "처음 권한을 회수하면",
+          "남에게 준 것도 함께 회수",
+          "남에게 준 것은 그대로"
+        ]
+      ]
+    }
   },
   {
     "id": "t30",
     "title": "식별 관계와 비식별 관계",
     "body": "부모의 주식별자가 자식의 주식별자 일부가 되면 식별 관계, 자식의 일반 속성(외래키)으로만 가면 비식별 관계예요. 식별 관계가 이어지면 자식의 주식별자 컬럼이 계속 늘어나고, 비식별 관계는 부모 없이도 자식이 생길 수 있는 약한 연결이에요. IE 표기법에서 식별은 실선, 비식별은 점선이에요.",
-    "ex": "식별:   주문(주문번호) → 주문상품(주문번호, 상품번호)\n비식별: 부서(부서번호) → 사원(사원번호), 부서번호는 일반 속성"
+    "ex": "식별:   주문(주문번호) → 주문상품(주문번호, 상품번호)\n비식별: 부서(부서번호) → 사원(사원번호), 부서번호는 일반 속성",
+    "pic": "<svg viewBox='0 0 300 104'><rect class='h' x='8' y='8' width='62' height='34' rx='8'/><rect class='h' x='230' y='8' width='62' height='34' rx='8'/><rect class='b' x='8' y='62' width='62' height='34' rx='8'/><rect class='b' x='230' y='62' width='62' height='34' rx='8'/><text x='39' y='30' class='k'>부모</text><text x='261' y='30' class='k'>자식</text><text x='39' y='84' class='k'>부모</text><text x='261' y='84' class='k'>자식</text><path class='ln' d='M70 25h160'/><path class='ln' stroke-dasharray='6 5' d='M70 79h160'/><text x='150' y='19' class='m'>식별 관계 · 실선</text><text x='150' y='73' class='m'>비식별 관계 · 점선</text></svg>"
   }
 ];
 window.SQLD_QUESTIONS.push(...
