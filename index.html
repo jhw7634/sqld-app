@@ -59,6 +59,7 @@ details.card > summary, .part > summary { list-style:none; } details.card > summ
 .stats .big { font-size:1.35rem; }
 .count { flex:none; font-weight:700; color:var(--accent); font-variant-numeric:tabular-nums; }
 .pbar { position:relative; background:var(--line); border-radius:99px; } .pbar i { display:block; height:100%; border-radius:99px; } .pbar b { position:absolute; top:-3px; bottom:-3px; border-left:2px dashed var(--muted); opacity:.6; }
+.dd { display:flex; align-items:center; gap:.6rem; } .dd input { width:1.35rem; height:1.35rem; flex:none; accent-color:var(--ok); } .dd.done > span { text-decoration:line-through; opacity:.6; }
 .pline { display:block; width:100%; text-align:left; background:none; border:0; padding:.45rem 0; color:inherit; font:inherit; }
 .tabs { display:grid; grid-template-columns:repeat(5,1fr); gap:.25rem; padding:.3rem; background:var(--line); border-radius:1rem; }
 .tabs button { border:0; background:none; padding:.65rem .4rem; text-align:center; font-weight:700; color:var(--muted); border-radius:.75rem; }
@@ -176,6 +177,7 @@ function home() {
     "[data-sf]": b => { prefs.stat = b.dataset.sf; home(); },
     "#plan": () => { if ($("#dday").value) { store.dday = $("#dday").value; save(); home(); } },
     "#dchange": () => { delete store.dday; save(); home(); },
+    "[data-dd]": c => { const d = c.dataset.dd, on = c.checked; store.done = store.done || {}; on ? (store.done[d] = 1) : delete store.done[d]; save(); document.querySelectorAll(`[data-dd="${d}"]`).forEach(x => { x.checked = on; x.parentElement.classList.toggle("done", on); }); }, // 플랜 날짜 완료 체크 → 줄 긋기
     "[data-plan]": b => { const d = $("#dday")?.value; store.plan = +b.dataset.plan; save(); home(); if (d) $("#dday").value = d; },
     "[data-task]": b => { const [k, v] = b.dataset.task.split(":"); k === "unit" ? (prefs.unit = v, list()) : k === "exam" ? startExam(+v, !store.runs[+v]) : k === "high" ? goHigh() : k === "notes" ? notes("wrong") : k === "brief" ? brief() : (store.tab = k, save(), home()); },
     "#hgo": goHigh,
@@ -348,10 +350,11 @@ function planCard() {
   if (left <= 0) return `<div class="card stack">${head}<p class="muted">${left ? "다음 시험일로 바꿔 주세요." : "오늘이 시험날이에요. 요약 카드만 한 번 훑고 가세요!"}</p></div>`;
   const T = tasks(), span = Math.min(P, left), k = span - left; // k: 오늘이 플랜 며칠째인지 (음수면 아직 시작 전)
   const day = j => { const d = T.filter((_, i) => Math.round((i * (span - 1)) / (T.length - 1)) === j); return d.length ? d : [{ t: "복습 · 오답노트 다시 풀기", go: "notes" }]; }; // 할 일보다 날이 많으면 빈 날은 복습
+  const ck = j => { const d = iso(addDays(today(), j - k)), on = !!store.done?.[d]; return [on ? " done" : "", `<input type="checkbox" data-dd="${d}" aria-label="${fmt(addDays(today(), j - k))} 완료"${on ? " checked" : ""}>`]; }; // 오른쪽 체크박스
   const line = x => `<button data-task="${x.go}" class="pline row" style="display:flex;flex-wrap:nowrap"><span style="color:var(--${x.ok ? "ok" : "muted"})">${x.ok ? "✓" : "○"}</span><span style="flex:1">${esc(x.t)}</span><span class="muted">›</span></button>`;
   return `<div class="card stack" style="gap:.3rem">${head}${len}
-    ${k < 0 ? `<p class="muted">${span}일 플랜은 ${fmt(addDays(today(), -k))}부터 시작해요. 그때까지 이론 탭을 읽어 두세요.</p>` : `<strong style="margin-top:.4rem">오늘 할 일 · ${k + 1}일째</strong>${day(k).map(line).join("")}`}
-    <details><summary class="muted" style="cursor:pointer;margin-top:.4rem">전체 일정 보기</summary>${[...Array(span)].map((_, j) => `<p class="muted" style="margin-top:.3rem${j < k ? ";opacity:.5" : ""}"><strong>${fmt(addDays(today(), j - k))}</strong> ${day(j).map(x => esc(x.t)).join(", ")}</p>`).join("")}</details></div>`;
+    ${k < 0 ? `<p class="muted">${span}일 플랜은 ${fmt(addDays(today(), -k))}부터 시작해요. 그때까지 이론 탭을 읽어 두세요.</p>` : `<div class="dd${ck(k)[0]}" style="margin-top:.4rem"><span style="flex:1"><strong>오늘 할 일 · ${k + 1}일째</strong></span>${ck(k)[1]}</div>${day(k).map(line).join("")}`}
+    <details><summary class="muted" style="cursor:pointer;margin-top:.4rem">전체 일정 보기</summary>${[...Array(span)].map((_, j) => `<p class="muted dd${ck(j)[0]}" style="margin-top:.3rem"><span style="flex:1"><strong>${fmt(addDays(today(), j - k))}</strong> ${day(j).map(x => esc(x.t)).join(", ")}</span>${ck(j)[1]}</p>`).join("")}</details></div>`;
 }
 
 // 시험 전날 요약 카드: 함정 요약과 틀렸던 문제의 핵심을 한 장씩 넘겨 보기
