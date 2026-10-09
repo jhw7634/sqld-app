@@ -564,7 +564,7 @@ function notes(mode) {
       <button class="chip" data-mode="review" aria-pressed="${review}">다시보기 ${reviewIds().length}</button>
       <button class="chip" data-mode="saved" aria-pressed="${saved}">저장 ${savedIds().length}</button></div>
     <p class="muted">${saved ? "맞힌 뒤 '저장'을 누른 문제예요." : review ? "한 번이라도 틀린 문제는 맞혀도 여기에 남아요." : "다시 풀어서 맞히면 오답노트에서 빠지고, 다시보기에는 남아요."}</p>
-    ${ids.length ? `<button id="retry" class="main">${ids.length}문제 다시 풀기</button>`
+    ${ids.length ? `<div class="split"><button id="slow" class="center">하나씩 보기</button><button id="retry" class="main">다시 풀기 ${ids.length}</button></div>`
       : `<p class="card muted center" style="padding:2.5rem 1rem">${saved ? "저장한 문제가 없어요.<br>맞힌 문제에서 '저장'을 누르면 여기에 모여요." : `${review ? "아직 틀린 적 있는 문제가 없어요." : "지금 못 맞힌 문제가 없어요."}<br>문제를 풀다 틀리면 여기에 자동으로 저장돼요.`}</p>`}
     ${ids.map(id => { const q = byId[id], w = store.wrong[id] || {}; return `
       <div class="card stack">
@@ -578,8 +578,24 @@ function notes(mode) {
     "#back": home,
     "[data-mode]": b => notes(b.dataset.mode),
     "#retry": () => start(shuffle(ids.map(id => byId[id])), true),
+    "#slow": () => slow(mode, ids),
     "[data-del]": b => { if (saved) delete store.saved[b.dataset.del]; else if (review) delete store.wrong[b.dataset.del]; else store.wrong[b.dataset.del].cleared = true; save(); notes(mode); },
   });
+}
+
+// 하나씩 보기: 목록의 문제를 한 장씩 천천히 (보기마다 정답·내 오답 표시, 해설 펼쳐 둠)
+function slow(mode, ids, i = 0) {
+  const q = byId[ids[i]], w = store.wrong[ids[i]] || {};
+  show(`
+    <div class="row bar"><button id="out" aria-label="나가기" class="back">✕</button><strong>${i + 1} / ${ids.length}</strong><span class="muted">하나씩 보기</span></div>
+    <div class="card stack" style="padding:1.5rem 1.25rem">
+      <span class="tag" style="align-self:flex-start">${q.subject}과목 · ${esc(q.topic)}</span>
+      <h2>${esc(q.q)}</h2>${code(q)}
+      ${q.options.map((o, k) => `<p style="${k + 1 === q.answer ? "color:var(--ok);font-weight:700" : k + 1 === w.picked ? "color:var(--bad)" : ""}">${C[k]} ${esc(o)}${k + 1 === q.answer ? " · 정답" : k + 1 === w.picked ? " · 내가 고른 답" : ""}</p>`).join("")}
+      <p>${esc(q.exp)}</p>${more(q)}
+    </div>`, { "#out": () => notes(mode) });
+  dock(`<div class="split"><button id="prev" class="center" ${i ? "" : "disabled"}>이전</button><button id="next" class="main">${i + 1 < ids.length ? "다음" : "끝 · 목록으로"}</button></div>`,
+    { "#prev": () => slow(mode, ids, i - 1), "#next": () => (i + 1 < ids.length ? slow(mode, ids, i + 1) : notes(mode)) });
 }
 
 // ---------- 실전 모의고사: 90분 타이머, 답안지, 제출 후 한 번에 채점 ----------
