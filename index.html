@@ -176,6 +176,7 @@ function home() {
     "[data-sf]": b => { prefs.stat = b.dataset.sf; home(); },
     "#plan": () => { if ($("#dday").value) { store.dday = $("#dday").value; save(); home(); } },
     "#dchange": () => { delete store.dday; save(); home(); },
+    "[data-plan]": b => { const d = $("#dday")?.value; store.plan = +b.dataset.plan; save(); home(); if (d) $("#dday").value = d; },
     "[data-task]": b => { const [k, v] = b.dataset.task.split(":"); k === "unit" ? (prefs.unit = v, list()) : k === "exam" ? startExam(+v, !store.runs[+v]) : k === "high" ? goHigh() : k === "notes" ? notes("wrong") : k === "brief" ? brief() : (store.tab = k, save(), home()); },
     "#hgo": goHigh,
     "#brief": () => brief(),
@@ -314,7 +315,7 @@ function examHome(n) {
     </details>`;
 }
 
-// ---------- 실전 탭: 20일 합격 플랜(D-day), 자주 나와요 문제, 실전 1·2·3, 시험 전날 요약 카드 ----------
+// ---------- 실전 탭: 합격 플랜(20일·30일, D-day), 자주 나와요 문제, 실전 1·2·3, 시험 전날 요약 카드 ----------
 const HIGH = PRACTICE.filter(q => q.freq === "high"); // 자주 나와요(빈도 높음) 연습 문제
 const goHigh = () => { const todo = HIGH.filter(q => !(q.id in store.last)); start(todo.length ? todo : shuffle(HIGH), false); };
 function examTab() {
@@ -326,7 +327,7 @@ function examTab() {
     ${go("brief", "시험 전날 요약 카드", `함정 ${TRAPS.length}장 + 틀렸던 문제 ${reviewIds().length}장`, "보기")}`;
 }
 
-// 20일 합격 플랜: 시험일(store.dday)까지 남은 날(최대 20일)에 할 일을 고르게 나눠 보여줌. 할 일의 ✓는 풀이 기록으로 판단
+// 합격 플랜: 시험일(store.dday)까지 남은 날(최대 store.plan일, 기본 20일)에 할 일을 고르게 나눠 보여줌. 할 일의 ✓는 풀이 기록으로 판단
 const today = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; };
 const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
 const fmt = d => `${d.getMonth() + 1}월 ${d.getDate()}일(${"일월화수목금토"[d.getDay()]})`;
@@ -340,14 +341,15 @@ const tasks = () => {
     ...EXAMS.flatMap((n, i) => [{ t: `실전 모의고사 ${n}`, go: "exam:" + n, ok: !!store.exams[n] }, ...(mids[i] ? [mids[i]] : [])]), { t: "시험 전날 요약 카드 보기", go: "brief" }];
 };
 function planCard() {
-  const left = dleft();
-  if (left === null) return `<div class="card stack"><h2>20일 합격 플랜</h2><p class="muted">시험일을 넣으면 D-day와 날짜별 할 일이 나와요.</p><div class="split" style="grid-template-columns:1fr auto"><input id="dday" type="date" min="${iso(today())}" aria-label="시험일"><button id="plan" class="main">만들기</button></div></div>`;
+  const left = dleft(), P = store.plan || 20;
+  const len = `<div class="row">${[20, 30].map(n => `<button class="chip" data-plan="${n}" aria-pressed="${P === n}">${n}일 플랜</button>`).join("")}</div>`;
+  if (left === null) return `<div class="card stack"><h2>${P}일 합격 플랜</h2>${len}<p class="muted">시험일을 넣으면 D-day와 날짜별 할 일이 나와요.</p><div class="split" style="grid-template-columns:1fr auto"><input id="dday" type="date" min="${iso(today())}" aria-label="시험일"><button id="plan" class="main">만들기</button></div></div>`;
   const head = `<span class="row" style="justify-content:space-between"><h2>${left > 0 ? `D-${left}` : left ? "시험이 지났어요" : "D-day"}</h2><button id="dchange" class="chip">${fmt(new Date(store.dday + "T00:00"))} 시험 · 바꾸기</button></span>`;
   if (left <= 0) return `<div class="card stack">${head}<p class="muted">${left ? "다음 시험일로 바꿔 주세요." : "오늘이 시험날이에요. 요약 카드만 한 번 훑고 가세요!"}</p></div>`;
-  const T = tasks(), span = Math.min(20, left), k = span - left; // k: 오늘이 플랜 며칠째인지 (음수면 아직 시작 전)
-  const day = j => T.slice(Math.floor((j * T.length) / span), Math.floor(((j + 1) * T.length) / span));
+  const T = tasks(), span = Math.min(P, left), k = span - left; // k: 오늘이 플랜 며칠째인지 (음수면 아직 시작 전)
+  const day = j => { const d = T.filter((_, i) => Math.round((i * (span - 1)) / (T.length - 1)) === j); return d.length ? d : [{ t: "복습 · 오답노트 다시 풀기", go: "notes" }]; }; // 할 일보다 날이 많으면 빈 날은 복습
   const line = x => `<button data-task="${x.go}" class="pline row" style="display:flex;flex-wrap:nowrap"><span style="color:var(--${x.ok ? "ok" : "muted"})">${x.ok ? "✓" : "○"}</span><span style="flex:1">${esc(x.t)}</span><span class="muted">›</span></button>`;
-  return `<div class="card stack" style="gap:.3rem">${head}
+  return `<div class="card stack" style="gap:.3rem">${head}${len}
     ${k < 0 ? `<p class="muted">${span}일 플랜은 ${fmt(addDays(today(), -k))}부터 시작해요. 그때까지 이론 탭을 읽어 두세요.</p>` : `<strong style="margin-top:.4rem">오늘 할 일 · ${k + 1}일째</strong>${day(k).map(line).join("")}`}
     <details><summary class="muted" style="cursor:pointer;margin-top:.4rem">전체 일정 보기</summary>${[...Array(span)].map((_, j) => `<p class="muted" style="margin-top:.3rem${j < k ? ";opacity:.5" : ""}"><strong>${fmt(addDays(today(), j - k))}</strong> ${day(j).map(x => esc(x.t)).join(", ")}</p>`).join("")}</details></div>`;
 }
