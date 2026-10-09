@@ -183,6 +183,7 @@ function home() {
     "#hgo": goHigh,
     "#brief": () => brief(),
     "[data-play]": b => play(b),
+    "[data-step]": b => step(b),
     "#reset": () => { if (confirm("푼 기록·오답노트·저장·실전 결과를 모두 지우고 처음부터 시작할까요?")) { localStorage.removeItem(KEY); location.reload(); } },
   });
 }
@@ -242,23 +243,33 @@ function studyHome() {
 // 이론 그림(설명 위)과 비교표·외우기 팁(설명 아래). steps가 있는 그림은 '움직여 보기'로 한 단계씩 재생
 const fig = (f, top) => { const i = FIGS.indexOf(f); return top ? (f.pic ? `<div class="stack">
   <div id="fig${i}">${f.pic.replace("<svg", '<svg class="pic" role="img" aria-label="그림"')}</div>
-  ${f.steps ? `<strong id="cap${i}" style="color:var(--accent)">${esc(f.steps[0])}</strong><button data-play="${i}" class="center">▶ 움직여 보기</button>` : ""}</div>` : "")
+  ${f.steps ? `<strong id="cap${i}" style="color:var(--accent)">${esc(f.steps[0])}</strong><button data-play="${i}" class="center">▶ 움직여 보기</button>
+  <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:.5rem;align-items:center"><button data-step="${i}:-1" class="center">◀ 이전</button><span id="cnt${i}" class="muted">1 / ${f.steps.length}</span><button data-step="${i}:1" class="center">다음 ▶</button></div>` : ""}</div>` : "")
   : f.table || f.memo ? `<div class="stack memo">${f.table ? grid(f.table) : ""}${f.table2 ? grid(f.table2) : ""}
   ${f.memo ? `<p class="card" style="background:var(--ok-soft);border:0"><strong>외우기 팁</strong><br>${esc(f.memo)}</p>` : ""}</div>` : ""; };
 // 그림의 k단계 보여 주기: data-s는 k단계부터, data-o는 적힌 단계에서만 보임
+const at = {}, run = {}; // 그림마다 지금 단계, 자동 재생 번호 (단계 버튼을 누르면 자동 재생 멈춤)
 function stepTo(i, k) {
   const fig = $("#fig" + i);
   if (!fig) return false;
   fig.querySelectorAll("[data-s]").forEach(e => (e.style.opacity = +e.dataset.s <= k ? 1 : 0.12));
   fig.querySelectorAll("[data-o]").forEach(e => (e.style.opacity = e.dataset.o.split(" ").includes(String(k)) ? 1 : 0));
   $("#cap" + i).textContent = FIGS[i].steps[k];
+  $("#cnt" + i).textContent = `${k + 1} / ${FIGS[i].steps.length}`;
+  at[i] = k;
   return true;
 }
 function play(b) {
-  const i = +b.dataset.play, n = FIGS[i].steps.length;
+  const i = +b.dataset.play, n = FIGS[i].steps.length, r = (run[i] = (run[i] || 0) + 1);
   b.disabled = true;
-  const go = k => { if (!stepTo(i, k)) return; if (k + 1 < n) setTimeout(() => go(k + 1), 1800); else { b.disabled = false; b.textContent = "↺ 다시 보기"; } };
+  const go = k => { if (run[i] !== r || !stepTo(i, k)) return; if (k + 1 < n) setTimeout(() => go(k + 1), 1800); else { b.disabled = false; b.textContent = "↺ 다시 보기"; } };
   go(0);
+}
+function step(b) { // 이전/다음 단계: 원하는 만큼 천천히 한 단계씩
+  const [i, d] = b.dataset.step.split(":").map(Number), n = FIGS[i].steps.length;
+  run[i] = (run[i] || 0) + 1;
+  const p = document.querySelector(`[data-play="${i}"]`); p.disabled = false; p.textContent = "▶ 움직여 보기";
+  stepTo(i, Math.min(n - 1, Math.max(0, (at[i] || 0) + d)));
 }
 document.addEventListener("toggle", e => e.target.querySelectorAll?.("[id^=fig]").forEach(f => FIGS[+f.id.slice(3)].steps && stepTo(+f.id.slice(3), 0)), true); // 열 때 첫 단계로
 
