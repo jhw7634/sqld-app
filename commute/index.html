@@ -1,0 +1,857 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>SQLD 문제집</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1B7FC4">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SQLD">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one narrow column like a phone ticket; a subway line map on top tracks progress by topic "station". */
+:root {
+  --bg: #F3F6F8;
+  --surface: #FFFFFF;
+  --ink: #15212B;
+  --muted: #5C6B77;
+  --rule: #DCE3E8;
+  --line: #1B7FC4;          /* subway line color = accent */
+  --line-soft: #E3F0F9;
+  --ok: #1E8A55; --ok-soft: #E4F4EB;
+  --bad: #C8423A; --bad-soft: #FBE9E7;
+  --warn: #A86A00; --warn-soft: #FFF3D9;
+  --code-bg: #EEF2F5;
+  --f-display: "Do Hyeon", "IBM Plex Sans KR", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans KR", system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, "IBM Plex Sans KR", monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0E141A; --surface: #161F27; --ink: #E5ECF1; --muted: #93A3AF; --rule: #2A3743;
+  --line: #5DB4EC; --line-soft: #1A2E3D;
+  --ok: #4CC38A; --ok-soft: #163327; --bad: #F07A70; --bad-soft: #3A1E1C; --warn: #E8B04A; --warn-soft: #3A2E14;
+  --code-bg: #1E2932; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0E141A; --surface: #161F27; --ink: #E5ECF1; --muted: #93A3AF; --rule: #2A3743;
+  --line: #5DB4EC; --line-soft: #1A2E3D;
+  --ok: #4CC38A; --ok-soft: #163327; --bad: #F07A70; --bad-soft: #3A1E1C; --warn: #E8B04A; --warn-soft: #3A2E14;
+  --code-bg: #1E2932; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.wrap { max-width: 640px; margin: 0 auto; padding-block: 12px 48px; display: flex; flex-direction: column; gap: 14px; }
+
+header.top { padding-block: 6px 0; display: flex; flex-direction: column; gap: 10px; }
+.brand { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.brand h1 { font-family: var(--f-display); font-weight: 400; font-size: 20px; margin: 0; white-space: nowrap; }
+.stnav { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; }
+.stnav .btn { font-size: 14px; padding: 9px 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stnav #prevSt { justify-self: start; } .stnav #nextSt { justify-self: end; }
+.stnow { font-family: var(--f-display); font-size: 18px; color: var(--line); white-space: nowrap; }
+.brand-r { display: flex; align-items: center; gap: 8px; flex: none; }
+.brand-r .pill { white-space: nowrap; }
+.brand { align-items: center; }
+.route { background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 12px; }
+.route .rline { display: grid; grid-template-columns: 86px 1fr; gap: 8px; align-items: start; }
+.route .rname { white-space: nowrap; }
+.route .rname { font-family: var(--f-display); font-size: 15px; color: var(--line); padding-top: 4px; }
+.route .rnums { display: flex; flex-wrap: wrap; gap: 6px; }
+.route .rn { width: 34px; height: 30px; border-radius: 8px; border: 1.5px solid var(--rule); background: var(--surface); color: var(--ink); font: inherit; font-size: 13px; font-variant-numeric: tabular-nums; cursor: pointer; position: relative; }
+.route .rn.ok { background: var(--ok-soft); border-color: var(--ok); color: var(--ok); font-weight: 700; }
+.route .rn.bad { background: var(--bad-soft); border-color: var(--bad); color: var(--bad); font-weight: 700; }
+.route .rn.cur { outline: 2px solid var(--line); outline-offset: 1px; }
+.route .rn.trap::after { content: ""; position: absolute; top: 2px; right: 2px; width: 6px; height: 6px; border-radius: 50%; background: var(--warn); }
+.route .legend { font-size: 12px; color: var(--muted); display: flex; gap: 12px; flex-wrap: wrap; }
+.score { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.score b { color: var(--ink); }
+
+/* subway line map */
+.map { overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.map::-webkit-scrollbar { display: none; }
+.track { position: relative; display: flex; gap: 0; min-width: max-content; padding: 4px 4px 2px; }
+.track::before { content: ""; position: absolute; left: 22px; right: 22px; top: 15px; height: 6px; border-radius: 3px; background: var(--rule); }
+.track .fill { position: absolute; left: 22px; top: 15px; height: 6px; border-radius: 3px; background: var(--line); transition: width .4s; }
+.stn { position: relative; width: 70px; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  background: none; border: 0; padding: 0; color: var(--muted); font: inherit; cursor: pointer; }
+.stn .dot { width: 22px; height: 22px; border-radius: 50%; background: var(--surface); border: 4px solid var(--rule); z-index: 1; transition: border-color .2s, background .2s; }
+.stn.done .dot { border-color: var(--line); background: var(--line); }
+.stn.part .dot { border-color: var(--line); }
+.stn.cur .dot { box-shadow: 0 0 0 4px var(--line-soft); border-color: var(--line); }
+.stn .nm { font-family: var(--f-display); font-size: 14px; line-height: 1.1; color: var(--ink); white-space: nowrap; }
+.stn .ct { font-size: 11px; font-variant-numeric: tabular-nums; }
+.stn:focus-visible { outline: 2px solid var(--line); outline-offset: 2px; border-radius: 6px; }
+
+.modebar { display: flex; gap: 8px; flex-wrap: wrap; }
+.pill { font: inherit; font-size: 13px; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); cursor: pointer; }
+.pill[aria-pressed="true"] { background: var(--line); border-color: var(--line); color: var(--surface); }
+.pill:disabled { opacity: .45; cursor: default; }
+
+/* problem card */
+.card { background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 12px; }
+.tag { padding: 2px 8px; border-radius: 6px; background: var(--line-soft); color: var(--line); font-weight: 700; letter-spacing: .02em; }
+.tag.trap { background: var(--warn-soft); color: var(--warn); }
+.tag.mc { background: var(--code-bg); color: var(--muted); }
+.tag.solved { background: var(--ok-soft); color: var(--ok); }
+.qnum { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; }
+.q { font-size: 17px; font-weight: 500; margin: 0; text-wrap: pretty; }
+
+details.tbls { border: 1px solid var(--rule); border-radius: 10px; }
+details.tbls summary { cursor: pointer; padding: 8px 12px; font-size: 13px; color: var(--muted); list-style: none; display: flex; justify-content: space-between; }
+details.tbls summary::after { content: "펼치기"; }
+details.tbls[open] summary::after { content: "접기"; }
+details.tbls summary::-webkit-details-marker { display: none; }
+.tblbox { padding: 0 12px 12px; display: flex; flex-direction: column; gap: 10px; }
+.tname { font-family: var(--f-mono); font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 2px; }
+.scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table.grid { border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+table.grid th, table.grid td { padding: 4px 9px; border-bottom: 1px solid var(--rule); text-align: left; }
+table.grid th { font-family: var(--f-mono); font-size: 11.5px; color: var(--muted); font-weight: 600; background: var(--code-bg); }
+table.grid td.null { color: var(--muted); font-style: italic; }
+/* 컬럼이 많아 옆으로 밀어야 할 때 첫 컬럼(번호·이름)은 고정 */
+table.grid th:first-child, table.grid td:first-child { position: sticky; left: 0; z-index: 1; background: var(--surface); box-shadow: 1px 0 0 var(--rule); }
+table.grid th:first-child { background: var(--code-bg); }
+.swipe { font-size: 12px; color: var(--line); margin: 2px 0 0; }
+
+pre.code { margin: 0; background: var(--code-bg); border-radius: 10px; padding: 10px 12px; font-family: var(--f-mono); font-size: 13.5px; overflow-x: auto; white-space: pre; }
+
+/* editor */
+.editor { display: flex; flex-direction: column; gap: 8px; }
+textarea#sql { width: 100%; min-height: 128px; resize: vertical; font-family: var(--f-mono); font-size: 15px; line-height: 1.55;
+  padding: 10px 12px; border-radius: 10px; border: 1.5px solid var(--rule); background: var(--code-bg); color: var(--ink); }
+textarea#sql:focus { outline: none; border-color: var(--line); }
+.keys { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+.keys::-webkit-scrollbar { display: none; }
+.keys.kwrap { flex-wrap: wrap; overflow: visible; }
+.key.val { color: var(--ok); font-weight: 600; }
+.key.del { color: var(--bad); font-weight: 600; }
+.key { flex: none; font-family: var(--f-mono); font-size: 13px; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); cursor: pointer; }
+.key.kw { color: var(--line); font-weight: 600; }
+.key.tb { color: var(--warn); font-weight: 600; }
+.key.col { background: var(--code-bg); }
+.key:active { background: var(--line-soft); }
+
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn { font: inherit; font-weight: 700; font-size: 15px; padding: 10px 16px; border-radius: 10px; border: 1.5px solid var(--rule); background: var(--surface); color: var(--ink); cursor: pointer; }
+.btn.primary { background: var(--line); border-color: var(--line); color: var(--surface); flex: 1; }
+.btn.ghost { border-color: transparent; background: none; color: var(--muted); font-weight: 500; padding-inline: 8px; }
+.btn:disabled { opacity: .5; cursor: default; }
+.btn:focus-visible, .key:focus-visible, .pill:focus-visible, .choice:focus-visible { outline: 2px solid var(--line); outline-offset: 2px; }
+
+.choices { display: flex; flex-direction: column; gap: 8px; }
+.choice { text-align: left; font: inherit; font-size: 14.5px; padding: 11px 12px; border-radius: 10px; border: 1.5px solid var(--rule); background: var(--surface); color: var(--ink); cursor: pointer; display: flex; gap: 10px; }
+.choice .n { font-family: var(--f-display); color: var(--line); flex: none; width: 1.2em; }
+.choice.picked-bad { border-color: var(--bad); background: var(--bad-soft); }
+.choice.picked-ok { border-color: var(--ok); background: var(--ok-soft); }
+.choice code, .q code { font-family: var(--f-mono); font-size: .92em; }
+
+/* feedback */
+.fb { border-radius: 10px; padding: 12px 14px; font-size: 14.5px; display: flex; flex-direction: column; gap: 6px; }
+.fb.ok { background: var(--ok-soft); }
+.fb.bad { background: var(--bad-soft); }
+.fb.info { background: var(--code-bg); }
+.fb.hint { background: var(--warn-soft); }
+.fb h3 { margin: 0; font-size: 15px; }
+.fb.ok h3 { color: var(--ok); } .fb.bad h3 { color: var(--bad); } .fb.hint h3 { color: var(--warn); }
+.fb p { margin: 0; }
+.result-label { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+.exp { border-top: 1px solid var(--rule); padding-top: 12px; display: grid; gap: 10px; }
+.exp .row { display: grid; grid-template-columns: 76px 1fr; gap: 10px; align-items: start; }
+.exp .lab { font-family: var(--f-display); font-size: 14px; color: var(--line); padding-top: 1px; }
+.exp .row p { margin: 0; min-width: 0; }
+
+.nav { display: flex; gap: 8px; }
+.nav .btn { flex: 1; }
+.loading { color: var(--muted); font-size: 13px; }
+.foot { font-size: 12px; color: var(--muted); text-align: center; }
+.resetbtn { background: none; border: 0; color: var(--muted); text-decoration: underline; font: inherit; font-size: 12px; cursor: pointer; }
+/* screens: home (start) / list (all problems) / quiz */
+.screen[hidden], .route[hidden], .iguide[hidden], .install[hidden] { display: none !important; }
+.hero { display: flex; align-items: center; gap: 14px; padding-top: 18px; }
+.hero .logo { width: 64px; height: 64px; flex: none; border-radius: 15px; box-shadow: 0 2px 8px rgba(21,33,43,.15); }
+.hero > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.hero h1 { font-family: var(--f-display); font-weight: 400; font-size: 30px; line-height: 1.15; margin: 0; }
+.hero p { margin: 0; color: var(--muted); font-size: 14px; }
+.prog { display: flex; flex-direction: column; gap: 10px; }
+.prog .big { display: flex; align-items: baseline; gap: 6px; font-variant-numeric: tabular-nums; }
+.prog .big b { font-family: var(--f-display); font-weight: 400; font-size: 40px; line-height: 1; color: var(--line); }
+.prog .big span { color: var(--muted); font-size: 15px; }
+.bar { height: 10px; border-radius: 5px; background: var(--rule); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--line); border-radius: 5px; transition: width .4s; }
+.bar.thin { height: 6px; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.stat { background: var(--code-bg); border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; }
+.stat b { font-size: 18px; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 12px; color: var(--muted); }
+.stat.ok b { color: var(--ok); } .stat.bad b { color: var(--bad); } .stat.warn b { color: var(--warn); }
+.btn.big { width: 100%; padding: 14px 16px; font-size: 17px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.btn.big small { font-weight: 500; font-size: 13px; opacity: .85; }
+.menu { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.menu .btn { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; padding: 12px 14px; }
+.menu .btn small { font-weight: 500; font-size: 12px; color: var(--muted); }
+.menu .btn.wide { grid-column: 1 / -1; }
+.sect { font-family: var(--f-display); font-size: 17px; margin: 6px 0 -4px; }
+.topics { display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; overflow: hidden; }
+.topic { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center; padding: 11px 14px; border: 0; border-bottom: 1px solid var(--rule); background: none; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.topic:last-child { border-bottom: 0; }
+.topic .tn { font-weight: 700; }
+.topic .tc { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.topic .bar { grid-column: 1 / -1; }
+.topic:active, .lrow:active { background: var(--line-soft); }
+.topic:focus-visible, .lrow:focus-visible { outline: 2px solid var(--line); outline-offset: -2px; }
+.tip { font-size: 13px; color: var(--muted); background: var(--code-bg); border-radius: 10px; padding: 10px 12px; margin: 0; }
+
+.bar-top { display: flex; align-items: center; gap: 8px; padding-top: 6px; }
+.bar-top h1 { font-family: var(--f-display); font-weight: 400; font-size: 20px; margin: 0; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.btn.back { padding: 7px 12px; font-size: 14px; flex: none; }
+.lsec { display: flex; flex-direction: column; gap: 6px; }
+.lsec h2 { font-family: var(--f-display); font-weight: 400; font-size: 17px; color: var(--line); margin: 8px 0 0; display: flex; justify-content: space-between; align-items: baseline; }
+.lsec h2 small { font-family: var(--f-body); font-size: 12px; color: var(--muted); }
+.lbox { background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; overflow: hidden; }
+.lrow { display: grid; grid-template-columns: 34px 1fr auto; gap: 10px; align-items: center; width: 100%; padding: 10px 12px; border: 0; border-bottom: 1px solid var(--rule); background: none; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.lrow:last-child { border-bottom: 0; }
+.lrow .no { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--muted); text-align: center; }
+.lrow .tx { font-size: 14px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-width: 0; }
+.lrow .tx .tag { font-size: 11px; margin-right: 4px; padding: 1px 6px; }
+.lrow .stt { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 6px; white-space: nowrap; }
+.lrow .stt.ok { background: var(--ok-soft); color: var(--ok); }
+.lrow .stt.bad { background: var(--bad-soft); color: var(--bad); }
+.lrow .stt.no { color: var(--muted); font-weight: 500; }
+.lrow.cur { background: var(--line-soft); }
+.empty { text-align: center; color: var(--muted); padding: 24px 0; margin: 0; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+.install { display: flex; flex-direction: column; gap: 8px; }
+.installbtn { width: 100%; border-color: var(--line); color: var(--line); }
+.iguide { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 12px 14px; font-size: 14px; display: flex; flex-direction: column; gap: 8px; }
+.iguide p { margin: 0; } .iguide b { color: var(--line); }
+</style>
+</head>
+<body>
+
+<div class="wrap screen" id="homeView">
+  <header class="hero">
+    <svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="64" height="64" role="img" aria-label="SQLD 문제집 로고">
+      <rect width="512" height="512" rx="112" fill="#1B7FC4"/>
+      <g fill="#FFFFFF">
+        <ellipse cx="236" cy="372" rx="128" ry="40"/>
+        <rect x="108" y="140" width="256" height="232"/>
+      </g>
+      <ellipse cx="236" cy="140" rx="128" ry="40" fill="#E3F0F9"/>
+      <g fill="none" stroke="#1B7FC4" stroke-width="12" stroke-linecap="round">
+        <path d="M108 218 A128 40 0 0 0 364 218"/>
+        <path d="M108 296 A128 40 0 0 0 364 296"/>
+      </g>
+      <circle cx="370" cy="366" r="84" fill="#FFC94A" stroke="#1B7FC4" stroke-width="18"/>
+      <path d="M328 368 l28 28 l54 -60" fill="none" stroke="#15212B" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div><h1>SQLD 문제집</h1>
+    <p>짬날 때 한 문제씩. 손으로 쳐보면 시험장에서 빨라져요.</p></div>
+  </header>
+  <section class="card prog" aria-label="내 진행 상황">
+    <div class="big"><b id="hSolved">0</b><span id="hTotal">/ 0 문제 맞힘</span></div>
+    <div class="bar" aria-hidden="true"><i id="hBar" style="width:0"></i></div>
+    <div class="stats">
+      <div class="stat ok"><b id="hOk">0</b><span>정답</span></div>
+      <div class="stat bad"><b id="hBad">0</b><span>오답 노트</span></div>
+      <div class="stat"><b id="hLeft">0</b><span>안 푼 문제</span></div>
+    </div>
+  </section>
+  <button class="btn primary big" id="hContinue">이어서 풀기 <small id="hContinueSub"></small></button>
+  <div class="menu">
+    <button class="btn" id="hList">문제 목록<small>번호·주제별로 골라 풀기</small></button>
+    <button class="btn" id="hWrong">오답 다시 풀기<small id="hWrongSub">틀린 문제만</small></button>
+    <button class="btn" id="hTrap">함정만 풀기<small id="hTrapSub">시험 단골 함정</small></button>
+    <button class="btn" id="hFresh">안 푼 문제부터<small>처음 보는 문제</small></button>
+  </div>
+  <h2 class="sect">주제별 진도</h2>
+  <div class="topics" id="hTopics"></div>
+  <div class="install" id="hInstall"><button class="btn installbtn" data-install>홈 화면에 추가</button><div class="iguide" hidden></div></div>
+  <p class="foot"><button class="resetbtn" id="hReset">기록 초기화</button> <span id="hResetConfirm" hidden>정말 지울까요? <button class="resetbtn" id="hResetYes">네, 지우기</button></span></p>
+</div>
+
+<div class="wrap screen" id="listView" hidden>
+  <header class="top">
+    <div class="bar-top"><button class="btn back" id="lHome">◀ 홈</button><h1>문제 목록</h1><span class="score" id="lScore"></span></div>
+    <div class="modebar" role="group" aria-label="목록 거르기">
+      <button class="pill" data-f="all" aria-pressed="true">전체</button>
+      <button class="pill" data-f="todo" aria-pressed="false">안 푼 문제</button>
+      <button class="pill" data-f="wrong" aria-pressed="false">오답</button>
+      <button class="pill" data-f="trap" aria-pressed="false">함정</button>
+    </div>
+  </header>
+  <div id="lBody" style="display:flex;flex-direction:column;gap:6px"></div>
+</div>
+
+<div class="wrap screen" id="quizView" hidden>
+  <header class="top">
+    <div class="brand">
+      <div class="bar-top" style="padding:0;flex:1;min-width:0"><button class="btn back" id="qHome">◀ 홈</button><h1>SQLD 문제집</h1></div>
+      <div class="brand-r"><span class="score" id="score"></span><button class="pill" id="routeBtn">문제 목록</button></div>
+    </div>
+    <div class="stnav">
+      <button class="btn" id="prevSt" aria-label="이전 주제로">◀ <span id="prevStName"></span></button>
+      <span class="stnow" id="stNow"></span>
+      <button class="btn" id="nextSt" aria-label="다음 주제로"><span id="nextStName"></span> ▶</button>
+    </div>
+    <section class="route" id="route" hidden aria-label="전체 문제 목록"></section>
+    <nav class="map" aria-label="주제별 진행" hidden><div class="track" id="track"></div></nav>
+    <div class="modebar">
+      <button class="pill" id="modeAll" aria-pressed="true">전체 문제</button>
+      <button class="pill" id="modeWrong" aria-pressed="false">오답 다시 풀기</button>
+      <button class="pill" id="modeTrap" aria-pressed="false">함정만</button>
+    </div>
+  </header>
+
+  <main class="card" id="card" aria-live="polite">
+    <div class="meta" id="meta"></div>
+    <p class="q" id="q"></p>
+    <div id="codeWrap"></div>
+    <details class="tbls" id="tbls" open><summary>사용하는 테이블</summary><div class="tblbox" id="tblbox"></div></details>
+    <div id="answerArea"></div>
+    <div id="fb" style="display:flex;flex-direction:column;gap:10px"></div>
+    <div id="exp"></div>
+  </main>
+
+  <div class="nav">
+    <button class="btn" id="prev">이전 문제</button>
+    <button class="btn" id="next">다음 문제</button>
+  </div>
+  <p class="foot">채점은 휴대폰 안에서 실제 SQL을 실행해서 결과를 비교해요 (SQLite 엔진, NVL 지원).<br>
+    <button class="resetbtn" id="reset">기록 초기화</button> <span id="resetConfirm" hidden>정말 지울까요? <button class="resetbtn" id="resetYes">네, 지우기</button></span></p>
+  <div class="install qinstall"><button class="btn installbtn" data-install>홈 화면에 추가</button><div class="iguide" hidden></div></div>
+</div>
+
+<script>
+const DATA = {"problems": [{"type": "sql", "st": 0, "q": "모든 직원의 이름(ENAME)과 급여(SAL)를 조회하세요.", "sql": "SELECT ename, sal FROM emp", "hints": ["보고 싶은 컬럼을 SELECT 뒤에 쉼표로 나열해요.", "형태: SELECT 컬럼1, 컬럼2 FROM 테이블"], "exp": {"easy": "SQL은 표에게 하는 주문이에요. \"뭘(SELECT) 어디서(FROM) 보여줘!\"", "work": "키워드는 대문자, 컬럼은 소문자로 쓰면 눈에 잘 들어와요.", "tip": "SQL 키워드는 대소문자를 가리지 않아요. select도 SELECT도 같아요."}, "tables": ["EMP"], "ordered": false, "trap": false}, {"type": "sql", "st": 0, "q": "EMP 테이블의 모든 컬럼을 한 번에 조회하세요.", "sql": "SELECT * FROM emp", "hints": ["\"전부\"를 뜻하는 기호 하나가 있어요.", "별표(*)를 써보세요."], "exp": {"easy": "* 은 \"다 보여줘\" 라는 뜻이에요.", "work": "연습할 땐 괜찮지만 실무에선 필요한 컬럼만 적어요. 데이터가 크면 느려지거든요.", "tip": "SELECT * 와 SELECT 컬럼명을 섞어 쓸 수도 있어요: SELECT e.*, d.dname"}, "tables": ["EMP"], "ordered": false, "trap": false}, {"type": "sql", "st": 0, "q": "직급(JOB)의 종류를 중복 없이 조회하세요.", "sql": "SELECT DISTINCT job FROM emp", "hints": ["같은 직급이 여러 번 나오면 안 돼요.", "중복을 없애는 키워드 DISTINCT를 SELECT 바로 뒤에 써요."], "exp": {"easy": "DISTINCT는 \"같은 건 한 번만\" 이에요. 사원이 4명이어도 '사원'은 한 줄만 나와요.", "work": "몇 종류인지 셀 때는 COUNT(DISTINCT job) 을 써요.", "tip": "DISTINCT는 SELECT 뒤 컬럼 전체에 적용돼요. DISTINCT job, deptno 는 (직급, 부서) 조합의 중복을 없애요."}, "tables": ["EMP"], "ordered": false, "trap": false}, {"type": "sql", "st": 0, "q": "이름과 연봉을 조회하세요. 연봉은 급여(SAL) × 12 이고, 컬럼 이름은 ANNUAL 로 보여주세요.", "sql": "SELECT ename, sal * 12 AS annual FROM emp", "hints": ["SELECT 안에서 바로 계산할 수 있어요.", "새 컬럼 이름은 AS 이름 으로 붙여요."], "exp": {"easy": "SELECT 안은 계산기처럼 쓸 수 있어요. sal * 12 하면 바로 계산돼요.", "work": "계산한 컬럼엔 항상 AS로 이름을 붙여요. 안 붙이면 컬럼명이 sal*12처럼 지저분하게 나와요.", "tip": "별칭(AS)은 ORDER BY에선 쓸 수 있지만 WHERE에선 못 써요. WHERE가 SELECT보다 먼저 실행되거든요."}, "tables": ["EMP"], "ordered": false, "trap": false}, {"type": "mc", "st": 0, "q": "다음 중 SQL 실행 순서로 올바른 것은?", "code": null, "choices": ["SELECT → FROM → WHERE → ORDER BY", "FROM → WHERE → SELECT → ORDER BY", "FROM → SELECT → WHERE → ORDER BY", "WHERE → FROM → SELECT → ORDER BY"], "answer": 1, "hints": ["쓰는 순서와 실행 순서는 달라요.", "먼저 \"어디서\" 가져와야 거를 수 있겠죠?"], "exp": {"easy": "어디서 가져와서(FROM), 거르고(WHERE), 고르고(SELECT), 줄 세워요(ORDER BY).", "work": "에러가 날 때 이 순서를 떠올리면 원인을 찾기 쉬워요.", "tip": "전체 순서: FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY. \"프웨그해셀오\"로 외워요."}, "tables": ["EMP"], "trap": true}, {"type": "sql", "st": 1, "q": "급여가 3500 이상인 직원의 사번(EMPNO), 이름, 급여를 조회하세요.", "sql": "SELECT empno, ename, sal FROM emp WHERE sal >= 3500", "hints": ["조건은 FROM 뒤에 WHERE로 붙여요.", "\"이상\"은 >= 예요."], "exp": {"easy": "WHERE는 \"~인 것만\" 통과시키는 문지기예요.", "work": "WHERE 1=1 을 먼저 쓰고 AND 조건을 한 줄씩 붙이면, 조건을 넣고 빼기 쉬워요.", "tip": ">= 이상, > 초과, <= 이하, < 미만. 말로 읽어보면 안 헷갈려요."}, "tables": ["EMP"], "ordered": false, "trap": false}, {"type": "sql", "st": 1, "q": "부서번호가 10이면서 급여가 3500 이상인 직원의 이름과 급여를, 급여가 높은 순으로 조회하세요.", "sql": "SELECT ename, sal FROM emp WHERE deptno = 10 AND sal >= 3500 ORDER BY sal DESC", "hints": ["조건 두 개를 함께 걸 때는 AND.", "높은 순 정렬은 맨 끝에 ORDER BY 컬럼 DESC."], "exp": {"easy": "AND는 \"둘 다 맞아야 통과\", OR는 \"하나만 맞아도 통과\" 예요.", "work": "ORDER BY는 항상 맨 마지막 줄이에요.", "tip": "ASC(오름차순)가 기본값이라 생략 가능해요. DESC는 꼭 써야 해요."}, "tables": ["EMP"], "ordered": true, "trap": false}, {"type": "sql", "st": 1, "q": "직급이 '대리' 또는 '과장'인 직원의 이름과 직급을 조회하세요.", "sql": "SELECT ename, job FROM emp WHERE job IN ('대리','과장')", "hints": ["OR로도 되지만 더 짧은 방법이 있어요.", "IN ('값1', '값2') 를 써보세요. 글자는 작은따옴표!"], "exp": {"easy": "IN은 \"이 바구니 안에 있는 것 중 하나면 OK\" 예요.", "work": "값이 3개 이상이면 OR 대신 IN이 읽기 편해요.", "tip": "글자는 작은따옴표 ' ' 로 감싸요. 큰따옴표는 컬럼 이름용이에요."}, "tables": ["EMP"], "ordered": false, "trap": false}, {"type": "sql", "st": 1, "q": "성이 '김'씨인 직원의 사번과 이름을 조회하세요.", "sql": "SELECT empno, ename FROM emp WHERE ename LIKE '김%'", "hints": ["글자 패턴 검색은 LIKE.", "% 는 \"뒤에 아무 글자나\". '김%' 처럼 따옴표 안에 써요."], "exp": {"easy": "% 는 아무 글자나, 몇 글자든 OK 라는 와일드카드예요.", "work": "'김%' 시작, '%수' 끝, '%하%' 포함.", "tip": "_ (언더바)는 딱 한 글자예요. '김_' 은 두 글자 이름만 찾아요."}, "tables": ["EMP"], "ordered": false, "trap": false}, {"type": "sql", "st": 1, "q": "이름이 정확히 세 글자이고 가운데 글자가 '하'인 직원의 이름을 조회하세요.", "sql": "SELECT ename FROM emp WHERE ename LIKE '_하_'", "hints": ["% 는 몇 글자든 되니까 여기선 안 맞아요.", "한 글자를 뜻하는 _ 를 앞뒤에 하나씩 써요."], "exp": {"easy": "_ 는 빈칸 하나짜리 퀴즈 칸이에요. '_하_' 는 \"?하?\" 모양만 찾아요.", "work": "'%하%' 를 쓰면 '하'가 어디든 들어간 이름이 다 나와서 범위가 넓어져요.", "tip": "시험에서 % 와 _ 의 차이를 자주 물어봐요. %는 0글자 이상, _는 정확히 1글자."}, "tables": ["EMP"], "ordered": false, "trap": true}, {"type": "sql", "st": 1, "q": "급여가 3000 이상 4000 이하인 직원의 이름과 급여를 조회하세요.", "sql": "SELECT ename, sal FROM emp WHERE sal BETWEEN 3000 AND 4000", "hints": ["범위 조건 전용 키워드가 있어요.", "BETWEEN 작은값 AND 큰값"], "exp": {"easy": "BETWEEN A AND B 는 A부터 B까지예요. 양 끝을 포함해요.", "work": "sal >= 3000 AND sal <= 4000 과 똑같아요.", "tip": "BETWEEN 4000 AND 3000 처럼 큰 값을 먼저 쓰면 결과가 0건이에요."}, "tables": ["EMP"], "ordered": false, "trap": false}, {"type": "mc", "st": 1, "q": "아래 SQL의 결과 건수는? (EMP의 SAL: 3000, 4000, 5500, 3200, 4200, 2900, 3000, 7000)", "code": "SELECT * FROM emp\nWHERE sal BETWEEN 4000 AND 3000;", "choices": ["0건", "2건", "4건", "5건"], "answer": 0, "hints": ["BETWEEN 뒤의 두 숫자 순서를 보세요.", "BETWEEN A AND B 는 A <= 값 AND 값 <= B 예요. A가 B보다 크면?"], "exp": {"easy": "BETWEEN은 작은 값이 먼저 와야 해요. 4000 이상이면서 3000 이하인 숫자는 없어요.", "work": "범위 조건은 항상 작은 값부터 쓰는 습관을 들여요.", "tip": "에러가 아니라 0건이 나와요. 시험은 이런 \"조용한 실수\"를 좋아해요."}, "tables": ["EMP"], "trap": true}, {"type": "mc", "st": 1, "q": "AND와 OR가 섞인 조건이에요. 결과에 나오지 않는 직원은?", "code": "SELECT ename FROM emp\nWHERE job = '사원'\n   OR job = '대리' AND deptno = 10;", "choices": ["김민수(사원, 10번)", "최유나(사원, 30번)", "정하늘(대리, 10번)", "이지은(대리, 20번)"], "answer": 3, "hints": ["AND와 OR 중 누가 먼저 계산될까요?", "AND가 먼저예요. job='사원' OR (job='대리' AND deptno=10) 으로 읽어요."], "exp": {"easy": "곱하기가 더하기보다 먼저인 것처럼, AND가 OR보다 먼저 계산돼요.", "work": "AND와 OR를 섞을 땐 괄호를 꼭 쳐서 의도를 분명히 해요.", "tip": "우선순위: NOT → AND → OR. 이지은은 대리지만 20번 부서라 탈락이에요."}, "tables": ["EMP"], "trap": true}, {"type": "sql", "st": 2, "q": "성과급(COMM)이 없는(NULL) 직원의 이름과 직급을 조회하세요.", "sql": "SELECT ename, job FROM emp WHERE comm IS NULL", "hints": ["COMM = NULL 은 결과가 하나도 안 나와요.", "\"비어 있니?\" 전용 질문: 컬럼 IS NULL (IS와 NULL 사이 띄어쓰기!)"], "exp": {"easy": "NULL은 \"빈 칸\"이에요. 빈 칸은 = 로 비교할 수 없어서 IS NULL 을 써요.", "work": "반대로 값이 있는 사람은 IS NOT NULL.", "tip": "최유나의 COMM은 0이라 안 나와요. 0은 \"0원 받음\", NULL은 \"값 없음\"이에요."}, "tables": ["EMP"], "ordered": false, "trap": true}, {"type": "sql", "st": 2, "q": "성과급(COMM)이 있는 직원의 이름과 성과급을 조회하세요. (0도 값이 있는 거예요)", "sql": "SELECT ename, comm FROM emp WHERE comm IS NOT NULL", "hints": ["IS NULL의 반대예요.", "IS NOT NULL"], "exp": {"easy": "0은 빈 칸이 아니에요. 숫자 0이 적혀 있는 칸이에요.", "work": "comm > 0 으로 쓰면 최유나(0)가 빠져요. 문제의 뜻을 잘 읽어요.", "tip": "comm <> NULL 도 항상 0건이에요. NULL은 오직 IS로만 비교해요."}, "tables": ["EMP"], "ordered": false, "trap": false}, {"type": "sql", "st": 2, "q": "부서가 배정되지 않은 직원의 이름을 조회하세요.", "sql": "SELECT ename FROM emp WHERE deptno IS NULL", "hints": ["부서번호 칸이 비어 있는 사람을 찾아요.", "deptno IS NULL"], "exp": {"easy": "신입 오세훈은 아직 부서 칸이 비어 있어요.", "work": "NULL이 있는 컬럼은 JOIN이나 GROUP BY에서 결과를 바꿔요. 데이터를 받으면 NULL부터 확인해요.", "tip": "deptno = NULL 은 에러가 아니라 0건이 나와서 실수를 알아채기 어려워요."}, "tables": ["EMP"], "ordered": false, "trap": false}, {"type": "mc", "st": 2, "q": "아래 SQL의 결과로 올바른 것은? (A: SAL 1000, COMM NULL / B: SAL 2000, COMM 100)", "code": "SELECT ename, sal * 2 + comm AS result\nFROM emp;", "choices": ["A: 2000, B: 4100", "A: NULL, B: 4100", "A: 2000, B: 4200", "A: NULL, B: 4200"], "answer": 1, "hints": ["NULL이 들어간 계산은 어떻게 될까요?", "1000*2 + NULL = NULL. 곱하기가 먼저예요."], "exp": {"easy": "빈 칸에 숫자를 더해도 빈 칸이에요.", "work": "돈, 개수처럼 계산할 컬럼에는 습관처럼 NVL(컬럼, 0)을 씌워요.", "tip": "객관식에 NULL이 보이면 \"NULL 계산은 무조건 NULL\"부터 떠올려요. 보기 절반이 지워져요."}, "tables": ["EMP"], "trap": true}, {"type": "mc", "st": 2, "q": "아래 SQL의 결과 건수는?", "code": "SELECT ename FROM emp\nWHERE deptno NOT IN (10, NULL);", "choices": ["0건", "4건", "6건", "8건"], "answer": 0, "hints": ["IN 안에 무엇이 들어 있나요?", "NOT IN 은 \"전부 다르다\"는 뜻이에요. NULL과 다른지는 알 수 없어서 모두 탈락해요."], "exp": {"easy": "NOT IN 바구니에 NULL이 하나라도 있으면 \"모르겠다\"가 돼서 아무도 통과 못 해요.", "work": "NOT IN 서브쿼리를 쓸 땐 안쪽에 WHERE 컬럼 IS NOT NULL 을 붙이거나 NOT EXISTS를 써요.", "tip": "IN 안의 NULL은 그냥 무시되지만, NOT IN 안의 NULL은 결과를 0건으로 만들어요. 최빈출 함정!"}, "tables": ["EMP"], "trap": true}, {"type": "sql", "st": 3, "q": "직원의 이름과 총급여(SAL + COMM)를 조회하세요. 총급여 컬럼 이름은 TOTAL. 성과급이 없으면 0으로 계산하세요.", "sql": "SELECT ename, sal + NVL(comm, 0) AS total FROM emp", "hints": ["sal + comm 만 쓰면 NULL인 사람의 총급여가 NULL이 돼요.", "COMM 자리에 NVL(comm, 0) 을 그대로 바꿔 끼워요."], "exp": {"easy": "NVL(comm, 0) 은 \"빈 칸이면 0으로 채워줘\" 예요.", "work": "NVL을 따로 다른 컬럼에 쓰면 계산엔 영향이 없어요. 계산식 안에 넣어야 해요.", "tip": "NVL(Oracle) = ISNULL(SQL Server) = COALESCE(표준). 시험엔 셋 다 나와요."}, "tables": ["EMP"], "ordered": false, "trap": true}, {"type": "sql", "st": 3, "q": "'김민수(사원)' 처럼 이름 뒤 괄호 안에 직급을 붙여서 NAME_JOB 컬럼으로 조회하세요.", "sql": "SELECT ename || '(' || job || ')' AS name_job FROM emp", "hints": ["글자를 이어 붙이는 연산자는 || 예요.", "ename || '(' || job || ')' 처럼 괄호도 따옴표 글자로 붙여요."], "exp": {"easy": "|| 는 글자 풀이에요. 조각들을 순서대로 이어 붙여요.", "work": "보고서용 문구, 파일 이름 같은 걸 만들 때 정말 자주 써요.", "tip": "Oracle은 || 또는 CONCAT(a, b), SQL Server는 + 로 이어 붙여요. CONCAT은 Oracle에서 인자 2개만 돼요."}, "tables": ["EMP"], "ordered": false, "trap": false}, {"type": "sql", "st": 3, "q": "이름과 입사 연도를 조회하세요. 입사일(HIREDATE)은 '2023-03-02' 같은 글자예요. 앞 4글자만 잘라서 HIRE_YEAR 로 보여주세요.", "sql": "SELECT ename, SUBSTR(hiredate, 1, 4) AS hire_year FROM emp", "hints": ["글자를 자르는 함수 SUBSTR를 써요.", "SUBSTR(컬럼, 시작위치, 길이). 시작은 1부터!"], "exp": {"easy": "SUBSTR는 가위예요. 1번째 글자부터 4글자를 잘라요.", "work": "SUBSTR(컬럼, 시작) 처럼 길이를 빼면 끝까지 잘라요.", "tip": "SQL의 위치는 0이 아니라 1부터 시작해요. 프로그래밍 언어와 달라서 헷갈려요."}, "tables": ["EMP"], "ordered": false, "trap": true}, {"type": "sql", "st": 3, "q": "이름, 급여, 등급을 조회하세요. 급여가 5000 이상이면 '고액', 아니면 '일반'. 등급 컬럼 이름은 GRADE.", "sql": "SELECT ename, sal, CASE WHEN sal >= 5000 THEN '고액' ELSE '일반' END AS grade FROM emp", "hints": ["조건에 따라 다른 값을 보여줄 땐 CASE.", "CASE WHEN 조건 THEN 값 ELSE 값 END"], "exp": {"easy": "CASE는 \"만약 ~라면 이거, 아니면 저거\" 갈림길이에요.", "work": "WHEN을 여러 개 써서 구간을 나눌 수 있어요. 위에서부터 먼저 맞는 것이 선택돼요.", "tip": "END를 빼먹는 실수가 제일 많아요. ELSE를 빼면 안 맞는 행은 NULL이 돼요."}, "tables": ["EMP"], "ordered": false, "trap": false}, {"type": "sql", "st": 3, "q": "이름과 성과급을 조회하되, 성과급이 NULL이면 '없음'이라고 보여주세요. 컬럼 이름은 COMM_TXT.", "sql": "SELECT ename, CASE WHEN comm IS NULL THEN '없음' ELSE comm END AS comm_txt FROM emp", "hints": ["CASE 안에서도 NULL은 IS NULL로 물어봐요.", "CASE WHEN comm IS NULL THEN '없음' ELSE comm END"], "exp": {"easy": "CASE WHEN comm = NULL 이라고 쓰면 아무도 '없음'이 안 돼요. 여기서도 IS NULL!", "work": "Oracle에서 숫자와 글자를 한 컬럼에 섞으면 에러가 나요. 실무에선 TO_CHAR(comm)으로 글자로 맞춰요.", "tip": "CASE 안의 비교도 WHERE와 같은 규칙이에요. NULL은 = 로 못 찾아요."}, "tables": ["EMP"], "ordered": false, "trap": true}, {"type": "mc", "st": 3, "q": "ROUND(1234.567, 1) 과 TRUNC(1234.567, 1) 의 결과로 올바른 것은?", "code": null, "choices": ["1234.6 / 1234.5", "1234.5 / 1234.6", "1230 / 1234.5", "1234.6 / 1234.6"], "answer": 0, "hints": ["ROUND는 반올림, TRUNC는 버림이에요.", "소수 둘째 자리 6을 반올림하면? 버리면?"], "exp": {"easy": "ROUND는 반올림, TRUNC는 그냥 잘라 버려요.", "work": "금액 계산은 회사 규칙(반올림/버림)을 먼저 확인해요.", "tip": "자릿수가 음수면 정수 쪽에서 처리해요. ROUND(1234.567, -1) = 1230."}, "tables": [], "trap": false}, {"type": "sql", "st": 4, "q": "전체 직원 수(CNT_ALL)와 성과급 값이 있는 직원 수(CNT_COMM)를 한 번에 조회하세요.", "sql": "SELECT COUNT(*) AS cnt_all, COUNT(comm) AS cnt_comm FROM emp", "hints": ["COUNT(*)는 줄 개수, COUNT(컬럼)은 값이 있는 칸만 세요.", "두 COUNT를 쉼표로 나란히 쓰고 AS로 이름을 붙여요."], "exp": {"easy": "COUNT(*) 는 \"교실에 몇 명?\", COUNT(comm) 은 \"숙제 낸 사람 몇 명?\" 예요.", "work": "집계 함수 5형제: COUNT, SUM, AVG, MAX, MIN. COUNT(*)만 NULL을 세요.", "tip": "0점 숙제도 낸 거예요. COMM이 0인 최유나도 세어져서 3명이에요."}, "tables": ["EMP"], "ordered": false, "trap": true}, {"type": "sql", "st": 4, "q": "전체 직원의 최고 급여(MAX_SAL)와 최저 급여(MIN_SAL)를 조회하세요.", "sql": "SELECT MAX(sal) AS max_sal, MIN(sal) AS min_sal FROM emp", "hints": ["가장 큰 값, 가장 작은 값을 찾는 함수가 있어요.", "MAX(sal), MIN(sal)"], "exp": {"easy": "MAX는 키 제일 큰 친구, MIN은 제일 작은 친구를 찾아요.", "work": "MAX, MIN은 날짜와 글자에도 써요. MAX(hiredate)는 가장 최근 입사일.", "tip": "집계 함수만 SELECT에 있으면 결과는 항상 1줄이에요."}, "tables": ["EMP"], "ordered": false, "trap": false}, {"type": "mc", "st": 4, "q": "AVG(comm) 과 AVG(NVL(comm, 0)) 의 결과로 올바른 것은? (COMM: NULL, 300, NULL, 0, 500, NULL, NULL, NULL)", "code": null, "choices": ["266.67 / 100", "100 / 100", "266.67 / 266.67", "100 / 266.67"], "answer": 0, "hints": ["AVG는 NULL을 어떻게 다룰까요?", "AVG(comm)은 값이 있는 3명으로 나누고, NVL을 쓰면 8명으로 나눠요."], "exp": {"easy": "AVG는 빈 칸을 아예 없는 사람으로 쳐요. (300+0+500)÷3 = 266.67", "work": "\"전 직원 평균\"을 원하면 AVG(NVL(comm,0)). 800÷8 = 100.", "tip": "같은 데이터인데 결과가 달라요. 시험에 정말 자주 나와요."}, "tables": [], "trap": true}, {"type": "sql", "st": 4, "q": "직급이 몇 종류인지 세어서 JOB_CNT 로 보여주세요.", "sql": "SELECT COUNT(DISTINCT job) AS job_cnt FROM emp", "hints": ["그냥 COUNT(job)은 8이 나와요.", "COUNT 괄호 안에 중복 제거 키워드를 넣어요: COUNT(DISTINCT job)"], "exp": {"easy": "사원, 대리, 과장, 부장. 중복을 빼고 세면 4종류예요.", "work": "고객 수, 상품 종류 수를 셀 때 COUNT(DISTINCT ...)를 정말 많이 써요.", "tip": "COUNT(job)과 COUNT(DISTINCT job)의 차이를 묻는 문제가 자주 나와요."}, "tables": ["EMP"], "ordered": false, "trap": false}, {"type": "sql", "st": 5, "q": "부서번호별로 부서번호(DEPTNO), 직원 수(CNT), 급여 합계(SUM_SAL)를 조회하고 부서번호 순으로 정렬하세요.", "sql": "SELECT deptno, COUNT(*) AS cnt, SUM(sal) AS sum_sal FROM emp GROUP BY deptno ORDER BY deptno", "hints": ["\"~별로\" 라는 말이 나오면 GROUP BY.", "GROUP BY deptno 를 FROM 뒤에, ORDER BY deptno 를 맨 끝에."], "exp": {"easy": "GROUP BY는 \"같은 부서끼리 한 바구니에 모아줘\" 예요.", "work": "기준 컬럼을 SELECT 맨 앞에 두면 표가 읽기 쉬워요.", "tip": "부서가 NULL인 오세훈도 NULL 바구니 하나로 묶여서 나와요. NULL도 그룹이 돼요."}, "tables": ["EMP"], "ordered": true, "trap": true}, {"type": "sql", "st": 5, "q": "직원이 2명 이상인 부서의 부서번호와 직원 수(CNT)를 조회하세요.", "sql": "SELECT deptno, COUNT(*) AS cnt FROM emp GROUP BY deptno HAVING COUNT(*) >= 2", "hints": ["바구니(그룹)를 거르는 건 WHERE가 아니에요.", "GROUP BY 바로 뒤에 HAVING COUNT(*) >= 2"], "exp": {"easy": "WHERE는 사람을 거르는 문지기, HAVING은 바구니를 거르는 선생님이에요.", "work": "\"이상\"은 >=. > 2 로 쓰면 3명 이상이 돼요.", "tip": "WHERE 안에는 COUNT, SUM 같은 집계 함수를 못 써요. 아직 그룹이 없거든요."}, "tables": ["EMP"], "ordered": false, "trap": false}, {"type": "sql", "st": 5, "q": "급여가 3000 이상인 직원만 대상으로, 부서별 부서번호와 평균 급여(AVG_SAL)를 구하고, 평균이 4000 이상인 부서만 보여주세요.", "sql": "SELECT deptno, AVG(sal) AS avg_sal FROM emp WHERE sal >= 3000 GROUP BY deptno HAVING AVG(sal) >= 4000", "hints": ["사람을 거르는 조건 하나, 바구니를 거르는 조건 하나가 있어요.", "sal >= 3000 은 WHERE에, AVG(sal) >= 4000 은 HAVING에."], "exp": {"easy": "먼저 문지기(WHERE)가 2900원 받는 김하나를 돌려보내고, 그 다음 바구니 평균을 내요.", "work": "WHERE로 먼저 줄여 놓으면 계산할 양이 줄어 빨라져요.", "tip": "WHERE 조건을 HAVING에 쓰면 결과가 달라질 수 있어요. 20번 부서 평균이 5500인 이유는 김하나가 먼저 빠졌기 때문이에요."}, "tables": ["EMP"], "ordered": false, "trap": true}, {"type": "sql", "st": 5, "q": "부서별, 직급별 직원 수를 조회하세요. 부서번호, 직급, 직원 수(CNT)를 보여주고 부서가 없는 직원은 빼세요.", "sql": "SELECT deptno, job, COUNT(*) AS cnt FROM emp WHERE deptno IS NOT NULL GROUP BY deptno, job", "hints": ["기준이 두 개면 GROUP BY에도 두 개를 써요.", "WHERE deptno IS NOT NULL 로 먼저 거르고 GROUP BY deptno, job"], "exp": {"easy": "바구니를 (부서, 직급) 짝으로 나눠요. 10번-사원, 10번-대리 처럼요.", "work": "SELECT에 있는 일반 컬럼은 전부 GROUP BY에도 있어야 해요.", "tip": "GROUP BY deptno, job 과 GROUP BY job, deptno 는 결과 내용이 같아요. 순서는 정렬에만 영향이 있어요."}, "tables": ["EMP"], "ordered": false, "trap": false}, {"type": "mc", "st": 5, "q": "다음 중 에러가 나는 SQL은? (Oracle 기준)", "code": null, "choices": ["SELECT deptno, COUNT(*) FROM emp GROUP BY deptno", "SELECT deptno, ename, COUNT(*) FROM emp GROUP BY deptno", "SELECT COUNT(*) FROM emp GROUP BY deptno", "SELECT deptno, MAX(sal) FROM emp GROUP BY deptno HAVING MAX(sal) > 5000"], "answer": 1, "hints": ["GROUP BY를 쓰면 SELECT에 올 수 있는 건 정해져 있어요.", "GROUP BY에 없는 일반 컬럼이 SELECT에 있는 보기를 찾아요."], "exp": {"easy": "바구니 하나에 사람이 여러 명인데 ename을 누구 걸로 보여줄지 몰라서 에러예요.", "work": "SELECT에는 ① GROUP BY에 쓴 컬럼 ② 집계 함수 만 올 수 있어요.", "tip": "③번처럼 GROUP BY 컬럼을 SELECT에 안 써도 에러는 아니에요. 함정 보기로 자주 나와요."}, "tables": ["EMP"], "trap": true}, {"type": "sql", "st": 6, "q": "직원 이름(ENAME)과 소속 부서 이름(DNAME)을 조회하세요. (부서가 없는 직원은 안 나와도 돼요)", "sql": "SELECT e.ename, d.dname FROM emp e JOIN dept d ON e.deptno = d.deptno", "hints": ["두 테이블을 연결하는 공통 컬럼은 DEPTNO예요.", "FROM emp e JOIN dept d ON e.deptno = d.deptno"], "exp": {"easy": "JOIN은 두 표를 같은 번호(부서번호)끼리 짝지어 붙이는 거예요.", "work": "테이블에 별칭(e, d)을 붙이고 e.ename 처럼 쓰면 어느 표의 컬럼인지 분명해요.", "tip": "INNER JOIN은 짝이 있는 것만 나와요. 부서 없는 오세훈, 직원 없는 기획팀은 빠져요."}, "tables": ["EMP", "DEPT"], "ordered": false, "trap": false}, {"type": "sql", "st": 6, "q": "부서가 없는 직원도 빠짐없이, 모든 직원의 이름과 부서 이름을 조회하세요.", "sql": "SELECT e.ename, d.dname FROM emp e LEFT JOIN dept d ON e.deptno = d.deptno", "hints": ["짝이 없어도 왼쪽 표는 다 보여주는 JOIN이 있어요.", "FROM emp e LEFT JOIN dept d ON ..."], "exp": {"easy": "LEFT JOIN은 왼쪽 표(직원)를 전부 지켜줘요. 짝이 없으면 부서 이름이 빈 칸(NULL)이에요.", "work": "\"빠짐없이\", \"모든\", \"~가 없어도\" 라는 말이 보이면 OUTER JOIN을 떠올려요.", "tip": "Oracle 옛 문법: WHERE e.deptno = d.deptno(+). (+)는 부족한 쪽에 붙여요."}, "tables": ["EMP", "DEPT"], "ordered": false, "trap": false}, {"type": "sql", "st": 6, "q": "모든 부서의 부서 이름(DNAME)과 직원 수(CNT)를 조회하세요. 직원이 없는 부서는 0으로 나와야 해요.", "sql": "SELECT d.dname, COUNT(e.empno) AS cnt FROM dept d LEFT JOIN emp e ON d.deptno = e.deptno GROUP BY d.dname", "hints": ["부서를 기준으로 LEFT JOIN 하세요.", "COUNT(*)를 쓰면 기획팀이 1이 돼요. 직원 쪽 컬럼을 세요: COUNT(e.empno)"], "exp": {"easy": "기획팀은 짝이 없어서 직원 칸이 빈 줄 하나가 생겨요. COUNT(*)는 그 빈 줄도 1로 세요.", "work": "OUTER JOIN 뒤에 셀 때는 반대쪽 표의 컬럼으로 COUNT 해요.", "tip": "COUNT(*) 와 COUNT(컬럼)의 차이가 JOIN에서 터지는 대표 함정이에요."}, "tables": ["EMP", "DEPT"], "ordered": false, "trap": true}, {"type": "sql", "st": 6, "q": "모든 부서 이름과, 그 부서의 '사원' 직급 직원 이름을 조회하세요. 사원이 없는 부서도 부서 이름은 나와야 해요.", "sql": "SELECT d.dname, e.ename FROM dept d LEFT JOIN emp e ON d.deptno = e.deptno AND e.job = '사원'", "hints": ["WHERE e.job = '사원' 을 쓰면 사원 없는 부서가 사라져요.", "직급 조건을 WHERE가 아니라 ON 안에 AND로 넣어요."], "exp": {"easy": "WHERE는 JOIN이 끝난 뒤에 걸러서, 빈 칸(NULL)인 줄까지 지워버려요. 그럼 LEFT JOIN이 INNER JOIN처럼 돼요.", "work": "OUTER JOIN에서 반대쪽 표 조건은 ON에 넣어요.", "tip": "ON 조건과 WHERE 조건의 차이는 실무에서도 시험에서도 가장 헷갈리는 부분이에요."}, "tables": ["EMP", "DEPT"], "ordered": false, "trap": true}, {"type": "sql", "st": 6, "q": "직원 이름(ENAME)과 그 직원의 상사 이름(MGR_NAME)을 조회하세요. MGR 컬럼에 상사의 사번이 있어요. 상사가 없는 직원은 빼도 돼요.", "sql": "SELECT e.ename, m.ename AS mgr_name FROM emp e JOIN emp m ON e.mgr = m.empno", "hints": ["같은 EMP 표를 두 번 써요. 하나는 직원, 하나는 상사.", "FROM emp e JOIN emp m ON e.mgr = m.empno"], "exp": {"easy": "같은 표를 복사해서 \"직원 표\"와 \"상사 표\"로 놓고 짝지어요. 이게 SELF JOIN이에요.", "work": "SELF JOIN에선 별칭이 꼭 필요해요. 없으면 어느 ename인지 몰라요.", "tip": "ON e.mgr = m.empno 방향을 거꾸로 쓰면 \"내 부하 직원\"이 나와요."}, "tables": ["EMP"], "ordered": false, "trap": false}, {"type": "mc", "st": 6, "q": "조인 조건 없이 EMP(8행)와 DEPT(4행)를 FROM에 함께 쓰면 결과는 몇 행일까요?", "code": "SELECT * FROM emp, dept;", "choices": ["4행", "8행", "12행", "32행"], "answer": 3, "hints": ["짝짓는 규칙이 없으면 모든 조합이 나와요.", "8 × 4"], "exp": {"easy": "짝 규칙이 없으면 직원 한 명당 부서 4개가 다 붙어요. 8 × 4 = 32.", "work": "결과 행 수가 갑자기 많아지면 조인 조건을 빠뜨렸는지 먼저 확인해요.", "tip": "이걸 카테시안 곱(CROSS JOIN)이라고 해요. 시험 단골 용어예요."}, "tables": ["EMP", "DEPT"], "trap": true}, {"type": "sql", "st": 6, "q": "직원 이름, 급여, 급여등급(GRADE)을 조회하세요. SALGRADE 표에서 급여가 LOSAL~HISAL 사이에 들어가는 등급이 그 직원의 등급이에요.", "sql": "SELECT e.ename, e.sal, s.grade FROM emp e JOIN salgrade s ON e.sal BETWEEN s.losal AND s.hisal", "hints": ["두 표에 같은 값의 컬럼이 없어요. = 대신 범위로 연결해요.", "ON e.sal BETWEEN s.losal AND s.hisal"], "exp": {"easy": "번호가 같은 짝을 찾는 대신, 급여가 어느 칸(범위)에 들어가는지로 짝지어요. 이걸 비등가 조인이라고 해요.", "work": "세금 구간, 등급표, 할인 구간처럼 범위 표와 붙일 때 실무에서 정말 많이 써요.", "tip": "ON 뒤에 꼭 = 만 오는 게 아니에요. BETWEEN, >=, <= 도 조인 조건이 될 수 있어요."}, "tables": ["EMP", "SALGRADE"], "ordered": false, "trap": true}, {"type": "sql", "st": 6, "q": "직원 이름(ENAME), 부서 이름(DNAME), 급여등급(GRADE)을 한 번에 조회하세요. (부서가 없는 직원은 빠져도 돼요)", "sql": "SELECT e.ename, d.dname, s.grade FROM emp e JOIN dept d ON e.deptno = d.deptno JOIN salgrade s ON e.sal BETWEEN s.losal AND s.hisal", "hints": ["표가 3개면 JOIN도 2번이에요. emp에 dept를 붙이고, 또 salgrade를 붙여요.", "FROM emp e JOIN dept d ON e.deptno = d.deptno JOIN salgrade s ON e.sal BETWEEN s.losal AND s.hisal"], "exp": {"easy": "기차 칸을 하나씩 연결하는 거예요. emp 칸에 dept 칸을 붙이고, 그 뒤에 salgrade 칸을 또 붙여요.", "work": "JOIN 한 줄에 ON 한 줄씩 짝지어 쓰면 표가 많아져도 안 헷갈려요.", "tip": "표가 N개면 조인 조건은 최소 N-1개. 3개면 2개가 필요해요."}, "tables": ["EMP", "DEPT", "SALGRADE"], "ordered": false, "trap": false}, {"type": "sql", "st": 6, "q": "프로젝트 이름(PNAME), 담당 직원 이름(ENAME), 그 직원의 부서 이름(DNAME)을 조회하세요. 담당자가 없는 프로젝트는 빼도 돼요.", "sql": "SELECT p.pname, e.ename, d.dname FROM proj p JOIN emp e ON p.empno = e.empno JOIN dept d ON e.deptno = d.deptno", "hints": ["PROJ와 EMP는 EMPNO로, EMP와 DEPT는 DEPTNO로 연결돼요.", "FROM proj p JOIN emp e ON p.empno = e.empno JOIN dept d ON e.deptno = d.deptno"], "exp": {"easy": "프로젝트 → 담당자 → 담당자의 부서 순서로 징검다리를 건너요. 가운데 emp가 다리 역할이에요.", "work": "어떤 컬럼으로 연결되는지 먼저 종이에 선을 그어보면 3개 이상 조인도 쉬워져요.", "tip": "proj와 dept는 직접 연결되는 컬럼이 없어서 emp를 꼭 거쳐야 해요."}, "tables": ["PROJ", "EMP", "DEPT"], "ordered": false, "trap": false}, {"type": "sql", "st": 6, "q": "서울에 있는 부서 직원이 맡은 프로젝트의 프로젝트 이름과 직원 이름을 조회하세요.", "sql": "SELECT p.pname, e.ename FROM proj p JOIN emp e ON p.empno = e.empno JOIN dept d ON e.deptno = d.deptno WHERE d.loc = '서울'", "hints": ["3개 표를 먼저 다 연결한 뒤, WHERE로 지역을 걸러요.", "... JOIN dept d ON e.deptno = d.deptno WHERE d.loc = '서울'"], "exp": {"easy": "SELECT에 부서 이름이 안 나와도, 조건에 쓰려면 dept 표를 연결해야 해요.", "work": "조인 조건(ON)과 거르는 조건(WHERE)을 나눠 쓰면 읽기 쉬워요.", "tip": "보여주지 않는 표도 조건에 필요하면 FROM/JOIN에 들어가야 해요."}, "tables": ["PROJ", "EMP", "DEPT"], "ordered": false, "trap": false}, {"type": "sql", "st": 6, "q": "모든 직원의 이름과, 그 직원이 맡은 프로젝트 이름을 조회하세요. 프로젝트가 없는 직원도 나와야 해요.", "sql": "SELECT e.ename, p.pname FROM emp e LEFT JOIN proj p ON e.empno = p.empno", "hints": ["\"없는 직원도\" 나와야 하니까 직원 표를 지켜주는 JOIN이에요.", "FROM emp e LEFT JOIN proj p ON e.empno = p.empno"], "exp": {"easy": "LEFT JOIN은 왼쪽 표(직원)를 다 지켜요. 프로젝트가 없는 직원은 프로젝트 이름이 NULL이에요.", "work": "\"모든 ~\"이 나오면 어느 표가 기준(왼쪽)인지부터 정해요.", "tip": "담당자 없는 '신입 교육' 프로젝트는 안 나와요. 기준이 직원 표니까요."}, "tables": ["EMP", "PROJ"], "ordered": false, "trap": true}, {"type": "sql", "st": 6, "q": "모든 부서의 부서 이름(DNAME)과 그 부서 직원들이 맡은 프로젝트 수(CNT)를 조회하세요. 프로젝트가 없는 부서는 0이에요.", "sql": "SELECT d.dname, COUNT(p.pno) AS cnt FROM dept d LEFT JOIN emp e ON d.deptno = e.deptno LEFT JOIN proj p ON e.empno = p.empno GROUP BY d.dname", "hints": ["dept부터 시작해서 LEFT JOIN을 두 번 해요. 중간에 INNER JOIN이 끼면 0인 부서가 사라져요.", "COUNT(*) 대신 COUNT(p.pno)로 프로젝트 칸만 세요."], "exp": {"easy": "부서 → 직원 → 프로젝트로 이어 붙이되, 짝이 없어도 부서는 지켜야 하니 LEFT JOIN을 두 번 써요.", "work": "OUTER JOIN을 이어갈 땐 끝까지 LEFT JOIN을 유지해요. 중간에 그냥 JOIN을 쓰면 빈 줄이 다 지워져요.", "tip": "COUNT(*)로 세면 기획팀이 0이 아니라 1이 돼요. 빈 줄도 한 줄로 세니까요."}, "tables": ["DEPT", "EMP", "PROJ"], "ordered": false, "trap": true}, {"type": "mc", "st": 6, "q": "EMP, DEPT, SALGRADE 3개 테이블을 조인할 때, 카테시안 곱이 생기지 않으려면 조인 조건이 최소 몇 개 필요할까요?", "code": null, "choices": ["1개", "2개", "3개", "4개"], "answer": 1, "hints": ["표 2개를 붙일 때 조건이 1개 필요해요.", "표가 N개면 N-1개."], "exp": {"easy": "기차 칸 3개를 연결하려면 연결고리가 2개 필요해요.", "work": "결과 행 수가 갑자기 많아지면 조인 조건이 하나 빠졌는지 확인해요.", "tip": "N개 테이블 → 최소 N-1개 조인 조건. 시험에 그대로 나와요."}, "tables": [], "trap": true}, {"type": "mc", "st": 6, "q": "다음 중 에러가 나는 SQL은? (Oracle 기준)", "code": null, "choices": ["SELECT ename, dname FROM emp NATURAL JOIN dept", "SELECT e.deptno, dname FROM emp e NATURAL JOIN dept d", "SELECT ename, dname FROM emp JOIN dept USING (deptno)", "SELECT e.ename, d.dname FROM emp e JOIN dept d ON e.deptno = d.deptno"], "answer": 1, "hints": ["NATURAL JOIN과 USING은 공통 컬럼을 하나로 합쳐요.", "합쳐진 공통 컬럼(deptno) 앞에는 별칭(e.)을 붙이면 안 돼요."], "exp": {"easy": "NATURAL JOIN은 이름이 같은 컬럼(deptno)을 알아서 한 개로 합쳐요. 그래서 e.deptno처럼 어느 표 건지 말하면 에러예요.", "work": "실무에선 어떤 컬럼으로 연결되는지 분명한 ON 방식을 가장 많이 써요.", "tip": "NATURAL JOIN, USING의 공통 컬럼에는 별칭 금지! SQLD 단골 함정이에요."}, "tables": ["EMP", "DEPT"], "trap": true}, {"type": "sql", "st": 7, "q": "전체 평균 급여보다 많이 받는 직원의 이름과 급여를 조회하세요.", "sql": "SELECT ename, sal FROM emp WHERE sal > (SELECT AVG(sal) FROM emp)", "hints": ["WHERE sal > AVG(sal) 은 에러예요.", "평균을 괄호 안 SELECT로 먼저 구해요: (SELECT AVG(sal) FROM emp)"], "exp": {"easy": "서브쿼리는 \"먼저 계산해 둔 답\"을 괄호에 넣어 쓰는 거예요. 평균 4100을 먼저 구하고 비교해요.", "work": "서브쿼리는 혼자 실행해도 되게 쓰고, 먼저 따로 돌려보면 디버깅이 쉬워요.", "tip": "WHERE에 집계 함수를 바로 쓸 수 없어서 서브쿼리를 써요."}, "tables": ["EMP"], "ordered": false, "trap": false}, {"type": "sql", "st": 7, "q": "'김민수'와 같은 부서에 있는 직원의 이름을 조회하세요. 김민수 본인은 빼세요.", "sql": "SELECT ename FROM emp WHERE deptno = (SELECT deptno FROM emp WHERE ename = '김민수') AND ename <> '김민수'", "hints": ["김민수의 부서번호를 서브쿼리로 먼저 구해요.", "... AND ename <> '김민수' 로 본인을 빼요."], "exp": {"easy": "\"김민수네 반이 몇 반이지?\"를 먼저 묻고, 그 반 친구들을 찾아요.", "work": "<> 와 != 는 둘 다 \"같지 않다\"예요.", "tip": "서브쿼리 결과가 여러 줄이면 = 대신 IN을 써야 해요. 동명이인이 있으면 = 는 에러!"}, "tables": ["EMP"], "ordered": false, "trap": false}, {"type": "sql", "st": 7, "q": "서울에 있는 부서에 소속된 직원의 이름을 조회하세요.", "sql": "SELECT ename FROM emp WHERE deptno IN (SELECT deptno FROM dept WHERE loc = '서울')", "hints": ["서울에 있는 부서는 여러 개예요.", "결과가 여러 줄인 서브쿼리는 IN (SELECT ...)"], "exp": {"easy": "서울 부서 번호 바구니 {10, 30}을 만들고, 그 안에 있는 직원을 찾아요.", "work": "같은 결과를 JOIN으로도 만들 수 있어요. 둘 다 연습해 두면 좋아요.", "tip": "다중 행 서브쿼리에 = 를 쓰면 에러예요. IN, ANY, ALL을 써요."}, "tables": ["EMP", "DEPT"], "ordered": false, "trap": false}, {"type": "sql", "st": 7, "q": "부서별로 가장 높은 급여를 받는 직원의 부서번호, 이름, 급여를 조회하세요.", "sql": "SELECT deptno, ename, sal FROM emp e WHERE sal = (SELECT MAX(sal) FROM emp WHERE deptno = e.deptno)", "hints": ["바깥 직원의 부서를 서브쿼리 안에서 써야 해요.", "WHERE sal = (SELECT MAX(sal) FROM emp WHERE deptno = e.deptno)"], "exp": {"easy": "직원 한 명씩 \"너희 부서 최고 급여가 너니?\"라고 물어보는 거예요. 이게 상관 서브쿼리예요.", "work": "같은 결과를 RANK() 윈도우 함수로 더 쉽게 만들 수도 있어요.", "tip": "부서가 NULL인 오세훈은 deptno = NULL 비교가 안 돼서 빠져요."}, "tables": ["EMP"], "ordered": false, "trap": true}, {"type": "sql", "st": 7, "q": "직원이 한 명도 없는 부서의 부서 이름을 조회하세요.", "sql": "SELECT dname FROM dept d WHERE NOT EXISTS (SELECT 1 FROM emp e WHERE e.deptno = d.deptno)", "hints": ["NOT IN (SELECT deptno FROM emp) 는 EMP에 NULL 부서가 있어서 0건이 나와요!", "NOT EXISTS (SELECT 1 FROM emp e WHERE e.deptno = d.deptno)"], "exp": {"easy": "EXISTS는 \"그런 사람 한 명이라도 있니?\", NOT EXISTS는 \"한 명도 없니?\" 예요.", "work": "NULL이 섞일 수 있는 컬럼이면 NOT IN 대신 NOT EXISTS가 안전해요.", "tip": "EXISTS 안의 SELECT 1 은 값이 중요하지 않다는 뜻이에요. 있는지만 봐요."}, "tables": ["EMP", "DEPT"], "ordered": false, "trap": true}, {"type": "sql", "st": 8, "q": "2024년 또는 2025년에 보너스를 받은 직원 이름을 중복 없이 조회하세요. (BONUS_2024, BONUS_2025 테이블)", "sql": "SELECT ename FROM bonus_2024 UNION SELECT ename FROM bonus_2025", "hints": ["두 SELECT 결과를 위아래로 합치는 연산자가 있어요.", "UNION은 중복을 없애고, UNION ALL은 그대로 둬요."], "exp": {"easy": "UNION은 두 반 명단을 합치면서 같은 이름은 한 번만 적어요.", "work": "중복이 없다는 걸 알면 UNION ALL이 더 빨라요. 정렬 작업이 없거든요.", "tip": "합치는 두 SELECT는 컬럼 개수와 타입이 같아야 해요."}, "tables": ["BONUS_2024", "BONUS_2025"], "ordered": false, "trap": false}, {"type": "sql", "st": 8, "q": "2024년과 2025년 두 해 모두 보너스를 받은 직원 이름을 조회하세요.", "sql": "SELECT ename FROM bonus_2024 INTERSECT SELECT ename FROM bonus_2025", "hints": ["\"둘 다\"는 교집합이에요.", "INTERSECT"], "exp": {"easy": "INTERSECT는 두 명단에 모두 있는 이름만 남겨요.", "work": "IN 서브쿼리나 JOIN으로도 같은 결과를 만들 수 있어요.", "tip": "차집합은 Oracle에선 MINUS, 표준과 SQL Server에선 EXCEPT예요."}, "tables": ["BONUS_2024", "BONUS_2025"], "ordered": false, "trap": false}, {"type": "mc", "st": 8, "q": "BONUS_2024(3명)와 BONUS_2025(2명)에 정하늘이 양쪽에 있어요. UNION ALL 결과는 몇 행일까요?", "code": "SELECT ename FROM bonus_2024\nUNION ALL\nSELECT ename FROM bonus_2025;", "choices": ["3행", "4행", "5행", "6행"], "answer": 2, "hints": ["UNION ALL은 중복을 없앨까요?", "ALL은 \"전부 그대로\". 3 + 2"], "exp": {"easy": "UNION ALL은 두 명단을 그냥 이어 붙여요. 정하늘이 두 번 나와요.", "work": "UNION은 중복 제거 때문에 느려질 수 있어요.", "tip": "UNION이면 4행, UNION ALL이면 5행. 이 차이를 꼭 물어봐요."}, "tables": ["BONUS_2024", "BONUS_2025"], "trap": true}, {"type": "sql", "st": 9, "q": "이름, 급여, 급여 높은 순 순위(RNK)를 조회하세요. 같은 급여면 같은 순위예요.", "sql": "SELECT ename, sal, RANK() OVER (ORDER BY sal DESC) AS rnk FROM emp", "hints": ["순위 함수 RANK()는 OVER와 짝꿍이에요.", "RANK() OVER (ORDER BY sal DESC) AS rnk"], "exp": {"easy": "RANK는 달리기 등수예요. 공동 6등이 둘이면 다음은 8등이에요.", "work": "윈도우 함수는 줄 수를 줄이지 않고 옆에 계산값을 붙여줘요. GROUP BY와 달라요.", "tip": "김민수와 오세훈이 3000으로 같아서 둘 다 6등이에요."}, "tables": ["EMP"], "ordered": false, "trap": false}, {"type": "sql", "st": 9, "q": "부서별로 급여 높은 순 순위(RNK)를 매겨서 부서번호, 이름, 급여, 순위를 조회하세요.", "sql": "SELECT deptno, ename, sal, RANK() OVER (PARTITION BY deptno ORDER BY sal DESC) AS rnk FROM emp", "hints": ["부서마다 1등부터 다시 시작해야 해요.", "OVER (PARTITION BY deptno ORDER BY sal DESC)"], "exp": {"easy": "PARTITION BY는 반을 나눠서 반마다 따로 등수를 매기는 거예요.", "work": "\"부서별 1등\"이 필요하면 이 결과를 서브쿼리로 감싸고 WHERE rnk = 1.", "tip": "PARTITION BY는 GROUP BY와 달리 줄을 합치지 않아요."}, "tables": ["EMP"], "ordered": false, "trap": false}, {"type": "mc", "st": 9, "q": "급여가 7000, 5500, 5500, 4200 일 때 DENSE_RANK() OVER (ORDER BY sal DESC) 의 결과는?", "code": null, "choices": ["1, 2, 3, 4", "1, 2, 2, 4", "1, 2, 2, 3", "1, 1, 2, 3"], "answer": 2, "hints": ["RANK, DENSE_RANK, ROW_NUMBER의 차이를 떠올려요.", "DENSE는 \"빽빽한\". 등수를 건너뛰지 않아요."], "exp": {"easy": "RANK: 1,2,2,4 / DENSE_RANK: 1,2,2,3 / ROW_NUMBER: 1,2,3,4", "work": "\"상위 3개 급여 금액\"처럼 값 기준이면 DENSE_RANK, \"딱 3명\"이면 ROW_NUMBER.", "tip": "세 함수 비교는 윈도우 함수 최빈출 문제예요."}, "tables": [], "trap": true}, {"type": "sql", "st": 9, "q": "이름, 부서번호, 급여, 그리고 그 직원이 속한 부서의 평균 급여(DEPT_AVG)를 함께 조회하세요.", "sql": "SELECT ename, deptno, sal, AVG(sal) OVER (PARTITION BY deptno) AS dept_avg FROM emp", "hints": ["GROUP BY를 쓰면 이름이 사라져요.", "AVG(sal) OVER (PARTITION BY deptno)"], "exp": {"easy": "집계 함수에 OVER를 붙이면 줄은 그대로 두고 옆에 부서 평균을 붙여줘요.", "work": "\"내 급여 vs 우리 부서 평균\" 비교 리포트에 자주 써요.", "tip": "OVER () 처럼 비워두면 전체 평균이 모든 줄에 붙어요."}, "tables": ["EMP"], "ordered": false, "trap": false}, {"type": "sql", "st": 10, "q": "프로젝트를 하나도 맡지 않은 직원의 이름을 조회하세요.", "sql": "SELECT e.ename FROM emp e LEFT JOIN proj p ON e.empno = p.empno WHERE p.pno IS NULL", "hints": ["직원 표를 지키면서 프로젝트를 붙이면, 짝이 없는 직원은 프로젝트 칸이 NULL이에요.", "LEFT JOIN proj p ON e.empno = p.empno WHERE p.pno IS NULL"], "exp": {"easy": "일단 전부 붙여보고, 프로젝트 칸이 빈 사람만 골라요.", "work": "\"주문 안 한 고객\", \"로그인 안 한 회원\" 찾기처럼 실무에서 정말 자주 쓰는 패턴이에요 (안티 조인).", "tip": "NOT EXISTS로도 같은 결과를 만들 수 있어요. NOT IN은 NULL 함정이 있어서 조심!"}, "tables": ["EMP", "PROJ"], "ordered": false, "trap": false}, {"type": "sql", "st": 10, "q": "직원의 이름과 맡은 프로젝트 이름(PNAME)을 조회하세요. 프로젝트가 없으면 '대기'라고 보여주세요.", "sql": "SELECT e.ename, NVL(p.pname, '대기') AS pname FROM emp e LEFT JOIN proj p ON e.empno = p.empno", "hints": ["모든 직원이 나와야 하니 LEFT JOIN.", "빈 칸은 NVL(p.pname, '대기') 로 채워요."], "exp": {"easy": "LEFT JOIN으로 생긴 빈 칸을 NVL로 보기 좋게 채워요.", "work": "보고서에 NULL이 그대로 나가면 읽는 사람이 헷갈려요. '없음', '대기', 0 처럼 채워서 내보내요.", "tip": "NVL의 두 값은 타입이 같아야 해요. 글자 칸엔 글자, 숫자 칸엔 숫자."}, "tables": ["EMP", "PROJ"], "ordered": false, "trap": false}, {"type": "sql", "st": 10, "q": "상사(MGR)별로 상사 이름(MGR_NAME)과 부하 직원 수(CNT)를 조회하세요.", "sql": "SELECT m.ename AS mgr_name, COUNT(*) AS cnt FROM emp e JOIN emp m ON e.mgr = m.empno GROUP BY m.ename", "hints": ["직원 표와 상사 표(같은 emp)를 SELF JOIN 해요.", "JOIN emp m ON e.mgr = m.empno 한 뒤 GROUP BY m.ename"], "exp": {"easy": "직원마다 상사를 붙인 다음, 상사 이름으로 바구니를 만들어 세요.", "work": "조직도, 추천인 수, 카테고리별 하위 메뉴 수처럼 \"나를 가리키는 줄 세기\"에 써요.", "tip": "GROUP BY m.ename 대신 m.empno로 묶으면 동명이인이 있어도 안전해요."}, "tables": ["EMP"], "ordered": false, "trap": false}, {"type": "sql", "st": 10, "q": "부서번호별로 사원 수(SAWON)와 대리 수(DAERI)를 옆으로 나란히 보여주세요. 부서가 없는 직원은 빼세요.", "sql": "SELECT deptno, SUM(CASE WHEN job = '사원' THEN 1 ELSE 0 END) AS sawon, SUM(CASE WHEN job = '대리' THEN 1 ELSE 0 END) AS daeri FROM emp WHERE deptno IS NOT NULL GROUP BY deptno", "hints": ["직급별로 1 또는 0을 만든 다음 더해요.", "SUM(CASE WHEN job = '사원' THEN 1 ELSE 0 END) AS sawon"], "exp": {"easy": "사원이면 1점, 아니면 0점을 주고 부서별로 점수를 더하면 사원 수가 돼요.", "work": "엑셀 피벗 테이블처럼 세로 데이터를 가로로 펼칠 때 쓰는 실무 필수 패턴이에요.", "tip": "COUNT(CASE WHEN job = '사원' THEN 1 END) 로도 같아요. ELSE가 없으면 NULL이라 안 세어지거든요."}, "tables": ["EMP"], "ordered": false, "trap": true}, {"type": "sql", "st": 10, "q": "부서별 급여 1등 직원의 부서 이름(DNAME), 이름, 급여를 조회하세요.", "sql": "SELECT dname, ename, sal FROM (SELECT d.dname, e.ename, e.sal, RANK() OVER (PARTITION BY e.deptno ORDER BY e.sal DESC) AS rnk FROM emp e JOIN dept d ON e.deptno = d.deptno) WHERE rnk = 1", "hints": ["안쪽에서 JOIN + 부서별 순위를 먼저 매기고, 바깥에서 1등만 골라요.", "SELECT ... FROM (SELECT ..., RANK() OVER (PARTITION BY e.deptno ORDER BY e.sal DESC) AS rnk FROM ...) WHERE rnk = 1"], "exp": {"easy": "반마다 등수를 매긴 표를 먼저 만들고, 그 표에서 1등만 뽑아요.", "work": "\"카테고리별 베스트 상품\", \"지점별 매출 1위\" 같은 Top-N 리포트의 기본형이에요.", "tip": "윈도우 함수는 WHERE에 바로 못 써요. 그래서 FROM 안 서브쿼리(인라인 뷰)로 감싸요."}, "tables": ["EMP", "DEPT"], "ordered": false, "trap": true}, {"type": "sql", "st": 10, "q": "급여가 가장 높은 3명의 이름과 급여를 조회하세요.", "sql": "SELECT ename, sal FROM (SELECT ename, sal, ROW_NUMBER() OVER (ORDER BY sal DESC) AS rn FROM emp) WHERE rn <= 3", "hints": ["급여 순으로 번호를 붙인 뒤 3번까지만 골라요.", "ROW_NUMBER() OVER (ORDER BY sal DESC) AS rn 을 서브쿼리에 넣고 WHERE rn <= 3"], "exp": {"easy": "줄 세우고 번호표를 나눠준 다음, 1~3번만 데려와요.", "work": "Oracle에선 FETCH FIRST 3 ROWS ONLY, SQL Server에선 TOP 3으로도 써요.", "tip": "Oracle ROWNUM은 ORDER BY보다 먼저 붙어서, 정렬 후에 자르려면 꼭 서브쿼리로 감싸야 해요."}, "tables": ["EMP"], "ordered": false, "trap": true}, {"type": "sql", "st": 10, "q": "입사 연도(HIRE_YEAR)별 입사자 수(CNT)를 연도 순으로 조회하세요. 입사일 앞 4글자가 연도예요.", "sql": "SELECT SUBSTR(hiredate, 1, 4) AS hire_year, COUNT(*) AS cnt FROM emp GROUP BY SUBSTR(hiredate, 1, 4) ORDER BY hire_year", "hints": ["연도를 SUBSTR로 잘라서 그걸로 GROUP BY 해요.", "GROUP BY SUBSTR(hiredate, 1, 4) ORDER BY hire_year"], "exp": {"easy": "날짜에서 연도만 잘라 바구니를 만들고, 바구니마다 사람 수를 세요.", "work": "월별 매출, 연도별 가입자처럼 \"기간별 집계\"는 실무 보고서의 단골이에요. Oracle에선 TO_CHAR(hiredate, 'YYYY')를 많이 써요.", "tip": "GROUP BY에는 SELECT의 별칭(hire_year)을 못 써요. 같은 식을 그대로 써야 해요. ORDER BY에선 별칭 OK!"}, "tables": ["EMP"], "ordered": true, "trap": true}, {"type": "sql", "st": 10, "q": "부서번호별 급여 합계(SUM_SAL)와 전체 급여에서 차지하는 비율(PCT, %)을 소수 첫째 자리까지 조회하세요.", "sql": "SELECT deptno, SUM(sal) AS sum_sal, ROUND(SUM(sal) * 100.0 / (SELECT SUM(sal) FROM emp), 1) AS pct FROM emp GROUP BY deptno", "hints": ["전체 합계는 서브쿼리 (SELECT SUM(sal) FROM emp) 로 구해요.", "ROUND(SUM(sal) * 100.0 / (SELECT SUM(sal) FROM emp), 1)"], "exp": {"easy": "우리 부서 몫 ÷ 회사 전체 × 100 이 비율이에요.", "work": "점유율, 구성비 보고서에 매일 쓰는 식이에요. SUM(sal) OVER () 로 전체 합을 구해도 돼요.", "tip": "정수끼리 나누면 소수점이 잘리는 DB가 있어요. 100.0 처럼 소수를 섞어 주면 안전해요."}, "tables": ["EMP"], "ordered": false, "trap": false}, {"type": "sql", "st": 10, "q": "입사일 순으로 이름, 입사일, 그리고 그때까지 입사한 직원들의 급여 누적 합계(CUM_SAL)를 조회하세요.", "sql": "SELECT ename, hiredate, SUM(sal) OVER (ORDER BY hiredate) AS cum_sal FROM emp", "hints": ["SUM에 OVER (ORDER BY ...)를 붙이면 누적 합계가 돼요.", "SUM(sal) OVER (ORDER BY hiredate) AS cum_sal"], "exp": {"easy": "한 명씩 입사할 때마다 저금통에 급여를 더해가는 거예요.", "work": "누적 매출, 누적 가입자 그래프를 그릴 때 그대로 써요.", "tip": "OVER 안에 ORDER BY가 있으면 누적, 없으면 전체 합계가 모든 줄에 붙어요."}, "tables": ["EMP"], "ordered": false, "trap": false}, {"type": "sql", "st": 10, "q": "같은 급여를 받는 직원이 2명 이상인 급여 금액(SAL)과 인원(CNT)을 조회하세요.", "sql": "SELECT sal, COUNT(*) AS cnt FROM emp GROUP BY sal HAVING COUNT(*) >= 2", "hints": ["급여로 바구니를 만들고, 2명 이상인 바구니만 남겨요.", "GROUP BY sal HAVING COUNT(*) >= 2"], "exp": {"easy": "같은 값끼리 모아서 2개 이상인 것만 보면 중복이 보여요.", "work": "중복 가입, 중복 주문 같은 \"데이터 이상한 것 찾기\"의 기본 쿼리예요.", "tip": "중복 확인은 GROUP BY + HAVING COUNT(*) > 1 이 정석이에요."}, "tables": ["EMP"], "ordered": false, "trap": false}], "stations": ["SELECT", "WHERE", "NULL", "함수", "집계", "GROUP BY", "JOIN", "서브쿼리", "집합", "윈도우", "실무"], "schema": "\nCREATE TABLE dept (deptno INTEGER, dname TEXT, loc TEXT);\nINSERT INTO dept VALUES (10,'개발팀','서울'),(20,'영업팀','부산'),(30,'인사팀','서울'),(40,'기획팀','대전');\nCREATE TABLE emp (empno INTEGER, ename TEXT, job TEXT, mgr INTEGER, sal INTEGER, comm INTEGER, deptno INTEGER, hiredate TEXT);\nINSERT INTO emp VALUES\n (101,'김민수','사원',103,3000,NULL,10,'2023-03-02'),\n (102,'이지은','대리',108,4000,300,20,'2021-07-15'),\n (103,'박서준','과장',NULL,5500,NULL,10,'2018-01-10'),\n (104,'최유나','사원',108,3200,0,30,'2024-02-01'),\n (105,'정하늘','대리',103,4200,500,10,'2020-11-20'),\n (106,'김하나','사원',102,2900,NULL,20,'2024-09-01'),\n (107,'오세훈','사원',NULL,3000,NULL,NULL,'2025-01-06'),\n (108,'한지민','부장',NULL,7000,NULL,20,'2015-05-11');\nCREATE TABLE salgrade (grade INTEGER, losal INTEGER, hisal INTEGER);\nINSERT INTO salgrade VALUES (1,0,2999),(2,3000,3999),(3,4000,4999),(4,5000,6999),(5,7000,9999);\nCREATE TABLE proj (pno INTEGER, pname TEXT, empno INTEGER);\nINSERT INTO proj VALUES (1,'모바일앱 개발',101),(2,'결제 시스템',105),(3,'신규 고객 영업',102),(4,'채용 박람회',104),(5,'데이터 분석',103),(6,'신입 교육',NULL);\nCREATE TABLE bonus_2024 (ename TEXT);\nINSERT INTO bonus_2024 VALUES ('이지은'),('정하늘'),('최유나');\nCREATE TABLE bonus_2025 (ename TEXT);\nINSERT INTO bonus_2025 VALUES ('정하늘'),('한지민');\n"};
+</script>
+<script src="sql-asm.js"></script>
+<script>
+(function () {
+  const P = DATA.problems, STN = DATA.stations;
+  const KEY = "sqld-commute-v1";
+  const $ = id => document.getElementById(id);
+  let SQL = null;
+
+  // ---------- state ----------
+  let st = { cur: 0, solved: {}, wrong: {}, tries: {}, drafts: {}, mode: "all" };
+  try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s) st = Object.assign(st, s); } catch (e) {}
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
+
+  // ---------- db ----------
+  function freshDb() {
+    const db = new SQL.Database();
+    db.create_function("NVL", (a, b) => (a === null || a === undefined) ? b : a);
+    db.exec(DATA.schema);
+    return db;
+  }
+  function run(sql) {
+    const db = freshDb();
+    try {
+      const res = db.exec(sql);
+      if (!res.length) return { cols: [], rows: [] };
+      const last = res[res.length - 1];
+      return { cols: last.columns, rows: last.values };
+    } finally { db.close(); }
+  }
+  function friendlyError(msg) {
+    let m;
+    if ((m = msg.match(/no such column: (\S+)/))) return `컬럼 "${m[1]}"을(를) 찾을 수 없어요. 철자를 확인하거나, 글자라면 작은따옴표 ' ' 로 감쌌는지 보세요.`;
+    if ((m = msg.match(/no such table: (\S+)/))) return `테이블 "${m[1]}"이(가) 없어요. FROM 뒤 테이블 이름을 확인해 보세요.`;
+    if ((m = msg.match(/no such function: (\S+)/))) return `"${m[1]}" 함수는 없어요. 함수 이름 철자를 확인해 보세요.`;
+    if ((m = msg.match(/near "(.+?)": syntax error/))) return `"${m[1]}" 근처에 문법 오류가 있어요. 키워드 철자(WHERE, FROM...), 쉼표, 따옴표, 괄호를 확인해 보세요.`;
+    if (/incomplete input/.test(msg)) return "문장이 끝나지 않았어요. 괄호나 따옴표를 닫았는지 확인해 보세요.";
+    if (/misuse of aggregate/.test(msg)) return "집계 함수(COUNT, SUM, AVG...)를 쓸 수 없는 자리에 썼어요. WHERE 대신 HAVING을 써야 하는지 생각해 보세요.";
+    if (/HAVING clause on a non-aggregate|GROUP BY clause is required/.test(msg)) return "HAVING은 GROUP BY와 함께 써요.";
+    if (/SELECTs to the left and right/.test(msg)) return "UNION 등으로 합치는 두 SELECT의 컬럼 개수가 달라요.";
+    if (/ambiguous column name: (\S+)/.test(msg)) return `"${msg.split(": ")[1]}" 컬럼이 두 테이블에 다 있어서 헷갈려요. e.deptno 처럼 테이블 별칭을 붙여주세요.`;
+    return "SQL 실행 중 오류가 났어요: " + msg;
+  }
+  const norm = v => v === null || v === undefined ? "∅" : (typeof v === "number" ? (Math.round(v * 100) / 100).toString() : String(v).trim());
+  function compare(mine, ref, ordered) {
+    if (!mine.rows.length && ref.rows.length) return { ok: false, why: `결과가 0행이에요. 정답은 ${ref.rows.length}행이에요. 조건이 너무 엄격하거나, NULL을 = 로 비교하진 않았는지 확인해 보세요.` };
+    if (mine.cols.length !== ref.cols.length) return { ok: false, why: `컬럼 수가 달라요. 내 답은 ${mine.cols.length}개, 정답은 ${ref.cols.length}개예요.` };
+    if (mine.rows.length !== ref.rows.length) return { ok: false, why: `결과 행 수가 달라요. 내 답은 ${mine.rows.length}행, 정답은 ${ref.rows.length}행이에요.` };
+    const a = mine.rows.map(r => r.map(norm).join("␟")), b = ref.rows.map(r => r.map(norm).join("␟"));
+    if (ordered) {
+      const sa = a.slice().sort().join("\n"), sb = b.slice().sort().join("\n");
+      if (sa === sb && a.join("\n") !== b.join("\n")) return { ok: false, why: "내용은 맞는데 정렬 순서가 달라요. ORDER BY를 확인해 보세요." };
+      return a.join("\n") === b.join("\n") ? { ok: true } : { ok: false, why: "행 수는 같지만 값이 달라요. 컬럼 순서와 계산식을 확인해 보세요." };
+    }
+    const sa = a.slice().sort().join("\n"), sb = b.slice().sort().join("\n");
+    if (sa === sb) return { ok: true };
+    // same values but different column order?
+    const ca = mine.rows.map(r => r.map(norm).sort().join("␟")).sort().join("\n");
+    const cb = ref.rows.map(r => r.map(norm).sort().join("␟")).sort().join("\n");
+    if (ca === cb) return { ok: false, why: "값은 맞는데 컬럼 순서가 달라요. 문제에 나온 순서대로 SELECT에 써 보세요." };
+    return { ok: false, why: "행 수는 같지만 값이 달라요. 조건이나 계산식을 다시 확인해 보세요." };
+  }
+
+  // ---------- rendering helpers ----------
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  function gridHTML(res, max) {
+    if (!res.cols.length) return '<p class="result-label">결과가 없어요 (0행).</p>';
+    const rows = max ? res.rows.slice(0, max) : res.rows;
+    let h = '<div class="scroll"><table class="grid"><thead><tr>' + res.cols.map(c => `<th>${esc(c)}</th>`).join("") + "</tr></thead><tbody>";
+    for (const r of rows) h += "<tr>" + r.map(v => v === null ? '<td class="null">NULL</td>' : `<td>${esc(typeof v === "number" ? (Math.round(v * 100) / 100) : v)}</td>`).join("") + "</tr>";
+    h += "</tbody></table></div>";
+    if (!res.rows.length) h += '<p class="result-label">0행</p>';
+    else if (max && res.rows.length > max) h += `<p class="result-label">${res.rows.length}행 중 ${max}행만 표시</p>`;
+    return h;
+  }
+  const inlineCode = s => esc(s).replace(/(SELECT|FROM|WHERE|GROUP BY|HAVING|ORDER BY|IS NOT NULL|IS NULL|NOT IN|NOT EXISTS|LIKE|BETWEEN|UNION ALL|UNION|INTERSECT|JOIN|NVL\([^)]*\)|COUNT\([^)]*\)|AVG\([^)]*\)|DENSE_RANK\(\)|RANK\(\)|ROUND\([^)]*\)|TRUNC\([^)]*\))/g, "<code>$1</code>");
+
+  function list() {
+    if (st.mode === "wrong") return (st.queue || []).slice();
+    if (st.mode === "trap") return P.map((p, i) => i).filter(i => P[i].trap);
+    return P.map((p, i) => i);
+  }
+
+  function renderTop() {
+    const solved = Object.keys(st.solved).length;
+    $("score").innerHTML = `<b>${solved}</b>/${P.length}`;
+    const tr = $("track"); tr.innerHTML = "";
+    let doneUpTo = -1;
+    STN.forEach((name, si) => {
+      const ids = P.map((p, i) => i).filter(i => P[i].st === si);
+      const n = ids.filter(i => st.solved[i]).length;
+      const b = document.createElement("button");
+      b.className = "stn" + (n === ids.length ? " done" : n ? " part" : "") + (P[st.cur].st === si ? " cur" : "");
+      b.innerHTML = `<span class="dot"></span><span class="nm">${esc(name)}</span><span class="ct">${n}/${ids.length}</span>`;
+      b.setAttribute("aria-label", `${name}, ${ids.length}문제 중 ${n}개 정답`);
+      b.onclick = () => { setMode("all"); go(ids.find(i => !st.solved[i]) ?? ids[0]); };
+      tr.appendChild(b);
+      if (n === ids.length && doneUpTo === si - 1) doneUpTo = si;
+    });
+    const fill = document.createElement("div"); fill.className = "fill";
+    fill.style.width = doneUpTo < 0 ? "0px" : `${doneUpTo * 70}px`;
+    tr.prepend(fill);
+    const wrongN = Object.keys(st.wrong).length;
+    $("modeWrong").textContent = `오답 다시 풀기 ${wrongN}`;
+    $("modeWrong").disabled = wrongN === 0 && st.mode !== "wrong";
+    ["All", "Wrong", "Trap"].forEach(k => $("mode" + k).setAttribute("aria-pressed", String(st.mode === k.toLowerCase())));
+    const cs = P[st.cur].st;
+    $("stNow").textContent = STN[cs];
+    $("prevStName").textContent = cs > 0 ? STN[cs - 1] : "처음";
+    $("nextStName").textContent = cs < STN.length - 1 ? STN[cs + 1] : "끝";
+    $("prevSt").disabled = cs === 0; $("nextSt").disabled = cs === STN.length - 1;
+    renderRoute();
+    const cur = tr.querySelector(".cur"); if (cur) cur.scrollIntoView({ block: "nearest", inline: "center" });
+  }
+
+  function renderRoute() {
+    const r = $("route"); if (r.hidden) return;
+    r.innerHTML = STN.map((name, si) => {
+      const nums = P.map((p, i) => i).filter(i => P[i].st === si).map(i =>
+        `<button class="rn${st.solved[i] && !st.wrong[i] ? " ok" : st.wrong[i] ? " bad" : ""}${i === st.cur ? " cur" : ""}${P[i].trap ? " trap" : ""}" data-i="${i}" aria-label="${i + 1}번 문제">${i + 1}</button>`).join("");
+      return `<div class="rline"><span class="rname">${esc(name)}</span><div class="rnums">${nums}</div></div>`;
+    }).join("") + '<div class="legend"><span>초록: 정답</span><span>빨강: 오답 노트</span><span>노란 점: 함정</span></div>';
+    r.querySelectorAll(".rn").forEach(b => b.onclick = () => { setModeQuiet("all"); r.hidden = true; $("routeBtn").setAttribute("aria-expanded", "false"); go(+b.dataset.i); });
+  }
+  function setModeQuiet(m) { st.mode = m; }
+  function renderTables(p) {
+    const box = $("tblbox");
+    if (!p.tables.length) { $("tbls").hidden = true; return; }
+    $("tbls").hidden = false;
+    if (!SQL) { box.innerHTML = '<p class="loading">테이블 불러오는 중…</p>'; return; }
+    box.innerHTML = p.tables.map(t => `<div><div class="tname">${t.toLowerCase()}</div>${gridHTML(run("SELECT * FROM " + t))}</div>`).join("");
+    requestAnimationFrame(() => box.querySelectorAll(".scroll").forEach(sc => {
+      sc.scrollLeft = 0;
+      if (sc.scrollWidth > sc.clientWidth + 2) sc.insertAdjacentHTML("afterend", '<p class="swipe">표를 옆으로 밀면 컬럼이 더 있어요 →</p>');
+    }));
+  }
+
+  function renderExp(p) {
+    $("exp").innerHTML = `<div class="exp">
+      <div class="row"><span class="lab">쉽게 말하면</span><p>${inlineCode(p.exp.easy)}</p></div>
+      <div class="row"><span class="lab">실무 스타일</span><p>${inlineCode(p.exp.work)}</p></div>
+      <div class="row"><span class="lab">시험 꿀팁</span><p>${inlineCode(p.exp.tip)}</p></div></div>`;
+  }
+
+  function fb(kind, title, body) {
+    const d = document.createElement("div"); d.className = "fb " + kind;
+    d.innerHTML = (title ? `<h3>${title}</h3>` : "") + (body || "");
+    $("fb").appendChild(d); return d;
+  }
+
+  function hintFor(i) {
+    const p = P[i], t = st.tries[i] || 0;
+    if (t <= 0) return null;
+    return p.hints[Math.min(t, p.hints.length) - 1];
+  }
+
+  function render() {
+    const i = st.cur, p = P[i], L = list(), pos = L.indexOf(i);
+    renderTop();
+    $("meta").innerHTML =
+      `<span class="tag">${esc(STN[p.st])}</span>` +
+      (p.trap ? '<span class="tag trap">함정</span>' : "") +
+      (p.type === "mc" ? '<span class="tag mc">객관식</span>' : "") +
+      (st.solved[i] ? '<span class="tag solved">정답</span>' : "") +
+      `<span class="qnum">${i + 1} / ${P.length}${st.mode !== "all" ? ` · 이 모드 ${pos + 1}/${L.length}` : ""}</span>`;
+    $("q").innerHTML = inlineCode(p.q);
+    $("codeWrap").innerHTML = p.code ? `<pre class="code">${esc(p.code)}</pre>` : "";
+    $("fb").innerHTML = ""; $("exp").innerHTML = "";
+    renderTables(p);
+
+    const area = $("answerArea");
+    if (p.type === "mc") {
+      area.innerHTML = '<div class="choices">' + p.choices.map((c, k) =>
+        `<button class="choice" data-k="${k}"><span class="n">${"①②③④"[k]}</span><span>${inlineCode(c)}</span></button>`).join("") + "</div>" +
+        '<div class="actions" style="margin-top:8px"><button class="btn ghost" id="hintBtn">힌트</button><button class="btn ghost" id="showBtn">정답 보기</button></div>';
+      area.querySelectorAll(".choice").forEach(b => b.onclick = () => pickChoice(i, +b.dataset.k, b));
+      if (st.solved[i]) { area.querySelector(`.choice[data-k="${p.answer}"]`).classList.add("picked-ok"); renderExp(p); }
+    } else {
+      area.innerHTML = `<div class="editor">
+        <textarea id="sql" rows="5" placeholder="SELECT ...&#10;FROM ...&#10;WHERE ..." autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="SQL 입력" inputmode="none"></textarea>
+        <div class="keys kwrap" id="clauses" aria-label="절 버튼"></div>
+        <div class="keys" id="keys" aria-label="연산자와 함수 버튼"></div>
+        <div class="keys kwrap" id="cols" aria-label="테이블, 컬럼, 값 버튼"></div>
+        <div class="actions">
+          <button class="btn" id="runBtn">실행</button>
+          <button class="btn primary" id="gradeBtn">채점하기</button>
+        </div>
+        <div class="actions"><button class="btn ghost" id="hintBtn">힌트</button><button class="btn ghost" id="showBtn">정답 보기</button><button class="btn ghost" id="undoBtn">↶ 한 단계 전</button><button class="btn ghost" id="clearBtn">전체 지우기</button><button class="btn ghost" id="kbdBtn" aria-pressed="false">키보드 켜기</button></div>
+      </div>`;
+      const ta = $("sql"); ta.value = st.drafts[i] || "";
+      ta.oninput = () => { st.drafts[i] = ta.value; save(); };
+      // 되돌리기 기록: 버튼 입력은 한 번씩, 손으로 친 글자는 잠깐 쉬었다 친 단위로
+      undoStack = []; let lastType = 0;
+      ta.addEventListener("beforeinput", () => { const now = Date.now(); if (now - lastType > 800) pushUndo(ta); lastType = now; });
+      buildKeys(ta, p);
+      $("runBtn").onclick = () => doRun(i);
+      $("gradeBtn").onclick = () => doGrade(i);
+      $("undoBtn").onclick = () => { if (!undoStack.length) return; ta.value = undoStack.pop(); st.drafts[i] = ta.value; save(); const n = ta.value.length; ta.setSelectionRange(n, n); ta.focus(); };
+      $("kbdBtn").onclick = () => { const on = ta.getAttribute("inputmode") === "none"; ta.setAttribute("inputmode", on ? "text" : "none"); $("kbdBtn").textContent = on ? "키보드 끄기" : "키보드 켜기"; $("kbdBtn").setAttribute("aria-pressed", String(on)); ta.blur(); if (on) setTimeout(() => ta.focus(), 50); };
+      $("clearBtn").onclick = () => { pushUndo(ta); ta.value = ""; st.drafts[i] = ""; save(); ta.focus(); };
+      if (!SQL) { $("runBtn").disabled = $("gradeBtn").disabled = true; fb("info", "", '<p class="loading">SQL 엔진 불러오는 중… 처음 한 번만 조금 걸려요.</p>'); }
+      if (st.solved[i]) { fb("ok", "이미 맞힌 문제예요", "<p>다시 풀어봐도 좋아요. 손에 익을수록 시험장에서 빨라져요.</p>"); renderExp(p); }
+    }
+    $("hintBtn").onclick = () => showHint(i, true);
+    $("showBtn").onclick = () => reveal(i);
+    $("prev").disabled = pos <= 0; $("next").disabled = pos < 0 || pos >= L.length - 1;
+  }
+
+  const CLAUSES = ["SELECT", "FROM", "WHERE", "AND", "OR", "GROUP BY", "HAVING", "ORDER BY"];
+  function keyBtn(box, ta, k, cls) {
+    const b = document.createElement("button"); b.type = "button"; b.className = "key " + cls; b.textContent = k;
+    b.addEventListener("pointerdown", e => e.preventDefault());
+    b.onclick = () => insert(ta, k);
+    box.appendChild(b);
+  }
+  // 정답 SQL을 조각으로 나눠서, 정답에 필요한 조각만 버튼으로 만든다 (순서는 섞어서 정답이 바로 보이지 않게)
+  const MULTI = ["IS NOT NULL", "IS NULL", "GROUP BY", "ORDER BY", "PARTITION BY", "LEFT JOIN", "UNION ALL", "NOT IN", "NOT EXISTS"];
+  const KW = new Set("SELECT FROM WHERE AND OR GROUP BY HAVING ORDER AS DESC ASC DISTINCT IN LIKE BETWEEN CASE WHEN THEN ELSE END JOIN LEFT ON OVER PARTITION EXISTS NOT UNION ALL INTERSECT IS NULL".split(" "));
+  const SYM_ORDER = [",", "(", ")", "*", "=", ">=", "<=", ">", "<", "<>", "||", "+", "-", "/"];
+  function tokenize(sql) {
+    const raw = sql.match(/'[^']*'|\d+(?:\.\d+)?|[A-Za-z_]\w*\.|[A-Za-z_]\w*|>=|<=|<>|!=|\|\||[=<>*+\-\/,()]/g) || [];
+    const out = [];
+    for (let i = 0; i < raw.length; i++) {
+      let hit = null;
+      for (const m of MULTI) { const w = m.split(" "); if (w.every((x, j) => (raw[i + j] || "").toUpperCase() === x)) { hit = m; i += w.length - 1; break; } }
+      out.push(hit || raw[i]);
+    }
+    return out;
+  }
+  function answerParts(p, cols, tabs) {
+    const sym = new Set(), kw = new Set(), fn = new Set(), names = new Set(), r3 = [], seen3 = new Set();
+    const add3 = (v, c) => { if (!seen3.has(v)) { seen3.add(v); r3.push([v, c]); } };
+    const t = tokenize(p.sql);
+    t.forEach((x, i) => {
+      const U = x.toUpperCase();
+      if (/^'|^\d/.test(x)) add3(x, "val");
+      else if (/\.$/.test(x)) add3(x.toLowerCase(), "tb");
+      else if (MULTI.includes(U) || KW.has(U)) { if (!CLAUSES.includes(U)) kw.add(U); }
+      else if (/^[A-Za-z_]/.test(x)) {
+        const L = x.toLowerCase();
+        if (t[i + 1] === "(") fn.add(U + "(");
+        else if (tabs.has(L)) add3(L, "tb");
+        else if (cols.has(L)) add3(L, "col");
+        else names.add(L);   // 별칭(e, total 같은 이름)
+      } else sym.add(x);
+    });
+    // 함수 뒤 여는 괄호는 함수 버튼에 포함되니, 다른 곳에 괄호가 더 있을 때만 "(" 버튼을 남긴다
+    const opens = t.filter(x => x === "(").length, fnOpens = t.filter((x, i) => t[i + 1] === "(" && /^[A-Za-z_]/.test(x) && !KW.has(x.toUpperCase()) && !MULTI.includes(x.toUpperCase())).length;
+    if (opens <= fnOpens) sym.delete("(");
+    const r2 = [...SYM_ORDER.filter(x => sym.has(x)).map(x => [x, ""]),
+      ...[...kw].sort().map(x => [x, "kw"]), ...[...fn].sort().map(x => [x, "kw"]), ...[...names].sort().map(x => [x, "col"])];
+    r3.sort((a, b) => ({ tb: 0, col: 1, val: 2 }[a[1]] - { tb: 0, col: 1, val: 2 }[b[1]]) || a[0].localeCompare(b[0]));
+    return [r2, r3];
+  }
+  // 1줄: 절 키워드 / 2줄: 정답에 필요한 기호·키워드·함수 / 3줄: 정답에 필요한 테이블·컬럼·값
+  function buildKeys(ta, p) {
+    const need = new Set(tokenize(p.sql).map(x => x.toUpperCase()));
+    CLAUSES.filter(k => need.has(k)).forEach(k => keyBtn($("clauses"), ta, k, "kw"));
+    if (!SQL) { $("keys").hidden = $("cols").hidden = true; return; }
+    const tabs = new Set(), cols = new Set();
+    const db = freshDb();
+    db.exec("SELECT name FROM sqlite_master WHERE type = 'table'")[0].values.forEach(r => tabs.add(String(r[0]).toLowerCase()));
+    try { tabs.forEach(t => db.exec(`PRAGMA table_info(${t})`)[0].values.forEach(r => cols.add(String(r[1]).toLowerCase()))); }
+    finally { db.close(); }
+    const [r2, r3] = answerParts(p, cols, tabs);
+    r2.forEach(([k, c]) => keyBtn($("keys"), ta, k, c));
+    r3.forEach(([k, c]) => keyBtn($("cols"), ta, k, c));
+  }
+  let undoStack = [];
+  function pushUndo(ta) { if (undoStack[undoStack.length - 1] !== ta.value) undoStack.push(ta.value); if (undoStack.length > 100) undoStack.shift(); }
+  function insert(ta, k, again, at) {
+    if (!again) pushUndo(ta);
+    const s = again ? at : (ta.selectionStart ?? ta.value.length), e = again ? at : (ta.selectionEnd ?? s), v = ta.value;
+    let text, caret;
+    if (k === "⌫") {
+      // 커서 앞 단어(또는 기호) 하나 지우기
+      const before = v.slice(0, s).replace(/\s+$/, ""), m = before.match(/(\w+\.?|'[^']*'|[^\w\s])$/u);
+      const cut = m ? before.length - m[0].length : before.length;
+      ta.value = before.slice(0, cut).replace(/[ \t]+$/, "") + (before.slice(0, cut) ? " " : "") + v.slice(e).replace(/^ +/, "");
+      const pos = before.slice(0, cut).replace(/[ \t]+$/, "").length + (before.slice(0, cut) ? 1 : 0);
+      ta.setSelectionRange(pos, pos); ta.focus(); ta.dispatchEvent(new Event("input")); return;
+    }
+    if (k === "⏎") { text = "\n"; caret = 1; }
+    else if (/^(FROM|WHERE|GROUP BY|HAVING|ORDER BY|JOIN|LEFT JOIN|UNION|UNION ALL|INTERSECT|AND|OR)$/.test(k)) {
+      // 절 키워드는 새 줄에서 시작, AND/OR는 두 칸 들여쓰기
+      const before = v.slice(0, s).replace(/[ \t]+$/, ""), atStart = !before || /\n$/.test(before);
+      const ind = /^(AND|OR)$/.test(k) ? "  " : "";
+      ta.value = before + (atStart ? "" : "\n") + ind + k + " " + v.slice(e);
+      const pos = before.length + (atStart ? 0 : 1) + ind.length + k.length + 1;
+      ta.setSelectionRange(pos, pos); ta.focus(); ta.dispatchEvent(new Event("input")); return;
+    }
+    else {
+      if (/^[,)]/.test(k)) { const m = v.slice(0, s).match(/ +$/); if (m) { ta.value = v.slice(0, s - m[0].length) + v.slice(s); return insert(ta, k, true, s - m[0].length); } }
+      const before = v.slice(0, s), needSpace = before && !/[\s(.]$/.test(before) && !/^[,)]/.test(k);
+      text = (needSpace ? " " : "") + k;
+      const gap = k.search(/\(\)|''|\(,|  /);
+      if (/\($/.test(k)) caret = text.length;
+      else if (k === "LIKE '%'") caret = text.length - 2;
+      else if (gap >= 0) caret = text.length - k.length + gap + 1;
+      else if (/\.$/.test(k)) caret = text.length;
+      else { text += " "; caret = text.length; }
+    }
+    ta.value = v.slice(0, s) + text + v.slice(e);
+    const pos = s + caret; ta.setSelectionRange(pos, pos); ta.focus();
+    ta.dispatchEvent(new Event("input"));
+  }
+
+  function doRun(i) {
+    const ta = $("sql"); $("fb").innerHTML = "";
+    if (!ta.value.trim()) { fb("info", "", "<p>먼저 SQL을 써 주세요.</p>"); return null; }
+    try { const r = run(ta.value); fb("info", "내 결과", gridHTML(r, 30)); return r; }
+    catch (e) { fb("bad", "실행 오류", `<p>${esc(friendlyError(e.message))}</p>`); return null; }
+  }
+
+  // 틀린 문제는 오답 노트에 쌓이고, "오답 다시 풀기"에서 맞히면 빠져요.
+  function markWrong(i) { st.wrong[i] = true; st.tries[i] = (st.tries[i] || 0) + 1; save(); }
+  function markRight(i) { st.solved[i] = true; if (st.mode === "wrong") delete st.wrong[i]; st.tries[i] = 0; save(); }
+
+  function doGrade(i) {
+    const p = P[i], ta = $("sql");
+    $("fb").innerHTML = ""; $("exp").innerHTML = "";
+    if (!ta.value.trim()) { fb("info", "", "<p>먼저 SQL을 써 주세요.</p>"); return; }
+    let mine;
+    try { mine = run(ta.value); }
+    catch (e) {
+      markWrong(i);
+      fb("bad", "실행 오류", `<p>${esc(friendlyError(e.message))}</p>`);
+      showHint(i); renderTop(); return;
+    }
+    const ref = run(p.sql), c = compare(mine, ref, p.ordered);
+    if (c.ok) {
+      const first = !(st.tries[i] > 0);
+      markRight(i);
+      fb("ok", first ? "정답이에요!" : "정답! 이번엔 맞혔어요", gridHTML(mine, 30));
+      renderExp(p);
+    } else {
+      markWrong(i);
+      const d = fb("bad", "아깝다!", `<p>${esc(c.why)}</p><p class="result-label">내 결과</p>${gridHTML(mine, 12)}`);
+      showHint(i);
+    }
+    renderTop(); updateMeta(i);
+  }
+
+  function pickChoice(i, k, btn) {
+    const p = P[i]; $("fb").innerHTML = ""; $("exp").innerHTML = "";
+    document.querySelectorAll(".choice").forEach(b => b.classList.remove("picked-bad", "picked-ok"));
+    if (k === p.answer) {
+      btn.classList.add("picked-ok"); const first = !(st.tries[i] > 0); markRight(i);
+      fb("ok", first ? "정답이에요!" : "정답! 이번엔 맞혔어요", ""); renderExp(p);
+    } else {
+      btn.classList.add("picked-bad"); markWrong(i);
+      fb("bad", "아깝다!", `<p>${"①②③④"[k]}번은 아니에요. 힌트 보고 다시 골라 보세요.</p>`); showHint(i);
+    }
+    renderTop(); updateMeta(i);
+  }
+
+  function showHint(i, manual) {
+    const p = P[i];
+    if (manual) { st.tries[i] = Math.min((st.tries[i] || 0) + 1, p.hints.length); save(); }
+    const t = st.tries[i] || 0, n = Math.min(t, p.hints.length);
+    if (!n) return;
+    document.querySelectorAll(".fb.hint").forEach(e => e.remove());
+    let body = "";
+    for (let k = 0; k < n; k++) body += `<p>${k + 1}. ${inlineCode(p.hints[k])}</p>`;
+    if (t >= p.hints.length) body += '<p class="result-label">힌트를 다 봤어요. 그래도 막히면 "정답 보기"를 눌러 보세요.</p>';
+    fb("hint", "힌트", body);
+  }
+
+  function reveal(i) {
+    const p = P[i];
+    document.querySelectorAll(".fb.reveal").forEach(e => e.remove());
+    let body;
+    if (p.type === "mc") {
+      body = `<p>정답은 <b>${"①②③④"[p.answer]}</b> ${inlineCode(p.choices[p.answer])}</p>`;
+      document.querySelectorAll(".choice").forEach(b => { if (+b.dataset.k === p.answer) b.classList.add("picked-ok"); });
+    } else {
+      body = `<pre class="code">${esc(prettySQL(p.sql))}</pre>` + (SQL ? '<p class="result-label">정답 결과</p>' + gridHTML(run(p.sql), 12) : "");
+    }
+    st.wrong[i] = true; save();
+    const d = fb("info", "정답", body); d.classList.add("reveal");
+    renderExp(p); renderTop();
+  }
+  function prettySQL(s) {
+    return s.replace(/\s+(FROM|WHERE|GROUP BY|HAVING|ORDER BY|LEFT JOIN|JOIN|UNION ALL|UNION|INTERSECT)\b/g, "\n$1")
+            .replace(/\n(UNION ALL|UNION|INTERSECT)\s+/g, "\n$1\n").replace(/ AND (?![^()]*\))/g, "\n  AND ") + ";";
+  }
+  function updateMeta(i) {
+    const m = $("meta"); if (st.solved[i] && !m.querySelector(".solved")) m.querySelector(".qnum").insertAdjacentHTML("beforebegin", '<span class="tag solved">정답</span>');
+  }
+
+  function go(i) { st.cur = i; save(); render(); window.scrollTo({ top: 0, behavior: "smooth" }); }
+  function setMode(m, quiet) {
+    st.mode = m;
+    if (m === "wrong") st.queue = Object.keys(st.wrong).map(Number).sort((a, b) => a - b);
+    save();
+    const L = list();
+    if (L.length && !L.includes(st.cur)) st.cur = L[0];
+    if (!L.length) { st.mode = "all"; }
+    if (!quiet) render();
+  }
+  $("prev").onclick = () => { const L = list(), p = L.indexOf(st.cur); if (p > 0) go(L[p - 1]); };
+  $("next").onclick = () => { const L = list(), p = L.indexOf(st.cur); if (p >= 0 && p < L.length - 1) go(L[p + 1]); };
+  function goStation(si) {
+    if (si < 0 || si >= STN.length) return;
+    const ids = P.map((p, i) => i).filter(i => P[i].st === si);
+    setModeQuiet("all"); st.cur = ids.find(i => !st.solved[i]) ?? ids[0]; save();
+    if (view !== "quiz") show("quiz"); else { render(); window.scrollTo({ top: 0, behavior: "smooth" }); }
+  }
+  $("prevSt").onclick = () => goStation(P[st.cur].st - 1);
+  $("nextSt").onclick = () => goStation(P[st.cur].st + 1);
+  $("routeBtn").onclick = () => show("list");
+  $("modeAll").onclick = () => setMode("all");
+  $("modeWrong").onclick = () => setMode("wrong");
+  $("modeTrap").onclick = () => setMode("trap");
+  $("reset").onclick = () => { $("resetConfirm").hidden = false; };
+  $("resetYes").onclick = () => { st = { cur: 0, solved: {}, wrong: {}, tries: {}, drafts: {}, mode: "all" }; save(); $("resetConfirm").hidden = true; render(); };
+
+  // ---------- screens: home / list / quiz ----------
+  let view = "home", lf = "all";
+  function show(v, push) {
+    view = v;
+    ["home", "list", "quiz"].forEach(k => $(k + "View").hidden = k !== v);
+    if (v === "home") renderHome();
+    if (v === "list") renderList();
+    if (v === "quiz") render();
+    if (push !== false) { try { history.pushState({ v }, "", "#" + v); } catch (e) {} }
+    window.scrollTo(0, 0);
+  }
+  window.addEventListener("popstate", e => show((e.state && e.state.v) || "home", false));
+  const plain = s => String(s).replace(/\s+/g, " ");
+  function nextTodo(from) {
+    for (let k = 0; k < P.length; k++) { const i = (from + k) % P.length; if (!st.solved[i]) return i; }
+    return from;
+  }
+  function renderHome() {
+    const solved = Object.keys(st.solved).length, wrongN = Object.keys(st.wrong).length;
+    const okN = P.filter((p, i) => st.solved[i] && !st.wrong[i]).length;
+    const trapN = P.filter(p => p.trap).length;
+    $("hSolved").textContent = solved;
+    $("hTotal").textContent = `/ ${P.length} 문제 맞힘`;
+    $("hBar").style.width = (solved / P.length * 100) + "%";
+    $("hOk").textContent = okN; $("hBad").textContent = wrongN; $("hLeft").textContent = P.length - solved;
+    $("hContinueSub").textContent = `${st.cur + 1}번 · ${STN[P[st.cur].st]}`;
+    $("hWrongSub").textContent = wrongN ? `${wrongN}문제 남음` : "아직 없어요";
+    $("hWrong").disabled = wrongN === 0;
+    $("hTrapSub").textContent = `${trapN}문제`;
+    $("hTopics").innerHTML = STN.map((name, si) => {
+      const ids = P.map((p, i) => i).filter(i => P[i].st === si), n = ids.filter(i => st.solved[i]).length;
+      return `<button class="topic" data-si="${si}" aria-label="${esc(name)}, ${ids.length}문제 중 ${n}개 정답"><span class="tn">${esc(name)}</span><span class="tc">${n}/${ids.length}</span><span class="bar thin" aria-hidden="true"><i style="width:${n / ids.length * 100}%"></i></span></button>`;
+    }).join("");
+    $("hTopics").querySelectorAll(".topic").forEach(b => b.onclick = () => { goStation(+b.dataset.si); });
+    const standalone = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone;
+    $("hInstall").hidden = !!standalone;
+  }
+  function renderList() {
+    $("lScore").innerHTML = `<b>${Object.keys(st.solved).length}</b>/${P.length}`;
+    document.querySelectorAll("#listView [data-f]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.f === lf)));
+    const keep = i => lf === "all" || (lf === "todo" && !st.solved[i]) || (lf === "wrong" && st.wrong[i]) || (lf === "trap" && P[i].trap);
+    let h = "";
+    STN.forEach((name, si) => {
+      const ids = P.map((p, i) => i).filter(i => P[i].st === si), shown = ids.filter(keep);
+      if (!shown.length) return;
+      const n = ids.filter(i => st.solved[i]).length;
+      h += `<section class="lsec"><h2>${esc(name)} <small>${n}/${ids.length} 맞힘</small></h2><div class="lbox">` + shown.map(i => {
+        const p = P[i], s = st.wrong[i] ? '<span class="stt bad">오답</span>' : st.solved[i] ? '<span class="stt ok">정답</span>' : '<span class="stt no">안 풂</span>';
+        return `<button class="lrow${i === st.cur ? " cur" : ""}" data-i="${i}"><span class="no">${i + 1}</span><span class="tx">${p.trap ? '<span class="tag trap">함정</span>' : ""}${p.type === "mc" ? '<span class="tag mc">객관식</span>' : ""}${esc(plain(p.q))}</span>${s}</button>`;
+      }).join("") + "</div></section>";
+    });
+    $("lBody").innerHTML = h || '<p class="empty">여기에 해당하는 문제가 없어요.</p>';
+    $("lBody").querySelectorAll(".lrow").forEach(b => b.onclick = () => { setModeQuiet("all"); st.cur = +b.dataset.i; save(); show("quiz"); });
+  }
+  document.querySelectorAll("#listView [data-f]").forEach(b => b.onclick = () => { lf = b.dataset.f; renderList(); });
+  $("lHome").onclick = () => show("home");
+  $("qHome").onclick = () => show("home");
+  $("hList").onclick = () => show("list");
+  $("hContinue").onclick = () => { if (!list().includes(st.cur)) setModeQuiet("all"); show("quiz"); };
+  $("hWrong").onclick = () => { setMode("wrong", true); show("quiz"); };
+  $("hTrap").onclick = () => { setMode("trap", true); show("quiz"); };
+  $("hFresh").onclick = () => { setModeQuiet("all"); st.cur = nextTodo(st.cur); save(); show("quiz"); };
+  $("hReset").onclick = () => { $("hResetConfirm").hidden = false; };
+  $("hResetYes").onclick = () => { st = { cur: 0, solved: {}, wrong: {}, tries: {}, drafts: {}, mode: "all" }; save(); $("hResetConfirm").hidden = true; renderHome(); };
+
+  if (st.cur >= P.length) st.cur = 0;
+  if (!list().length) st.mode = "all";
+  try { history.replaceState({ v: "home" }, "", "#home"); } catch (e) {}
+  show("home", false);
+
+  function boot() {
+    initSqlJs(window.SQL_WASM_OPTS || {}).then(S => { SQL = S; if (view === "quiz") render(); }).catch(err => {
+      fb("bad", "SQL 엔진을 불러오지 못했어요", "<p>인터넷 연결을 확인하고 페이지를 새로고침해 주세요. 객관식 문제는 그대로 풀 수 있어요.</p>");
+    });
+  }
+  if (typeof initSqlJs === "function") boot();
+  else {
+    const s = document.createElement("script");
+    s.src = "https://cdn.jsdelivr.net/npm/sql.js@1.8.0/dist/sql-asm.js";
+    s.onload = boot;
+    s.onerror = () => fb("bad", "SQL 엔진을 불러오지 못했어요", "<p>인터넷 연결을 확인하고 페이지를 새로고침해 주세요.</p>");
+    document.head.appendChild(s);
+  }
+})();
+
+  // 홈 화면에 추가: 설치 창을 띄울 수 있는 브라우저면 바로 띄우고, 아니면 방법을 보여준다
+  let installEvt = null;
+  addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; });
+  const isStandalone = () => (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone;
+  const IGUIDE = `<p><b>아이폰 (Safari)</b><br>화면 아래 공유 버튼(네모에 화살표) → <b>홈 화면에 추가</b> → 추가</p>
+    <p><b>갤럭시·안드로이드 (Chrome, 삼성 인터넷)</b><br>오른쪽 위 ⋮ 또는 아래 ≡ 메뉴 → <b>홈 화면에 추가</b> (또는 <b>앱 설치</b>)</p>
+    <p>Claude 앱 안에서 보고 있다면, 먼저 링크를 Safari나 Chrome으로 열어 주세요.</p>`;
+  document.querySelectorAll("[data-install]").forEach(btn => {
+    if (isStandalone()) { btn.parentElement.hidden = true; return; }
+    btn.onclick = async () => {
+      if (installEvt) { installEvt.prompt(); try { await installEvt.userChoice; } catch (e) {} installEvt = null; return; }
+      const g = btn.nextElementSibling; g.innerHTML = IGUIDE; g.hidden = !g.hidden;
+      btn.textContent = g.hidden ? "홈 화면에 추가" : "설명 닫기";
+    };
+  });
+</script>
+
+<script>if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));</script>
+</body>
+</html>
