@@ -211,6 +211,19 @@ const grid = (t, name) => `<div class="scroll"><table>${name ? `<caption>${esc(n
 const para = p => { const [lead, ...li] = p.split("\n");
   if (li.length && li.every(x => x.includes(" : "))) return `<div class="stack memo" style="gap:.4rem"><p>${esc(lead)}</p><table>${li.map(x => { const k = x.indexOf(" : "); return `<tr><td>${esc(x.slice(0, k))}</td><td>${esc(x.slice(k + 3))}</td></tr>`; }).join("")}</table></div>`;
   return `<div><p>${esc(lead)}</p>${li.length ? `<ul class="pts">${li.map(x => { const k = x.indexOf(" : "); return `<li>${k > 0 ? `<strong>${esc(x.slice(0, k))}</strong> : ${esc(x.slice(k + 3))}` : esc(x)}</li>`; }).join("")}</ul>` : ""}</div>`; };
+// 이론 설명 한 개: 그림, 설명, 비교표, 예시, 시험 포인트
+const lesson = l => `
+      <div class="stack" style="margin-top:.8rem">
+        ${(l.figs || []).map(f => fig(f, 1)).join("")}
+        ${l.body.map(para).join("")}
+        ${(l.figs || []).map(f => fig(f)).join("")}
+        ${l.ex.map(e => `<div class="stack" style="border-top:1px dashed var(--line);padding-top:.8rem">
+          <strong>${esc(e.say)}</strong>
+          ${Object.entries(e.data).map(([n, t]) => grid(t, n)).join("")}
+          ${e.sql ? `<pre>${esc(e.sql)}</pre>` : ""}
+          ${e.out ? grid(e.out, e.after ? "실행한 뒤 표" : "결과") : ""}
+        </div>`).join("")}
+        ${l.tip ? `<p class="card" style="background:var(--accent-soft);border:0"><strong>시험 포인트</strong><br>${esc(l.tip)}</p>` : ""}`;
 function studyHome() {
   return `
     ${[...new Set(STUDY.map(l => l.part))].map((part, i, all) => { const ls = STUDY.filter(l => l.part === part), [subj, name] = part.includes(" · ") ? part.split(" · ") : ["", part];
@@ -222,17 +235,7 @@ function studyHome() {
     ${ls.map(l => `
     <details class="card">
       <summary style="cursor:pointer"><strong><span style="color:var(--accent)">${STUDY.indexOf(l) + 1}.</span> ${esc(l.title)}</strong><br><span class="muted">${esc(l.sum)}</span></summary>
-      <div class="stack" style="margin-top:.8rem">
-        ${(l.figs || []).map(f => fig(f, 1)).join("")}
-        ${l.body.map(para).join("")}
-        ${(l.figs || []).map(f => fig(f)).join("")}
-        ${l.ex.map(e => `<div class="stack" style="border-top:1px dashed var(--line);padding-top:.8rem">
-          <strong>${esc(e.say)}</strong>
-          ${Object.entries(e.data).map(([n, t]) => grid(t, n)).join("")}
-          ${e.sql ? `<pre>${esc(e.sql)}</pre>` : ""}
-          ${e.out ? grid(e.out, e.after ? "실행한 뒤 표" : "결과") : ""}
-        </div>`).join("")}
-        ${l.tip ? `<p class="card" style="background:var(--accent-soft);border:0"><strong>시험 포인트</strong><br>${esc(l.tip)}</p>` : ""}
+      ${lesson(l)}
       </div>
     </details>`).join("")}
       </div>
@@ -260,6 +263,20 @@ function stepTo(i, k) {
 function step(b) { // 이전/다음 단계: 원하는 만큼 천천히 한 단계씩
   const [i, d] = b.dataset.step.split(":").map(Number), n = FIGS[i].steps.length;
   stepTo(i, Math.min(n - 1, Math.max(0, (at[i] || 0) + d)));
+}
+// 문제 주제(topic)로 이론 설명 찾기: 단원 안에서 처음 맞는 설명, 없으면 그 단원의 기본 설명 (PIVOT·정규식은 설명이 없어 버튼 없음)
+const TOPIC = { g03: "SQL 분류", m01: "특징|관점|유의점|중요성|좋은|물리|독립", m02: "스키마|단계|ERD", m03: "엔터티", m04: "속성|도메인", m05: "관계", m06: "식별자", m07: "관계", m08: "^정규화|정규형|이상|BCNF|종속", m09: "성능|반정규화",
+  l01: "관계형", l02: "SELECT 문|DISTINCT|연결|^별칭$", l03: "우선순위", l04: "LIKE|BETWEEN", l05: "ORDER BY", l06: "NULL|빈 문자열", l07: "함수|날짜|SUBSTR", l08: "CASE|DECODE", l12: "순서",
+  l10: "GROUP BY|ORDER BY와 집계", l11: "HAVING", l14: "OUTER|외부", l15: "CROSS", l17: "UNION|INTERSECT|MINUS|집합",
+  l18: "RANK|NTILE|CUME|^윈도우 함수|순위", l19: "PARTITION|윈도우|범위|이동|LAG|LEAD|VALUE|RATIO|누적|앞뒤", l20: "ROWNUM|TOP|Top", l21: "ROLLUP|CUBE|GROUPING",
+  l22: "계층|PRIOR|LEVEL|CONNECT|SIBLINGS|START|전개|셀프", l23: "^(INSERT|UPDATE|DELETE|MERGE)", l24: "트랜잭션|SAVEPOINT|커밋|COMMIT", l25: "제약|ON DELETE|CHECK|DEFAULT|ALTER|CTAS|테이블|CHAR|KEY|외래키|UNIQUE|RENAME", l26: "GRANT|ROLE|권한" };
+const lessonOf = q => { const ls = STUDY.filter(l => l.unit === q.unit); return ls.find(l => TOPIC[l.id] && new RegExp(TOPIC[l.id]).test(q.topic)) || ls.find(l => !TOPIC[l.id] && l.id[0] !== "g"); };
+function theory(l) { // 문제 풀다가 이론 보기: ←로 풀던 문제로 돌아감 (기록은 그대로)
+  show(`<div class="row"><button id="back" aria-label="문제로 돌아가기" class="back">←</button><span class="muted">이론 · ${esc(l.part)}</span></div>
+    <h2><span style="color:var(--accent)">${STUDY.indexOf(l) + 1}.</span> ${esc(l.title)}</h2><span class="muted">${esc(l.sum)}</span>
+    ${lesson(l)}
+    <button id="back2" class="main">문제로 돌아가기</button>`, { "#back": question, "#back2": question, "[data-step]": b => step(b) });
+  (l.figs || []).forEach(f => f.steps && stepTo(FIGS.indexOf(f), 0));
 }
 document.addEventListener("toggle", e => e.target.querySelectorAll?.("[id^=fig]").forEach(f => FIGS[+f.id.slice(3)].steps && stepTo(+f.id.slice(3), 0)), true); // 열 때 첫 단계로
 
@@ -495,16 +512,19 @@ function question() {
   const exp = `<strong>정답 ${ans(q, q.answer)}</strong><br>${esc(q.exp)}${more(q)}`;
   const next = () => { if (last) return result(); s.i++; s.picked = 0; s.checked = false; s.tried = []; question(); };
   if (!s.checked) return dock(`<button id="check" class="main" ${s.picked ? "" : "disabled"}>정답 확인</button>`, { "#check": check });
-  const kept = q.id in store.saved;
+  const kept = q.id in store.saved, l = lessonOf(q);
+  const th = l ? `<button id="theory" class="center">이론 보기 · ${esc(l.title)}</button>` : "";
   if (s.ok) return dock(`<h2>정답이에요!</h2><div class="exp">${exp}</div>${note}
-    <div class="split" style="grid-template-columns:1.3fr 1fr"><button id="keep" class="center" style="font-weight:700;white-space:nowrap;padding-inline:.4rem;font-size:min(1rem, 3.9vw)" aria-pressed="${kept}">${bm(kept)}${kept ? "저장했어요" : "저장 (나중에 다시 보기)"}</button><button id="next" class="main">${last ? "결과 보기" : "다음 문제"}</button></div>`, {
+    <div class="split" style="grid-template-columns:1.3fr 1fr"><button id="keep" class="center" style="font-weight:700;white-space:nowrap;padding-inline:.4rem;font-size:min(1rem, 3.9vw)" aria-pressed="${kept}">${bm(kept)}${kept ? "저장했어요" : "저장 (나중에 다시 보기)"}</button><button id="next" class="main">${last ? "결과 보기" : "다음 문제"}</button></div>${th}`, {
+    "#theory": () => theory(l),
     "#keep": () => { kept ? delete store.saved[q.id] : (store.saved[q.id] = Date.now()); save(); question(); },
     "#next": next,
   }, "ok");
   // 오답: 정답은 접어 두고, 같은 문제를 다시 풀거나 다음으로
   dock(`<h2>아쉬워요, 오답이에요</h2>${note}
     <details class="exp"><summary><strong>정답과 해설 보기</strong></summary>${exp}</details>
-    <div class="split"><button id="redo" class="center">다시 풀기</button><button id="next" class="main">다음으로</button></div>`, {
+    <div class="split"><button id="redo" class="center">다시 풀기</button><button id="next" class="main">다음으로</button></div>${th}`, {
+    "#theory": () => theory(l),
     "#redo": () => { s.picked = 0; s.checked = false; question(); },
     "#next": next,
   }, "bad");
