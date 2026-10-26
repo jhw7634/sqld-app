@@ -97,6 +97,7 @@ for q in qs:
 
 # 공부 탭 예시: 화면에 보여 주는 표(data)로 DB를 만들고 SQL을 실행해서 결과 표(out)와 칸 이름·값이 같은지 확인
 # (Oracle의 MINUS는 DuckDB 문법인 EXCEPT로 바꿔 실행, DUAL은 한 줄짜리 표로 만들어 둠)
+# ROWNUM, CONNECT BY, PIVOT, REGEXP처럼 DuckDB에 없는 Oracle 문법은 같은 뜻의 쿼리(run)를 대신 실행
 def study(ex):
     sqlite = ex.get("db") == "sqlite"
     c = sqlite3.connect(":memory:") if sqlite else duckdb.connect()
@@ -107,7 +108,7 @@ def study(ex):
         c.execute(f"CREATE TABLE {name} ({', '.join(f'{k} {v}' for k, v in zip(t['cols'], types))})")
         if t["rows"]: c.executemany(f"INSERT INTO {name} VALUES ({', '.join('?' * len(t['cols']))})", t["rows"])
     if sqlite: c.commit()
-    sql = re.sub(r"\bMINUS\b", "EXCEPT", ex["sql"])
+    sql = re.sub(r"\bMINUS\b", "EXCEPT", ex.get("run", ex["sql"]))
     parts = [x for x in sql.split(";") if x.strip()] + ([ex["after"]] if ex.get("after") else [])
     for x in parts[:-1]: c.execute(x)
     cur = c.execute(parts[-1])

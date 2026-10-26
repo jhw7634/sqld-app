@@ -264,12 +264,17 @@ function step(b) { // 이전/다음 단계: 원하는 만큼 천천히 한 단�
   const [i, d] = b.dataset.step.split(":").map(Number), n = FIGS[i].steps.length;
   stepTo(i, Math.min(n - 1, Math.max(0, (at[i] || 0) + d)));
 }
-// 문제 주제(topic)로 이론 설명 찾기: 단원 안에서 처음 맞는 설명, 없으면 그 단원의 기본 설명 (PIVOT·정규식은 설명이 없어 버튼 없음)
+// 문제 주제(topic)로 이론 설명 찾기: 단원 안에서 처음 맞는 설명, 없으면 그 단원의 기본 설명 (TOPIC이 없는 첫 설명)
 const TOPIC = { g03: "SQL 분류", m01: "특징|관점|유의점|중요성|좋은|물리|독립", m02: "스키마|단계|ERD", m03: "엔터티", m04: "속성|도메인", m05: "관계", m06: "식별자", m07: "관계", m08: "^정규화|정규형|이상|BCNF|종속", m09: "성능|반정규화",
-  l01: "관계형", l02: "SELECT 문|DISTINCT|연결|^별칭$", l03: "우선순위", l04: "LIKE|BETWEEN", l05: "ORDER BY", l06: "NULL|빈 문자열", l07: "함수|날짜|SUBSTR", l08: "CASE|DECODE", l12: "순서",
-  l10: "GROUP BY|ORDER BY와 집계", l11: "HAVING", l14: "OUTER|외부", l15: "CROSS", l17: "UNION|INTERSECT|MINUS|집합",
-  l18: "RANK|NTILE|CUME|^윈도우 함수|순위", l19: "PARTITION|윈도우|범위|이동|LAG|LEAD|VALUE|RATIO|누적|앞뒤", l20: "ROWNUM|TOP|Top", l21: "ROLLUP|CUBE|GROUPING",
-  l22: "계층|PRIOR|LEVEL|CONNECT|SIBLINGS|START|전개|셀프", l23: "^(INSERT|UPDATE|DELETE|MERGE)", l24: "트랜잭션|SAVEPOINT|커밋|COMMIT", l25: "제약|ON DELETE|CHECK|DEFAULT|ALTER|CTAS|테이블|CHAR|KEY|외래키|UNIQUE|RENAME", l26: "GRANT|ROLE|권한" };
+  l01: "관계형", l02: "SELECT 문|DISTINCT|연결|^별칭$", l03: "우선순위", l04: "LIKE|BETWEEN", l05: "ORDER BY", l06: "NULL|빈 문자열", l07: "문자 함수|숫자 함수|SUBSTR", l27: "날짜|변환|단일행", l08: "CASE|DECODE", l12: "순서",
+  l10: "^GROUP BY$|ORDER BY와 집계|WHERE와 그룹", l11: "^HAVING|WHERE와 HAVING", l29: "COUNT|빈 결과|조건부|문자열 MAX|GROUP BY 규칙|GROUP BY와 NULL|GROUP BY 없는",
+  l14: "^(LEFT|RIGHT) OUTER|LEFT와 RIGHT|^외부 조인$|OUTER JOIN 활용", l15: "CROSS|카티션", l30: "NATURAL|USING|NON-EQUI|조인 조건 수|여러 테이블", l31: "조건 위치|\\(\\+\\)|Oracle 외부|FULL|없는 행|OUTER JOIN과 COUNT|NULL",
+  l32: "NOT IN|NOT EXISTS|연관|스칼라|빈 서브쿼리|다중 컬럼|IN, NOT IN", l17: "^(UNION|INTERSECT|MINUS$)|^집합 연산$", l33: "^뷰|집합 연산 (결과|순서)|집합 연산자|집합 연산과|MINUS와",
+  l18: "^RANK|DENSE|^순위|^윈도우 함수$", l19: "PARTITION|누적 합계|집계 윈도우", l35: "범위|RANGE|ROWS|이동|VALUE|앞뒤|누적 최댓값|사용 위치", l36: "NTILE|CUME|PERCENT|RATIO|LAG|LEAD|윈도우 함수 종류",
+  l20: "Top-N", l34: "ROWNUM|TOP", l21: "^ROLLUP", l37: "CUBE|GROUPING",
+  l22: "^계층 쿼리$|PRIOR|^LEVEL$|역방향", l38: "CONNECT_BY|SYS_|SIBLINGS|START|계층 전개|계층형|셀프", l39: "PIVOT", l40: "REGEXP|정규",
+  l23: "^(INSERT|UPDATE|DELETE)$|TRUNCATE|^(DELETE|UPDATE)와 NULL", l41: "MERGE|INSERT \\.\\.\\.|값 교환|서브쿼리|CTAS", l24: "트랜잭션|SAVEPOINT|커밋|COMMIT",
+  l25: "^제약|KEY$|^외래키$|^CHECK 제약$", l42: "ON DELETE|[와과] NULL|DEFAULT|ALTER|CHAR|RENAME|테이블 이름", l26: "GRANT|ROLE|권한" };
 const lessonOf = q => { const ls = STUDY.filter(l => l.unit === q.unit); return ls.find(l => TOPIC[l.id] && new RegExp(TOPIC[l.id]).test(q.topic)) || ls.find(l => !TOPIC[l.id] && l.id[0] !== "g"); };
 function theory(l) { // 문제 풀다가 이론 보기: ←로 풀던 문제로 돌아감 (기록은 그대로)
   show(`<div class="row"><button id="back" aria-label="문제로 돌아가기" class="back">←</button><span class="muted">이론 · ${esc(l.part)}</span></div>
