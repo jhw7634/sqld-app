@@ -1,0 +1,793 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>JS 문제집</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#4150C8">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="JS 문제집">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one narrow phone column. Home → 문제 목록 → 문제 화면, plus 이론 노트. Accent = indigo, logo = JS yellow. */
+:root {
+  --bg: #F4F5F9;
+  --surface: #FFFFFF;
+  --ink: #171A2B;
+  --muted: #5E6378;
+  --rule: #DDE0EA;
+  --line: #4150C8;
+  --line-soft: #E8EAFB;
+  --ok: #1E8A55; --ok-soft: #E4F4EB;
+  --bad: #C8423A; --bad-soft: #FBE9E7;
+  --warn: #9A6400; --warn-soft: #FFF3D6;
+  --code-bg: #EEF0F6;
+  --f-display: "Do Hyeon", "IBM Plex Sans KR", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans KR", system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, "IBM Plex Sans KR", monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0F111A; --surface: #171A26; --ink: #E6E8F2; --muted: #9499AE; --rule: #2A2E40;
+  --line: #8C98FF; --line-soft: #20243D;
+  --ok: #4CC38A; --ok-soft: #163327; --bad: #F07A70; --bad-soft: #3A1E1C; --warn: #E8B04A; --warn-soft: #3A2E14;
+  --code-bg: #1F2332; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0F111A; --surface: #171A26; --ink: #E6E8F2; --muted: #9499AE; --rule: #2A2E40;
+  --line: #8C98FF; --line-soft: #20243D;
+  --ok: #4CC38A; --ok-soft: #163327; --bad: #F07A70; --bad-soft: #3A1E1C; --warn: #E8B04A; --warn-soft: #3A2E14;
+  --code-bg: #1F2332; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+/* 코드 글꼴의 합자(=> 가 ⇒, === 가 ≡ 로 바뀌는 것)를 끈다: 배우는 사람은 실제 글자를 봐야 한다 */
+code, pre, textarea, .key, .ex, .t, .choice .c { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.wrap { max-width: 640px; margin: 0 auto; padding-block: 12px 48px; display: flex; flex-direction: column; gap: 14px; }
+[hidden] { display: none !important; }
+
+header.top { padding-block: 6px 0; display: flex; flex-direction: column; gap: 10px; }
+.bar-top { display: flex; align-items: center; gap: 8px; padding-top: 6px; }
+.bar-top h1 { font-family: var(--f-display); font-weight: 400; font-size: 20px; margin: 0; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.score { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.score b { color: var(--ink); }
+.stnav { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 8px; align-items: center; }
+.stnav .btn { font-size: 14px; padding: 9px 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.stnav #prevSt { justify-self: start; } .stnav #nextSt { justify-self: end; }
+.stnow { font-family: var(--f-display); font-size: 18px; color: var(--line); white-space: nowrap; }
+
+.modebar { display: flex; gap: 8px; flex-wrap: wrap; }
+.pill { font: inherit; font-size: 13px; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); cursor: pointer; }
+.pill[aria-pressed="true"] { background: var(--line); border-color: var(--line); color: var(--surface); }
+.pill:disabled { opacity: .45; cursor: default; }
+
+.card { background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 12px; }
+.tag { padding: 2px 8px; border-radius: 6px; background: var(--line-soft); color: var(--line); font-weight: 700; letter-spacing: .02em; }
+.tag.trap { background: var(--warn-soft); color: var(--warn); }
+.tag.mc { background: var(--code-bg); color: var(--muted); }
+.tag.solved { background: var(--ok-soft); color: var(--ok); }
+.qnum { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; }
+.q { font-size: 17px; font-weight: 500; margin: 0; text-wrap: pretty; }
+.q code, .fb code, .exp code, .lesson p code, .tipbox code { font-family: var(--f-mono); font-size: .88em; background: var(--code-bg); padding: 0 4px; border-radius: 4px; }
+
+.examples { border: 1px solid var(--rule); border-radius: 10px; padding: 8px 12px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.examples .lab { font-size: 12px; color: var(--muted); }
+.ex { font-family: var(--f-mono); font-size: 13px; white-space: pre-wrap; overflow-wrap: anywhere; padding-left: 1.2em; text-indent: -1.2em; }
+.ex::-webkit-scrollbar { display: none; }
+.ex .arr { color: var(--muted); } .ex .val { color: var(--ok); font-weight: 600; }
+
+pre.code { margin: 0; background: var(--code-bg); border-radius: 10px; padding: 10px 12px; font-family: var(--f-mono); font-size: 13.5px; line-height: 1.55; overflow-x: auto; white-space: pre; }
+
+.editor { display: flex; flex-direction: column; gap: 8px; }
+textarea#src { width: 100%; min-height: 150px; resize: vertical; font-family: var(--f-mono); font-size: 14.5px; line-height: 1.55; tab-size: 2;
+  padding: 10px 12px; border-radius: 10px; border: 1.5px solid var(--rule); background: var(--code-bg); color: var(--ink); white-space: pre; overflow-x: auto; }
+textarea#src:focus { outline: none; border-color: var(--line); }
+.keys { display: flex; gap: 6px; flex-wrap: wrap; }
+.keys:empty { display: none; }
+.key { flex: none; font-family: var(--f-mono); font-size: 13.5px; min-width: 34px; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); cursor: pointer; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.key.kw { color: var(--line); font-weight: 600; }
+.key.fn { color: var(--warn); font-weight: 600; }
+.key.nm { background: var(--code-bg); }
+.key.val { color: var(--ok); font-weight: 600; }
+.key.ctl { color: var(--muted); }
+.key:active { background: var(--line-soft); }
+
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn { font: inherit; font-weight: 700; font-size: 15px; padding: 10px 16px; border-radius: 10px; border: 1.5px solid var(--rule); background: var(--surface); color: var(--ink); cursor: pointer; }
+.btn.primary { background: var(--line); border-color: var(--line); color: var(--surface); flex: 1; }
+.btn.ghost { border-color: transparent; background: none; color: var(--muted); font-weight: 500; padding-inline: 8px; }
+.btn.theory { color: var(--line); font-weight: 600; }
+.btn:disabled { opacity: .5; cursor: default; }
+.btn:focus-visible, .key:focus-visible, .pill:focus-visible, .choice:focus-visible { outline: 2px solid var(--line); outline-offset: 2px; }
+
+.choices { display: flex; flex-direction: column; gap: 8px; }
+.choice { text-align: left; font: inherit; font-size: 14.5px; padding: 11px 12px; border-radius: 10px; border: 1.5px solid var(--rule); background: var(--surface); color: var(--ink); cursor: pointer; display: flex; gap: 10px; }
+.choice .n { font-family: var(--f-display); color: var(--line); flex: none; width: 1.2em; }
+.choice .c { font-family: var(--f-mono); font-size: 14px; min-width: 0; overflow-wrap: anywhere; }
+.choice.picked-bad { border-color: var(--bad); background: var(--bad-soft); }
+.choice.picked-ok { border-color: var(--ok); background: var(--ok-soft); }
+
+.fb { border-radius: 10px; padding: 12px 14px; font-size: 14.5px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.fb.ok { background: var(--ok-soft); } .fb.bad { background: var(--bad-soft); } .fb.info { background: var(--code-bg); } .fb.hint { background: var(--warn-soft); }
+.fb h3 { margin: 0; font-size: 15px; }
+.fb.ok h3 { color: var(--ok); } .fb.bad h3 { color: var(--bad); } .fb.hint h3 { color: var(--warn); }
+.fb p { margin: 0; }
+.fb .btn.theory { align-self: flex-start; padding: 6px 12px; font-size: 14px; background: var(--surface); border-color: var(--rule); }
+.result-label { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.tests { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.t { font-family: var(--f-mono); font-size: 12.5px; display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: 6px; align-items: start; }
+.t .mk { font-weight: 700; } .t.ok .mk { color: var(--ok); } .t.bad .mk { color: var(--bad); }
+.t .body { white-space: pre-wrap; overflow-wrap: anywhere; }
+.t .body::-webkit-scrollbar { display: none; }
+.t .want { color: var(--muted); }
+pre.logs { margin: 0; font-family: var(--f-mono); font-size: 12.5px; background: var(--surface); border-radius: 8px; padding: 6px 10px; white-space: pre-wrap; word-break: break-all; }
+
+.exp { border-top: 1px solid var(--rule); padding-top: 12px; display: grid; gap: 10px; }
+.exp .row { display: grid; grid-template-columns: 76px 1fr; gap: 10px; align-items: start; }
+.exp .lab { font-family: var(--f-display); font-size: 14px; color: var(--line); padding-top: 1px; }
+.exp .row p { margin: 0; min-width: 0; }
+.exp .btn.theory { justify-self: start; }
+
+.nav { display: flex; gap: 8px; }
+.nav .btn { flex: 1; }
+.foot { font-size: 12px; color: var(--muted); text-align: center; }
+.resetbtn { background: none; border: 0; color: var(--muted); text-decoration: underline; font: inherit; font-size: 12px; cursor: pointer; }
+
+.hero { display: flex; align-items: center; gap: 14px; padding-top: 18px; }
+.hero .logo { width: 64px; height: 64px; flex: none; border-radius: 15px; box-shadow: 0 2px 8px rgba(23,26,43,.15); }
+.hero > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.hero h1 { font-family: var(--f-display); font-weight: 400; font-size: 30px; line-height: 1.15; margin: 0; }
+.hero p { margin: 0; color: var(--muted); font-size: 14px; }
+.prog { display: flex; flex-direction: column; gap: 10px; }
+.prog .big { display: flex; align-items: baseline; gap: 6px; font-variant-numeric: tabular-nums; }
+.prog .big b { font-family: var(--f-display); font-weight: 400; font-size: 40px; line-height: 1; color: var(--line); }
+.prog .big span { color: var(--muted); font-size: 15px; }
+.bar { height: 10px; border-radius: 5px; background: var(--rule); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--line); border-radius: 5px; transition: width .4s; }
+.bar.thin { height: 6px; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.stat { background: var(--code-bg); border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; }
+.stat b { font-size: 18px; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 12px; color: var(--muted); }
+.stat.ok b { color: var(--ok); } .stat.bad b { color: var(--bad); }
+.btn.big { width: 100%; padding: 14px 16px; font-size: 17px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.btn.big small { font-weight: 500; font-size: 13px; opacity: .85; }
+.menu { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.menu .btn { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; padding: 12px 14px; }
+.menu .btn small { font-weight: 500; font-size: 12px; color: var(--muted); }
+.menu .btn.wide { grid-column: 1 / -1; }
+.sect { font-family: var(--f-display); font-weight: 400; font-size: 17px; margin: 6px 0 -4px; }
+.topics { display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; overflow: hidden; }
+.topic { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center; padding: 11px 14px; border: 0; border-bottom: 1px solid var(--rule); background: none; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.topic:last-child { border-bottom: 0; }
+.topic .tn { font-weight: 700; }
+.topic .tc { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.topic .bar { grid-column: 1 / -1; }
+.topic:active, .lrow:active { background: var(--line-soft); }
+.topic:focus-visible, .lrow:focus-visible { outline: 2px solid var(--line); outline-offset: -2px; }
+
+.btn.back { padding: 7px 12px; font-size: 14px; flex: none; }
+.lsec { display: flex; flex-direction: column; gap: 6px; }
+.lsec h2 { font-family: var(--f-display); font-weight: 400; font-size: 17px; color: var(--line); margin: 8px 0 0; display: flex; justify-content: space-between; align-items: baseline; }
+.lsec h2 small { font-family: var(--f-body); font-size: 12px; color: var(--muted); }
+.lbox { background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; overflow: hidden; }
+.lrow { display: grid; grid-template-columns: 34px 1fr auto; gap: 10px; align-items: center; width: 100%; padding: 10px 12px; border: 0; border-bottom: 1px solid var(--rule); background: none; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.lrow:last-child { border-bottom: 0; }
+.lrow .no { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--muted); text-align: center; }
+.lrow .tx { font-size: 14px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-width: 0; }
+.lrow .tx .tag { font-size: 11px; margin-right: 4px; padding: 1px 6px; }
+.lrow .stt { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 6px; white-space: nowrap; }
+.lrow .stt.ok { background: var(--ok-soft); color: var(--ok); }
+.lrow .stt.bad { background: var(--bad-soft); color: var(--bad); }
+.lrow .stt.no { color: var(--muted); font-weight: 500; }
+.lrow.cur { background: var(--line-soft); }
+.empty { text-align: center; color: var(--muted); padding: 24px 0; margin: 0; }
+
+.tchips { display: flex; gap: 6px; flex-wrap: wrap; }
+.lesson { scroll-margin-top: 12px; }
+.lesson h2 { font-family: var(--f-display); font-weight: 400; font-size: 21px; color: var(--line); margin: 0; }
+.lesson p { margin: 0; }
+.lesson pre.code { font-size: 12.5px; }
+.tipbox { background: var(--warn-soft); border-radius: 10px; padding: 10px 12px; font-size: 14px; }
+.tipbox b { color: var(--warn); }
+.lesson.focus { border-color: var(--line); box-shadow: 0 0 0 2px var(--line-soft); }
+.lesson .go { align-self: flex-start; }
+
+.install { display: flex; flex-direction: column; gap: 8px; }
+.installbtn { width: 100%; border-color: var(--line); color: var(--line); }
+.iguide { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 12px 14px; font-size: 14px; display: flex; flex-direction: column; gap: 8px; }
+.iguide p { margin: 0; } .iguide b { color: var(--line); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="wrap screen" id="homeView">
+  <header class="hero">
+    <svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="64" height="64" role="img" aria-label="JS 문제집 로고">
+      <rect width="512" height="512" rx="112" fill="#F7D63E"/>
+      <g fill="none" stroke="#171A2B" stroke-width="40" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M176 150 L86 240 L176 330"/>
+        <path d="M300 150 L390 240 L300 330"/>
+        <path d="M266 120 L210 360"/>
+      </g>
+      <circle cx="384" cy="384" r="84" fill="#4150C8" stroke="#F7D63E" stroke-width="18"/>
+      <path d="M342 386 l28 28 l54 -60" fill="none" stroke="#FFFFFF" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div><h1>JS 문제집</h1>
+    <p>짬날 때 한 문제씩. 버튼으로 조립하고, 폰 안에서 진짜로 실행해서 채점해요.</p></div>
+  </header>
+  <section class="card prog" aria-label="내 진행 상황">
+    <div class="big"><b id="hSolved">0</b><span id="hTotal">/ 0 문제 맞힘</span></div>
+    <div class="bar" aria-hidden="true"><i id="hBar" style="width:0"></i></div>
+    <div class="stats">
+      <div class="stat ok"><b id="hOk">0</b><span>한 번에 정답</span></div>
+      <div class="stat bad"><b id="hBad">0</b><span>오답 노트</span></div>
+      <div class="stat"><b id="hLeft">0</b><span>안 푼 문제</span></div>
+    </div>
+  </section>
+  <button class="btn primary big" id="hContinue">이어서 풀기 <small id="hContinueSub"></small></button>
+  <div class="menu">
+    <button class="btn" id="hList">문제 목록<small>번호·주제별로 골라 풀기</small></button>
+    <button class="btn" id="hWrong">오답 다시 풀기<small id="hWrongSub">틀린 문제만</small></button>
+    <button class="btn" id="hTrap">함정만 풀기<small id="hTrapSub">헷갈리는 출력 문제</small></button>
+    <button class="btn" id="hFresh">안 푼 문제부터<small>처음 보는 문제</small></button>
+    <button class="btn wide" id="hTheory">📖 이론 노트<small>주제별 한 장 요약 · 막히면 먼저 읽기</small></button>
+  </div>
+  <h2 class="sect">주제별 진도</h2>
+  <div class="topics" id="hTopics"></div>
+  <div class="install" id="hInstall"><button class="btn installbtn" data-install>홈 화면에 추가</button><div class="iguide" hidden></div></div>
+  <p class="foot"><button class="resetbtn" id="hReset">기록 초기화</button> <span id="hResetConfirm" hidden>정말 지울까요? <button class="resetbtn" id="hResetYes">네, 지우기</button></span></p>
+</div>
+
+<div class="wrap screen" id="listView" hidden>
+  <header class="top">
+    <div class="bar-top"><button class="btn back" id="lHome">◀ 홈</button><h1>문제 목록</h1><span class="score" id="lScore"></span></div>
+    <div class="modebar" role="group" aria-label="목록 거르기">
+      <button class="pill" data-f="all" aria-pressed="true">전체</button>
+      <button class="pill" data-f="todo" aria-pressed="false">안 푼 문제</button>
+      <button class="pill" data-f="wrong" aria-pressed="false">오답</button>
+      <button class="pill" data-f="trap" aria-pressed="false">함정</button>
+    </div>
+  </header>
+  <div id="lBody" style="display:flex;flex-direction:column;gap:6px"></div>
+</div>
+
+<div class="wrap screen" id="theoryView" hidden>
+  <header class="top">
+    <div class="bar-top"><button class="btn back" id="tBack">◀ 뒤로</button><h1>이론 노트</h1></div>
+    <div class="tchips" id="tChips"></div>
+  </header>
+  <div id="tBody" style="display:flex;flex-direction:column;gap:12px"></div>
+</div>
+
+<div class="wrap screen" id="quizView" hidden>
+  <header class="top">
+    <div class="bar-top"><button class="btn back" id="qHome">◀ 홈</button><h1>JS 문제집</h1><span class="score" id="score"></span><button class="pill" id="listBtn">문제 목록</button></div>
+    <div class="stnav">
+      <button class="btn" id="prevSt" aria-label="이전 주제로">◀ <span id="prevStName"></span></button>
+      <span class="stnow" id="stNow"></span>
+      <button class="btn" id="nextSt" aria-label="다음 주제로"><span id="nextStName"></span> ▶</button>
+    </div>
+    <div class="modebar">
+      <button class="pill" id="modeAll" aria-pressed="true">전체 문제</button>
+      <button class="pill" id="modeWrong" aria-pressed="false">오답 다시 풀기</button>
+      <button class="pill" id="modeTrap" aria-pressed="false">함정만</button>
+    </div>
+  </header>
+
+  <main class="card" id="card" aria-live="polite">
+    <div class="meta" id="meta"></div>
+    <p class="q" id="q"></p>
+    <div id="codeWrap"></div>
+    <div id="answerArea"></div>
+    <div id="fb" style="display:flex;flex-direction:column;gap:10px"></div>
+    <div id="exp"></div>
+  </main>
+
+  <div class="nav">
+    <button class="btn" id="prev">이전 문제</button>
+    <button class="btn" id="next">다음 문제</button>
+  </div>
+  <p class="foot">채점은 휴대폰 안에서 내 코드를 진짜로 실행해서, 예시 결과와 비교해요.<br>
+    <button class="resetbtn" id="reset">기록 초기화</button> <span id="resetConfirm" hidden>정말 지울까요? <button class="resetbtn" id="resetYes">네, 지우기</button></span></p>
+  <div class="install"><button class="btn installbtn" data-install>홈 화면에 추가</button><div class="iguide" hidden></div></div>
+</div>
+
+<script id="runner">
+// 사용자 코드를 실행하고 예시 호출(tests)을 채점한다. 앱(Web Worker)과 build_check.js(Node)가 같이 쓴다.
+function fmt(v, inner) {
+  if (typeof v === "string") return inner ? JSON.stringify(v) : v;
+  if (typeof v === "number") return Object.is(v, -0) ? "0" : String(v);
+  if (typeof v === "bigint") return v + "n";
+  if (typeof v === "function") return /^class\b/.test(Function.prototype.toString.call(v)) ? "class " + (v.name || "") : "ƒ " + (v.name || "익명") + "()";
+  if (v === null || v === undefined || typeof v !== "object") return String(v);
+  if (typeof v.then === "function") return "Promise {…}";
+  if (Array.isArray(v)) return "[" + v.map(x => fmt(x, true)).join(", ") + "]";
+  if (v instanceof Set) return "Set(" + v.size + ") {" + [...v].map(x => fmt(x, true)).join(", ") + "}";
+  if (v instanceof Map) return "Map(" + v.size + ") {" + [...v].map(([k, x]) => fmt(k, true) + " => " + fmt(x, true)).join(", ") + "}";
+  if (v instanceof Error) return v.name + ": " + v.message;
+  const name = v.constructor && v.constructor !== Object && v.constructor.name ? v.constructor.name + " " : "";
+  const ks = Object.keys(v);
+  return name + (ks.length ? "{ " + ks.map(k => (/^[A-Za-z_$가-힣][\w$가-힣]*$/.test(k) ? k : JSON.stringify(k)) + ": " + fmt(v[k], true)).join(", ") + " }" : "{}");
+}
+function same(a, b) {
+  if (typeof a === "number" && typeof b === "number") return a === b || (a !== a && b !== b) || Math.abs(a - b) < 1e-9;
+  if (a === b) return true;
+  if (!a || !b || typeof a !== "object" || typeof b !== "object") return false;
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
+  if (a instanceof Set && b instanceof Set) return same([...a], [...b]);
+  const ka = Object.keys(a), kb = Object.keys(b);
+  return ka.length === kb.length && ka.every(k => Object.prototype.hasOwnProperty.call(b, k) && same(a[k], b[k]));
+}
+const errText = e => (e && e.name ? e.name + ": " + e.message : "Error: " + String(e));
+async function runJob(job) {
+  const logs = [], push = (...a) => logs.push(a.map(x => fmt(x)).join(" "));
+  const con = { log: push, info: push, warn: push, error: push, table: push };
+  const names = job.names || [];
+  let scope, err = null;
+  try {
+    scope = new Function("console", job.code + "\n;return {" + names.map(n => `${JSON.stringify(n)}: typeof ${n} !== "undefined" ? ${n} : undefined`).join(", ") + "};")(con);
+  } catch (e) { err = errText(e); }
+  const results = [];
+  if (!err) for (const t of job.tests || []) {
+    let exp;
+    try { exp = new Function("return (" + t[1] + ");")(); } catch (e) { exp = "(기대값 오류)"; }
+    const r = { call: t[0], exp: fmt(exp, true) };
+    try {
+      const missing = names.find(n => scope[n] === undefined);
+      if (missing) throw new ReferenceError(missing + " is not defined");
+      let got = new Function("console", ...names, "return (" + t[0] + ");")(con, ...names.map(n => scope[n]));
+      if (got && typeof got.then === "function") got = await got;
+      r.got = fmt(got, true); r.ok = same(got, exp);
+    } catch (e) { r.err = errText(e); r.ok = false; }
+    results.push(r);
+  }
+  if (job.wait) await new Promise(res => setTimeout(res, job.wait));
+  return { logs, err, results };
+}
+if (typeof module !== "undefined") module.exports = { runJob, fmt };
+
+</script>
+<script>
+const DATA = {"problems": [{"type": "code", "st": 0, "q": "이름 name을 받아 \"안녕, 이름!\" 글자를 돌려주는 함수를 완성하세요. 예: hello(\"민수\") → \"안녕, 민수!\"", "sol": "function hello(name) {\n  return \"안녕, \" + name + \"!\";\n}", "tests": [["hello(\"민수\")", "\"안녕, 민수!\""], ["hello(\"지은\")", "\"안녕, 지은!\""]], "hints": ["함수가 값을 내보낼 때는 return 을 써요.", "글자끼리는 + 로 이어 붙여요: \"안녕, \" + name + \"!\""], "exp": {"easy": "return은 \"이거 가져가!\" 하고 결과를 건네주는 손이에요. 글자는 + 로 기차처럼 이어 붙여요.", "work": "실무에서는 `안녕, ${name}!` 처럼 백틱(`) 템플릿 문자열을 더 많이 써요. 읽기 쉬워요.", "tip": "글자 + 글자 = 이어 붙이기. 숫자 + 숫자 = 더하기. 이 둘을 섞으면 함정이 생겨요 (연산자 주제에서 나와요)."}, "starter": "function hello(name) {\n  \n}", "must": [], "names": ["hello"], "trap": false}, {"type": "code", "st": 0, "q": "가격 price와 개수 count를 받아, total 이라는 변수에 price × count 를 담은 뒤 total을 돌려주세요.", "sol": "function pay(price, count) {\n  const total = price * count;\n  return total;\n}", "tests": [["pay(1000, 3)", "3000"], ["pay(2500, 2)", "5000"], ["pay(700, 0)", "0"]], "hints": ["값을 담는 상자는 const 이름 = 값; 으로 만들어요.", "곱하기 기호는 * 예요: const total = price * count;"], "exp": {"easy": "변수는 이름표 붙은 상자예요. const total = ... 은 \"total 상자에 이 값을 넣어 둬\" 라는 뜻이에요.", "work": "다시 바꿀 일이 없으면 const, 나중에 바꿔야 하면 let. 실무에서는 일단 const로 쓰고, 꼭 필요할 때만 let으로 바꿔요.", "tip": "var는 옛날 방식이에요. 새 코드에서는 거의 안 써요. 시험·면접에서는 var의 이상한 점을 물어봐요."}, "starter": "function pay(price, count) {\n  \n}", "must": [["\\b(const|let)\\s+total\\b", "total 변수를 const(또는 let)로 만들어서 풀어 보세요."]], "names": ["pay"], "trap": false}, {"type": "mc", "st": 0, "q": "다음 코드의 출력은?", "code": "console.log(typeof null);", "out": "object", "choices": ["\"null\"", "\"object\"", "\"undefined\"", "에러가 나요"], "answer": 1, "hints": ["null은 \"비어 있음\"을 뜻하는 값이에요. 그런데 typeof 결과는 예상과 달라요.", "자바스크립트가 처음 만들어질 때 생긴 유명한 실수가 있어요."], "exp": {"easy": "typeof null 은 \"object\" 라고 나와요. 자바스크립트 할아버지 시절 실수가 그대로 남은 거예요.", "work": "null인지 확인할 땐 typeof 대신 value === null 로 직접 비교해요.", "tip": "typeof 함정 3총사: typeof null → \"object\", typeof [] → \"object\", typeof NaN → \"number\"."}, "trap": true}, {"type": "mc", "st": 0, "q": "다음 코드의 출력은?", "code": "console.log(typeof NaN);", "out": "number", "choices": ["\"NaN\"", "\"undefined\"", "\"number\"", "\"object\""], "answer": 2, "hints": ["NaN은 \"숫자가 아님(Not a Number)\"이라는 뜻이지만…", "NaN도 숫자 계산에서 나온 결과라서 숫자 종류로 쳐요."], "exp": {"easy": "NaN은 \"숫자 계산을 했는데 망했어요\" 표시예요. 그래도 숫자 가족이라 typeof는 \"number\"예요.", "work": "숫자로 바꾼 값이 NaN인지 확인할 땐 Number.isNaN(값) 을 써요.", "tip": "이름에 Not a Number가 들어 있어도 typeof는 \"number\". 거꾸로 생각하면 함정을 피해요."}, "trap": true}, {"type": "mc", "st": 0, "q": "다음 코드를 실행하면?", "code": "const a = 1;\na = 2;\nconsole.log(a);", "out": "Error:TypeError", "choices": ["1", "2", "undefined", "에러가 나요 (TypeError)"], "answer": 3, "hints": ["const로 만든 변수에 새 값을 넣을 수 있을까요?", "const는 \"상수\", 한 번 정하면 다시 넣을 수 없어요."], "exp": {"easy": "const 상자는 뚜껑이 본드로 붙어 있어요. 새 값을 넣으려 하면 TypeError가 나요.", "work": "값이 바뀌어야 하는 변수(카운터, 합계)는 처음부터 let으로 만들어요.", "tip": "const = 다시 넣기(재할당) 금지. 단, const 배열에 push 하는 건 돼요 (배열 주제에서 나와요)."}, "trap": true}, {"type": "code", "st": 0, "q": "값 v의 종류를 글자로 돌려주는 kind 함수를 만드세요. 단 null이면 \"null\", 배열이면 \"array\"를 돌려주고, 나머지는 typeof 결과를 그대로 돌려주세요.", "sol": "function kind(v) {\n  if (v === null) return \"null\";\n  if (Array.isArray(v)) return \"array\";\n  return typeof v;\n}", "tests": [["kind(1)", "\"number\""], ["kind(\"a\")", "\"string\""], ["kind(null)", "\"null\""], ["kind([1, 2])", "\"array\""], ["kind({})", "\"object\""], ["kind(undefined)", "\"undefined\""]], "hints": ["typeof는 null과 배열을 둘 다 \"object\"라고 해요. 그래서 그 둘을 먼저 걸러야 해요.", "null은 v === null, 배열은 Array.isArray(v) 로 확인해요.", "마지막 줄: return typeof v;"], "exp": {"easy": "typeof는 대충 보는 안경이라 null, 배열, 객체를 다 \"object\"로 봐요. 그래서 돋보기(=== null, Array.isArray)로 먼저 확인해요.", "work": "API에서 받은 값이 배열인지 확인할 때 Array.isArray를 정말 자주 써요.", "tip": "특별한 경우를 위에서 먼저 return 하고, 나머지를 맨 아래에서 처리하면 if가 깔끔해져요."}, "starter": "function kind(v) {\n  \n}", "must": [], "names": ["kind"], "trap": true}, {"type": "mc", "st": 1, "q": "다음 코드의 출력은?", "code": "console.log(1 + \"2\");\nconsole.log(\"3\" - 1);", "out": "12 / 2", "choices": ["3 / 2", "12 / 2", "12 / NaN", "3 / 31"], "answer": 1, "hints": ["+ 양쪽 중 하나라도 글자면 어떻게 될까요?", "- 는 글자를 이어 붙이는 기능이 없어요. 그래서 숫자로 바꿔서 빼요."], "exp": {"easy": "+ 는 글자가 하나라도 있으면 \"이어 붙이기\"로 변해요. 1 + \"2\" = \"12\". - 는 그런 기능이 없어서 \"3\"을 숫자 3으로 바꿔 빼요.", "work": "입력창(input)에서 받은 값은 늘 글자예요. Number(값)으로 바꾼 다음 더해요.", "tip": "+ 만 글자에 약해요. - * / 는 글자를 숫자로 바꿔서 계산해요."}, "trap": true}, {"type": "mc", "st": 1, "q": "다음 코드의 출력은?", "code": "console.log(0.1 + 0.2 === 0.3);", "out": "false", "choices": ["true", "false", "0.3", "에러가 나요"], "answer": 1, "hints": ["컴퓨터는 0.1 같은 소수를 2진수로 정확히 못 담아요.", "0.1 + 0.2 는 실제로 0.30000000000000004 예요."], "exp": {"easy": "컴퓨터 계산기는 0.1을 아주 살짝 틀리게 기억해요. 그래서 0.1 + 0.2가 딱 0.3이 아니에요.", "work": "돈 계산은 원 단위 정수로 하거나, Math.abs(a - b) < 0.000001 처럼 \"거의 같은지\"로 비교해요.", "tip": "0.1 + 0.2 === 0.3 → false. 면접 단골 문제예요."}, "trap": true}, {"type": "mc", "st": 1, "q": "다음 코드의 출력은?", "code": "console.log(0 == \"\", 0 === \"\");", "out": "true false", "choices": ["true true", "true false", "false true", "false false"], "answer": 1, "hints": ["== 는 종류가 달라도 억지로 맞춰서 비교해요.", "=== 는 값과 종류가 둘 다 같아야 true예요."], "exp": {"easy": "== 는 \"대충 비슷하면 같다고 해 줄게\", === 는 \"완전히 똑같아야 해\". 0 과 \"\"는 대충 보면 둘 다 비어 보여서 == 로는 true예요.", "work": "실무에서는 거의 항상 === 와 !== 만 써요. == 는 헷갈리는 결과가 많아서 피해요.", "tip": "== 는 쓰지 말고 === 만. 시험에서 == 가 보이면 함정이에요."}, "trap": true}, {"type": "code", "st": 1, "q": "두 수 a, b 중 큰 수를 돌려주세요. Math.max 대신 삼항 연산자 ( 조건 ? 참일때 : 거짓일때 ) 로 풀어 보세요.", "sol": "function bigger(a, b) {\n  return a > b ? a : b;\n}", "tests": [["bigger(3, 5)", "5"], ["bigger(9, 2)", "9"], ["bigger(4, 4)", "4"]], "hints": ["조건 ? A : B 는 \"조건이 맞으면 A, 아니면 B\"예요.", "return a > b ? a : b;"], "exp": {"easy": "삼항 연산자는 갈림길 표지판이에요. \"a가 더 커? 그럼 a로, 아니면 b로!\"", "work": "짧은 선택은 삼항으로, 갈래가 3개 이상이면 if / else if 로 써야 읽기 쉬워요.", "tip": "물음표 앞 = 질문, 물음표 뒤 = 맞을 때, 콜론 뒤 = 틀릴 때."}, "starter": "function bigger(a, b) {\n  \n}", "must": [["\\?", "삼항 연산자( ? : )를 써서 풀어 보세요."]], "names": ["bigger"], "trap": false}, {"type": "code", "st": 1, "q": "이름 name이 null이나 undefined면 \"손님\"을, 아니면 name을 그대로 돌려주세요. 빈 글자 \"\"는 그대로 \"\"를 돌려줘야 해요.", "sol": "function orGuest(name) {\n  return name ?? \"손님\";\n}", "tests": [["orGuest(\"민수\")", "\"민수\""], ["orGuest(null)", "\"손님\""], ["orGuest(undefined)", "\"손님\""], ["orGuest(\"\")", "\"\""]], "hints": ["|| 를 쓰면 빈 글자 \"\"도 \"손님\"으로 바뀌어 버려요.", "null과 undefined일 때만 바꾸는 연산자 ?? 가 있어요.", "return name ?? \"손님\";"], "exp": {"easy": "|| 는 \"비어 보이면 다 바꿔\"(0, \"\", false도), ?? 는 \"진짜 없을 때만(null, undefined) 바꿔\" 예요.", "work": "설정값 기본값을 줄 때 ?? 를 써요. 사용자가 일부러 0이나 \"\"를 넣었는데 바뀌어 버리면 버그예요.", "tip": "0이나 \"\"를 살려야 하면 ??, 다 바꿔도 되면 ||."}, "starter": "function orGuest(name) {\n  \n}", "must": [], "names": ["orGuest"], "trap": true}, {"type": "mc", "st": 1, "q": "다음 코드의 출력은?", "code": "console.log(NaN === NaN);", "out": "false", "choices": ["true", "false", "NaN", "에러가 나요"], "answer": 1, "hints": ["NaN은 자기 자신과도 같지 않은 유일한 값이에요.", "NaN인지 확인하려면 Number.isNaN()을 써요."], "exp": {"easy": "NaN은 \"모르는 숫자\"라서, 모르는 것끼리는 같다고 할 수 없어요. 그래서 NaN === NaN 도 false예요.", "work": "계산 결과가 망가졌는지 볼 때 Number.isNaN(result) 를 써요.", "tip": "NaN과 비교하는 건 전부 false. 확인은 Number.isNaN만."}, "trap": true}, {"type": "code", "st": 1, "q": "정수 n이 짝수면 true, 홀수면 false를 돌려주세요.", "sol": "function isEven(n) {\n  return n % 2 === 0;\n}", "tests": [["isEven(4)", "true"], ["isEven(7)", "false"], ["isEven(0)", "true"], ["isEven(-6)", "true"]], "hints": ["% 는 나눈 나머지예요. 7 % 2 = 1", "짝수는 2로 나눈 나머지가 0이에요: n % 2 === 0"], "exp": {"easy": "% 는 \"나눠 주고 남은 사탕 개수\"예요. 2명에게 나눠서 하나도 안 남으면 짝수!", "work": "비교식 자체가 true/false 라서 if 없이 바로 return 하면 돼요.", "tip": "if (조건) return true; else return false; 는 return 조건; 한 줄로 줄일 수 있어요."}, "starter": "function isEven(n) {\n  \n}", "must": [], "names": ["isEven"], "trap": false}, {"type": "code", "st": 2, "q": "점수 score가 90 이상이면 \"A\", 80 이상이면 \"B\", 70 이상이면 \"C\", 나머지는 \"F\"를 돌려주세요.", "sol": "function grade(score) {\n  if (score >= 90) return \"A\";\n  if (score >= 80) return \"B\";\n  if (score >= 70) return \"C\";\n  return \"F\";\n}", "tests": [["grade(95)", "\"A\""], ["grade(90)", "\"A\""], ["grade(85)", "\"B\""], ["grade(70)", "\"C\""], ["grade(12)", "\"F\""]], "hints": ["큰 점수부터 차례로 물어봐요.", "if (score >= 90) return \"A\"; 처럼 맞으면 바로 return 하면 아래는 안 봐요.", "이상은 >= 예요. > 를 쓰면 딱 90점이 B가 돼요."], "exp": {"easy": "놀이기구 키 재기처럼 위에서부터 차례로 물어봐요. 통과하면 바로 나가니까(return) 아래 질문은 안 해요.", "work": "return으로 일찍 나가는 방식(early return)은 else를 줄여서 실무에서 정말 많이 써요.", "tip": "\"이상\" = >=, \"초과\" = >. 경계값(딱 90점)을 꼭 테스트해 보세요."}, "starter": "function grade(score) {\n  \n}", "must": [], "names": ["grade"], "trap": false}, {"type": "code", "st": 2, "q": "n이 15의 배수면 \"FizzBuzz\", 3의 배수면 \"Fizz\", 5의 배수면 \"Buzz\", 아니면 n(숫자 그대로)을 돌려주세요.", "sol": "function fizz(n) {\n  if (n % 15 === 0) return \"FizzBuzz\";\n  if (n % 3 === 0) return \"Fizz\";\n  if (n % 5 === 0) return \"Buzz\";\n  return n;\n}", "tests": [["fizz(3)", "\"Fizz\""], ["fizz(10)", "\"Buzz\""], ["fizz(30)", "\"FizzBuzz\""], ["fizz(7)", "7"]], "hints": ["15의 배수는 3의 배수이기도 해요. 어떤 걸 먼저 물어봐야 할까요?", "가장 좁은 조건(15의 배수)을 맨 위에 둬요."], "exp": {"easy": "15는 3으로도 나눠져요. 3부터 물어보면 30이 \"Fizz\"에서 멈춰 버려요. 제일 까다로운 조건부터!", "work": "조건이 겹칠 때는 \"좁은 것 먼저, 넓은 것 나중\". 할인 규칙, 등급 계산에서도 똑같아요.", "tip": "if 순서 문제는 경계값 하나(30)만 넣어 봐도 바로 잡혀요."}, "starter": "function fizz(n) {\n  \n}", "must": [], "names": ["fizz"], "trap": true}, {"type": "mc", "st": 2, "q": "다음 코드의 출력은?", "code": "if (\"0\") console.log(\"참\");\nelse console.log(\"거짓\");", "out": "참", "choices": ["참", "거짓", "undefined", "에러가 나요"], "answer": 0, "hints": ["\"0\"은 숫자 0이 아니라 글자예요.", "빈 글자 \"\"만 거짓이고, 뭐라도 들어 있는 글자는 참이에요."], "exp": {"easy": "\"0\"은 0이라고 적힌 쪽지예요. 쪽지에 뭐라도 써 있으면 참이에요. 빈 쪽지(\"\")만 거짓!", "work": "입력값을 if로 검사할 땐 글자인지 숫자인지 먼저 확인하는 습관을 들여요.", "tip": "거짓(falsy) 6개만 외우기: false, 0, \"\", null, undefined, NaN. 나머지는 다 참이에요."}, "trap": true}, {"type": "mc", "st": 2, "q": "다음 코드의 출력은?", "code": "console.log(!![], !!\"\");", "out": "true false", "choices": ["true true", "true false", "false true", "false false"], "answer": 1, "hints": ["!! 는 값을 true/false로 바꿔 보는 방법이에요.", "빈 배열 [] 은 거짓 6개(false, 0, \"\", null, undefined, NaN)에 들어 있나요?"], "exp": {"easy": "빈 상자 []도 상자는 상자라서 참이에요. 빈 글자 \"\"는 거짓 목록에 있어서 거짓이에요.", "work": "배열이 비었는지는 if (arr.length === 0) 처럼 길이로 확인해요. if (arr) 는 늘 참이라 버그가 나요.", "tip": "빈 배열 [] 과 빈 객체 {} 는 참! 시험 단골이에요."}, "trap": true}, {"type": "code", "st": 2, "q": "나이 age가 18 이상이고(그리고) 면허 hasLicense가 true면 true를 돌려주세요.", "sol": "function canDrive(age, hasLicense) {\n  return age >= 18 && hasLicense;\n}", "tests": [["canDrive(20, true)", "true"], ["canDrive(20, false)", "false"], ["canDrive(17, true)", "false"], ["canDrive(18, true)", "true"]], "hints": ["\"그리고\"는 && 예요.", "return age >= 18 && hasLicense;"], "exp": {"easy": "&& 는 \"둘 다 OK여야 통과\", || 는 \"하나만 OK여도 통과\"예요.", "work": "조건이 길어지면 const isAdult = age >= 18; 처럼 이름을 붙여 두면 읽기 쉬워요.", "tip": "&& 는 그리고(AND), || 는 또는(OR), ! 는 반대(NOT)."}, "starter": "function canDrive(age, hasLicense) {\n  \n}", "must": [], "names": ["canDrive"], "trap": false}, {"type": "mc", "st": 2, "q": "다음 코드의 출력은?", "code": "const n = 1;\nswitch (n) {\n  case 1: console.log(\"하나\");\n  case 2: console.log(\"둘\"); break;\n  default: console.log(\"기타\");\n}", "out": "하나 / 둘", "choices": ["하나", "하나 / 둘", "하나 / 둘 / 기타", "둘"], "answer": 1, "hints": ["case 1 아래에 break가 있나요?", "break가 없으면 아래 case로 미끄러져 내려가요(fall-through)."], "exp": {"easy": "switch는 미끄럼틀이에요. break(멈춤)를 안 만나면 아래 칸까지 쭉 미끄러져요. 그래서 \"둘\"까지 찍고 break에서 멈춰요.", "work": "switch를 쓰면 case마다 break를 쓰는 습관을 들이고, 일부러 안 쓸 땐 주석으로 표시해요.", "tip": "switch 문제가 나오면 break 위치부터 찾아보세요."}, "trap": true}, {"type": "code", "st": 3, "q": "1부터 n까지 모두 더한 값을 돌려주세요. 예: sumTo(10) → 55", "sol": "function sumTo(n) {\n  let sum = 0;\n  for (let i = 1; i <= n; i++) {\n    sum += i;\n  }\n  return sum;\n}", "tests": [["sumTo(1)", "1"], ["sumTo(10)", "55"], ["sumTo(0)", "0"]], "hints": ["합계를 담을 상자를 let sum = 0; 으로 먼저 만들어요.", "for (let i = 1; i <= n; i++) 로 1부터 n까지 돌아요.", "반복 안에서 sum += i; 끝나면 return sum;"], "exp": {"easy": "저금통(sum)을 0원으로 시작해서, 1원, 2원, 3원… 차례로 넣는 거예요. for는 \"몇 번 반복\"을 정하는 줄이에요.", "work": "합계·개수처럼 바뀌는 값은 let, 반복 변수도 let 으로 써요.", "tip": "for 괄호 안 3칸: 시작(let i = 1); 계속할 조건(i <= n); 한 번 돌고 나서(i++)."}, "starter": "function sumTo(n) {\n  \n}", "must": [], "names": ["sumTo"], "trap": false}, {"type": "code", "st": 3, "q": "n부터 1까지 거꾸로 센 배열을 돌려주세요. 예: countDown(3) → [3, 2, 1]", "sol": "function countDown(n) {\n  const out = [];\n  while (n > 0) {\n    out.push(n);\n    n--;\n  }\n  return out;\n}", "tests": [["countDown(3)", "[3, 2, 1]"], ["countDown(1)", "[1]"], ["countDown(0)", "[]"]], "hints": ["빈 배열 const out = []; 을 만들고 하나씩 넣어요.", "while (n > 0) 동안 out.push(n); 하고 n--;", "n-- 를 빼먹으면 끝나지 않는 반복(무한 반복)이 돼요."], "exp": {"easy": "while은 \"아직 남았니? 그럼 계속!\" 이에요. 로켓 발사 카운트다운처럼 3, 2, 1 넣고 0이 되면 멈춰요.", "work": "while 안에서 조건이 바뀌는 줄(n--)이 꼭 있는지 확인하는 습관을 들여요. 없으면 앱이 멈춰요.", "tip": "횟수가 정해져 있으면 for, \"~하는 동안\"이면 while."}, "starter": "function countDown(n) {\n  \n}", "must": [], "names": ["countDown"], "trap": false}, {"type": "code", "st": 3, "q": "숫자 배열 arr의 합을 for...of 반복으로 구해서 돌려주세요.", "sol": "function sumArr(arr) {\n  let sum = 0;\n  for (const x of arr) {\n    sum += x;\n  }\n  return sum;\n}", "tests": [["sumArr([1, 2, 3])", "6"], ["sumArr([10])", "10"], ["sumArr([])", "0"]], "hints": ["for (const x of arr) 는 배열 안의 값을 하나씩 x에 꺼내 줘요.", "sum += x; 로 더해요."], "exp": {"easy": "for...of 는 바구니(배열)에서 사과를 하나씩 꺼내 주는 손이에요. 번호(i)를 신경 안 써도 돼요.", "work": "배열의 값만 필요하면 for...of, 번호도 필요하면 for (let i...) 나 forEach((x, i) => ...) 를 써요.", "tip": "of = 값(사과), in = 번호표(0, 1, 2). 헷갈리면 \"오브 = 오브젝트 말고 값\"이 아니라 \"of는 값!\"만 외워요."}, "starter": "function sumArr(arr) {\n  \n}", "must": [["for\\s*\\(\\s*(const|let|var)\\s+\\w+\\s+of\\b", "for...of 반복으로 풀어 보세요."]], "names": ["sumArr"], "trap": false}, {"type": "mc", "st": 3, "q": "다음 코드의 출력은?", "code": "const arr = [10, 20];\nfor (const x in arr) console.log(x);", "out": "0 / 1", "choices": ["10 / 20", "0 / 1", "\"10\" / \"20\"", "아무것도 안 나와요"], "answer": 1, "hints": ["for...in 은 값이 아니라 무엇을 꺼낼까요?", "in은 번호표(키)를 꺼내요."], "exp": {"easy": "for...in 은 배열에서 사과가 아니라 사과가 놓인 자리 번호(0, 1)를 꺼내요. 그것도 글자 \"0\", \"1\"로요.", "work": "배열은 for...of 나 forEach, 객체의 키는 Object.keys(obj) 로 돌아요. for...in 은 배열에 쓰지 않아요.", "tip": "배열 + for...in = 함정. 값이 필요하면 of!"}, "trap": true}, {"type": "code", "st": 3, "q": "배열 arr에서 처음 나오는 음수를 돌려주세요. 음수가 없으면 null을 돌려주세요.", "sol": "function firstNegative(arr) {\n  for (const x of arr) {\n    if (x < 0) return x;\n  }\n  return null;\n}", "tests": [["firstNegative([3, -1, -5])", "-1"], ["firstNegative([-7])", "-7"], ["firstNegative([1, 2])", "null"]], "hints": ["찾자마자 return 하면 반복이 바로 끝나요.", "반복이 다 끝날 때까지 못 찾았으면, 반복 아래에서 return null;"], "exp": {"easy": "보물찾기에서 보물을 찾으면 바로 집에 가요(return). 끝까지 못 찾으면 \"없어요(null)\"라고 말해요.", "work": "실무에서는 같은 일을 arr.find(x => x < 0) ?? null 한 줄로 해요 (배열 메서드에서 나와요).", "tip": "return null; 을 반복 안에 넣으면 첫 번째만 보고 끝나 버려요. 위치가 중요해요."}, "starter": "function firstNegative(arr) {\n  \n}", "must": [], "names": ["firstNegative"], "trap": false}, {"type": "mc", "st": 3, "q": "다음 코드의 출력은?", "code": "let count = 0;\nfor (let i = 0; i <= 3; i++) count++;\nconsole.log(count);", "out": "4", "choices": ["3", "4", "5", "무한 반복"], "answer": 1, "hints": ["i는 0, 1, 2, 3 … 언제 멈출까요?", "i <= 3 이니까 3일 때도 한 번 더 돌아요."], "exp": {"easy": "0부터 3까지 손가락을 세어 보면 0, 1, 2, 3 → 4개예요. <= 의 = 때문에 한 번 더 돌아요.", "work": "배열을 돌 때는 i < arr.length (작다) 를 써요. <= 로 쓰면 없는 칸을 읽어서 undefined가 나와요.", "tip": "반복 횟수 = 끝 - 시작 (+1 if <=). 하나 차이 실수(off-by-one)는 개발자 단골 버그예요."}, "trap": true}, {"type": "code", "st": 4, "q": "숫자 n을 받아 2배를 돌려주는 함수를 화살표 함수로 만드세요.", "sol": "const double = n => n * 2;", "tests": [["double(3)", "6"], ["double(0)", "0"], ["double(-4)", "-8"]], "hints": ["화살표 함수 모양: 매개변수 => 결과", "한 줄이면 return과 { } 없이 바로 써요: n => n * 2"], "exp": {"easy": "화살표 함수는 함수의 짧은 별명이에요. \"n을 주면 → n * 2를 줄게\" 를 그대로 쓴 모양이에요.", "work": "map, filter 안에 넣는 짧은 함수는 거의 다 화살표 함수로 써요.", "tip": "{ } 를 쓰면 return 을 꼭 써야 해요. n => { n * 2 } 는 undefined를 돌려줘요!"}, "starter": "const double = ", "must": [["=>", "화살표 함수( => )로 만들어 보세요."]], "names": ["double"], "trap": false}, {"type": "code", "st": 4, "q": "이름 name을 받아 \"이름야, 안녕\"을 돌려주세요. 이름을 안 주면 \"친구\"를 기본값으로 써요. 예: greet() → \"친구야, 안녕\"", "sol": "function greet(name = \"친구\") {\n  return name + \"야, 안녕\";\n}", "tests": [["greet(\"민수\")", "\"민수야, 안녕\""], ["greet()", "\"친구야, 안녕\""]], "hints": ["매개변수 자리에 = 기본값 을 쓸 수 있어요: name = \"친구\"", "몸통은 return name + \"야, 안녕\";"], "exp": {"easy": "기본값은 \"아무것도 안 주면 이걸로 할게\" 예비 타이어예요.", "work": "옵션이 많은 함수는 기본값을 매개변수에 바로 적어 두면, 함수 머리만 봐도 사용법이 보여요.", "tip": "기본값은 undefined일 때만 쓰여요. null을 넘기면 기본값이 안 쓰이고 null이 들어가요."}, "starter": "function greet(", "must": [["greet\\s*\\(\\s*name\\s*=", "매개변수 기본값(name = ...)으로 풀어 보세요."]], "names": ["greet"], "trap": false}, {"type": "code", "st": 4, "q": "함수 f와 값 x를 받아, f를 두 번 적용한 결과 f(f(x))를 돌려주세요.", "sol": "function applyTwice(f, x) {\n  return f(f(x));\n}", "tests": [["applyTwice(n => n + 3, 1)", "7"], ["applyTwice(s => s + \"!\", \"와\")", "\"와!!\""]], "hints": ["함수도 값처럼 넘겨받을 수 있어요. f(x) 로 부르면 돼요.", "안쪽부터: f(x)의 결과를 다시 f에 넣어요."], "exp": {"easy": "f는 \"주스 기계\"예요. 과일을 한 번 넣고, 나온 주스를 또 넣는 거예요.", "work": "함수를 넘겨받는 함수(콜백)는 이벤트, 배열 메서드, 비동기 어디에나 나와요.", "tip": "괄호는 안쪽부터 계산해요. f(f(x)) = f( f(x)의 결과 )."}, "starter": "function applyTwice(f, x) {\n  \n}", "must": [], "names": ["applyTwice"], "trap": false}, {"type": "mc", "st": 4, "q": "다음 코드의 출력은?", "code": "console.log(hi());\nfunction hi() { return \"안녕\"; }", "out": "안녕", "choices": ["안녕", "undefined", "에러가 나요 (ReferenceError)", "에러가 나요 (TypeError)"], "answer": 0, "hints": ["function 으로 선언한 함수는 코드 맨 위로 미리 끌어올려져요(호이스팅).", "그래서 선언보다 먼저 불러도 돼요."], "exp": {"easy": "function 선언은 연극 시작 전에 무대에 미리 올라와 있는 배우예요. 그래서 먼저 불러도 대답해요.", "work": "그래도 읽는 사람을 위해 함수는 쓰기 전에 위에 두거나, 파일 아래쪽에 모아 두는 규칙을 정해요.", "tip": "function 선언 = 미리 올라옴. const/let 화살표 함수 = 안 올라옴 (다음 문제!)."}, "trap": false}, {"type": "mc", "st": 4, "q": "다음 코드의 출력은?", "code": "console.log(hi());\nconst hi = () => \"안녕\";", "out": "Error:ReferenceError", "choices": ["안녕", "undefined", "에러가 나요 (ReferenceError)", "에러가 나요 (TypeError)"], "answer": 2, "hints": ["이번엔 const로 만든 화살표 함수예요.", "const는 선언하는 줄에 도착하기 전에는 쓸 수 없어요."], "exp": {"easy": "const 함수는 자기 줄에 도착해야 무대에 올라와요. 그 전에 부르면 \"아직 없는데요?\" ReferenceError!", "work": "const 함수는 꼭 쓰는 곳보다 위에 만들어 둬요.", "tip": "앞 문제와 짝꿍: function 선언은 OK, const 화살표는 에러."}, "trap": true}, {"type": "code", "st": 4, "q": "숫자를 몇 개든 받아서 모두 더한 값을 돌려주세요. 예: sumAll(1, 2, 3) → 6, sumAll() → 0", "sol": "function sumAll(...nums) {\n  let sum = 0;\n  for (const n of nums) sum += n;\n  return sum;\n}", "tests": [["sumAll(1, 2, 3)", "6"], ["sumAll(5)", "5"], ["sumAll()", "0"]], "hints": ["...nums 라고 쓰면 받은 값을 전부 nums 배열에 모아 줘요(나머지 매개변수).", "그 다음은 배열 합 구하기와 같아요: for (const n of nums) sum += n;"], "exp": {"easy": "...nums 는 \"몇 개가 오든 다 이 바구니에 담아!\" 예요.", "work": "로그 함수, 합계 함수처럼 개수가 정해지지 않은 함수에 써요.", "tip": "... 이 매개변수 자리에 있으면 \"모으기\", 호출하는 자리에 있으면 \"펼치기\"."}, "starter": "function sumAll(", "must": [["\\.\\.\\.\\s*nums", "나머지 매개변수(...nums)로 받아 보세요."]], "names": ["sumAll"], "trap": false}, {"type": "mc", "st": 4, "q": "다음 코드의 출력은?", "code": "function add(a, b) { a + b; }\nconsole.log(add(1, 2));", "out": "undefined", "choices": ["3", "undefined", "NaN", "에러가 나요"], "answer": 1, "hints": ["함수 몸통에서 a + b 를 계산은 했지만…", "결과를 밖으로 내보내는 단어가 빠졌어요."], "exp": {"easy": "계산만 하고 return 하지 않으면, 요리만 하고 접시에 안 담은 거예요. 받은 사람은 빈손(undefined)이에요.", "work": "{ } 가 있는 함수는 return 을 빼먹지 않았는지 꼭 확인해요.", "tip": "return 이 없는 함수는 늘 undefined를 돌려줘요."}, "trap": true}, {"type": "code", "st": 5, "q": "배열 arr의 마지막 값을 돌려주세요. 빈 배열이면 undefined가 나와도 돼요.", "sol": "function last(arr) {\n  return arr[arr.length - 1];\n}", "tests": [["last([1, 2, 3])", "3"], ["last([\"a\"])", "\"a\""], ["last([])", "undefined"]], "hints": ["배열 번호는 0부터 시작해요.", "길이가 3이면 마지막 번호는 2 = arr.length - 1"], "exp": {"easy": "3층짜리 건물인데 층 번호가 0층부터 시작해요. 그래서 꼭대기는 2층(길이 - 1)이에요.", "work": "요즘은 arr.at(-1) 로도 마지막 값을 꺼낼 수 있어요.", "tip": "arr[arr.length] 는 늘 undefined. 마지막은 length - 1!"}, "starter": "function last(arr) {\n  \n}", "must": [], "names": ["last"], "trap": false}, {"type": "code", "st": 5, "q": "원래 배열 list는 바꾸지 말고, 끝에 item을 더한 새 배열을 돌려주세요.", "sol": "function addItem(list, item) {\n  return [...list, item];\n}", "tests": [["addItem([1, 2], 3)", "[1, 2, 3]"], ["(() => { const a = [1, 2]; addItem(a, 3); return a; })()", "[1, 2]"]], "hints": ["push는 원래 배열을 바꿔 버려요.", "[...list] 는 list를 펼쳐서 새 배열에 복사해요.", "return [...list, item];"], "exp": {"easy": "... 은 바구니를 쏟아서 새 바구니에 옮겨 담는 거예요. 원래 바구니는 그대로!", "work": "React 같은 화면 프로그램에서는 원본을 바꾸지 않고 새 배열을 만드는 게 규칙이에요.", "tip": "원본을 바꾸는 메서드: push, pop, sort, reverse, splice. 새로 만드는 것: map, filter, slice, [...]."}, "starter": "function addItem(list, item) {\n  \n}", "must": [], "names": ["addItem"], "trap": true}, {"type": "mc", "st": 5, "q": "다음 코드의 출력은?", "code": "const arr = [1];\narr.push(2);\nconsole.log(arr.length);", "out": "2", "choices": ["1", "2", "에러가 나요 (TypeError)", "undefined"], "answer": 1, "hints": ["const는 \"다른 배열로 바꿔치기\"를 막아요.", "배열 안에 값을 넣는 건 바꿔치기가 아니에요."], "exp": {"easy": "const는 상자 이름표를 다른 상자에 못 붙이게 하는 거예요. 상자 안에 물건을 더 넣는 건(push) 괜찮아요.", "work": "실무 배열·객체는 거의 다 const로 만들어요. 안의 내용은 바뀌어도 돼요.", "tip": "const arr = [] ; arr.push(1) → OK, arr = [1] → 에러."}, "trap": true}, {"type": "mc", "st": 5, "q": "다음 코드의 출력은?", "code": "const a = [1, 2, 3];\nconst b = a;\nb.push(4);\nconsole.log(a.length);", "out": "4", "choices": ["3", "4", "에러가 나요", "undefined"], "answer": 1, "hints": ["b = a 는 배열을 복사할까요, 같은 배열을 가리킬까요?", "배열과 객체는 \"주소\"가 복사돼요."], "exp": {"easy": "b = a 는 같은 집 주소를 적은 쪽지를 하나 더 만든 거예요. b로 가서 짐을 넣으면 a 집에도 들어가 있어요.", "work": "복사가 필요하면 const b = [...a]; 로 새 배열을 만들어요.", "tip": "숫자·글자는 값이 복사, 배열·객체는 주소가 복사."}, "trap": true}, {"type": "code", "st": 5, "q": "과일 배열 fruits에 \"사과\"가 있으면 true, 없으면 false를 돌려주세요.", "sol": "function hasApple(fruits) {\n  return fruits.includes(\"사과\");\n}", "tests": [["hasApple([\"배\", \"사과\"])", "true"], ["hasApple([\"포도\"])", "false"], ["hasApple([])", "false"]], "hints": ["배열에 어떤 값이 들어 있는지 물어보는 메서드가 있어요.", "fruits.includes(\"사과\")"], "exp": {"easy": "includes는 \"이 바구니에 사과 있어?\" 하고 물어보면 있다/없다로 대답해 줘요.", "work": "옛날 코드에서는 indexOf(값) !== -1 로 썼어요. 지금은 includes가 읽기 쉬워요.", "tip": "includes는 === 로 비교해요. 숫자 2와 글자 \"2\"는 달라요."}, "starter": "function hasApple(fruits) {\n  \n}", "must": [], "names": ["hasApple"], "trap": false}, {"type": "code", "st": 5, "q": "두 칸짜리 배열 pair를 받아 순서를 바꾼 새 배열을 돌려주세요. 구조 분해 const [a, b] = pair; 를 써 보세요.", "sol": "function swap(pair) {\n  const [a, b] = pair;\n  return [b, a];\n}", "tests": [["swap([1, 2])", "[2, 1]"], ["swap([\"왼\", \"오\"])", "[\"오\", \"왼\"]"]], "hints": ["const [a, b] = pair; 는 첫 칸을 a, 둘째 칸을 b에 담아요.", "return [b, a];"], "exp": {"easy": "구조 분해는 상자를 열어서 \"첫 번째는 a 손에, 두 번째는 b 손에\" 나눠 쥐는 거예요.", "work": "React의 const [count, setCount] = useState(0) 이 바로 이 문법이에요.", "tip": "배열 구조 분해는 순서대로, 객체 구조 분해는 이름대로."}, "starter": "function swap(pair) {\n  \n}", "must": [["\\[\\s*\\w+\\s*,\\s*\\w+\\s*\\]\\s*=", "구조 분해 const [a, b] = pair; 로 풀어 보세요."]], "names": ["swap"], "trap": false}, {"type": "mc", "st": 5, "q": "다음 코드의 출력은?", "code": "console.log([10, 1, 2].sort());", "out": "[1, 10, 2]", "choices": ["[1, 2, 10]", "[1, 10, 2]", "[10, 2, 1]", "[10, 1, 2]"], "answer": 1, "hints": ["sort()는 기본으로 값을 글자로 바꿔서 사전 순으로 줄 세워요.", "글자 \"10\"은 \"2\"보다 앞이에요 (\"1\"로 시작하니까)."], "exp": {"easy": "sort()는 숫자를 글자 사전처럼 정리해요. 사전에서 \"10\"은 \"1\"로 시작하니까 \"2\"보다 먼저 나와요.", "work": "숫자 정렬은 늘 sort((a, b) => a - b) 를 써요. 큰 순서는 b - a.", "tip": "숫자 배열 + sort() 그냥 = 함정!"}, "trap": true}, {"type": "code", "st": 5, "q": "숫자 배열 arr를 작은 수부터 정렬한 새 배열을 돌려주세요. 원래 배열은 바꾸면 안 돼요.", "sol": "function sortNums(arr) {\n  return [...arr].sort((a, b) => a - b);\n}", "tests": [["sortNums([10, 1, 2])", "[1, 2, 10]"], ["sortNums([3, -1])", "[-1, 3]"], ["(() => { const a = [3, 1]; sortNums(a); return a; })()", "[3, 1]"]], "hints": ["sort는 원래 배열을 바꿔요. 먼저 [...arr] 로 복사해요.", "숫자 비교 함수: (a, b) => a - b", "return [...arr].sort((a, b) => a - b);"], "exp": {"easy": "a - b 가 음수면 a를 앞에, 양수면 b를 앞에 둬요. 키 작은 친구부터 줄 세우는 규칙이에요.", "work": "요즘 브라우저는 arr.toSorted((a, b) => a - b) 로 복사 + 정렬을 한 번에 해요.", "tip": "작은 순 a - b, 큰 순 b - a. 원본 보호는 [...arr]."}, "starter": "function sortNums(arr) {\n  \n}", "must": [], "names": ["sortNums"], "trap": true}, {"type": "code", "st": 6, "q": "배열의 모든 수를 2배로 만든 새 배열을 map으로 돌려주세요.", "sol": "function doubleAll(arr) {\n  return arr.map(n => n * 2);\n}", "tests": [["doubleAll([1, 2, 3])", "[2, 4, 6]"], ["doubleAll([])", "[]"]], "hints": ["map은 칸마다 함수를 적용해서 같은 길이의 새 배열을 만들어요.", "arr.map(n => n * 2)"], "exp": {"easy": "map은 공장 컨베이어 벨트예요. 들어온 물건 하나하나를 똑같이 가공해서 내보내요.", "work": "서버에서 받은 목록을 화면에 그릴 때 map을 제일 많이 써요.", "tip": "map = 개수 그대로, 모양만 바꾸기."}, "starter": "function doubleAll(arr) {\n  \n}", "must": [["\\.map\\(", "map 메서드로 풀어 보세요."]], "names": ["doubleAll"], "trap": false}, {"type": "code", "st": 6, "q": "나이 배열 ages에서 20 이상인 나이만 골라 새 배열로 돌려주세요.", "sol": "function adults(ages) {\n  return ages.filter(a => a >= 20);\n}", "tests": [["adults([15, 20, 31])", "[20, 31]"], ["adults([1, 2])", "[]"]], "hints": ["골라내기는 filter예요.", "함수가 true를 돌려주는 값만 남아요: ages.filter(a => a >= 20)"], "exp": {"easy": "filter는 체예요. 조건을 통과한 것만 아래로 떨어지고, 나머지는 걸러져요.", "work": "검색, 카테고리 고르기, 삭제(지울 것만 빼고 남기기)를 filter로 해요.", "tip": "filter = 개수가 줄어들 수 있음, 값 모양은 그대로."}, "starter": "function adults(ages) {\n  \n}", "must": [["\\.filter\\(", "filter 메서드로 풀어 보세요."]], "names": ["adults"], "trap": false}, {"type": "code", "st": 6, "q": "가격 배열 prices의 합을 reduce로 구하세요. 빈 배열이면 0이에요.", "sol": "function total(prices) {\n  return prices.reduce((sum, p) => sum + p, 0);\n}", "tests": [["total([1000, 500])", "1500"], ["total([7])", "7"], ["total([])", "0"]], "hints": ["reduce((모은값, 지금값) => 새 모은값, 시작값)", "시작값 0을 빼먹으면 빈 배열에서 에러가 나요.", "prices.reduce((sum, p) => sum + p, 0)"], "exp": {"easy": "reduce는 눈사람 굴리기예요. 눈덩이(sum)를 0에서 시작해서 값을 하나씩 붙여 점점 키워요.", "work": "장바구니 합계, 점수 총합처럼 \"여러 개 → 하나\"를 만들 때 써요.", "tip": "reduce에는 시작값(, 0)을 꼭 써요. 빈 배열 + 시작값 없음 = TypeError."}, "starter": "function total(prices) {\n  \n}", "must": [["\\.reduce\\(", "reduce 메서드로 풀어 보세요."]], "names": ["total"], "trap": true}, {"type": "code", "st": 6, "q": "사람 배열 users에서 id가 같은 사람 객체를 찾아 돌려주세요. 없으면 undefined.", "sol": "function findUser(users, id) {\n  return users.find(u => u.id === id);\n}", "tests": [["findUser([{ id: 1, name: \"민수\" }, { id: 2, name: \"지은\" }], 2)", "{ id: 2, name: \"지은\" }"], ["findUser([{ id: 1, name: \"민수\" }], 9)", "undefined"]], "hints": ["조건에 맞는 첫 번째 하나를 찾는 메서드는 find예요.", "users.find(u => u.id === id)"], "exp": {"easy": "find는 \"이 조건에 맞는 친구 딱 한 명 데려와!\" 예요. 찾으면 바로 멈춰요.", "work": "목록에서 상세 정보를 찾을 때 find, 여러 명이면 filter를 써요.", "tip": "find = 하나(또는 undefined), filter = 배열(빈 배열일 수도)."}, "starter": "function findUser(users, id) {\n  \n}", "must": [["\\.find\\(", "find 메서드로 풀어 보세요."]], "names": ["findUser"], "trap": false}, {"type": "code", "st": 6, "q": "배열에서 짝수만 골라 각각 제곱한 뒤 모두 더한 값을 돌려주세요. 예: [1, 2, 3, 4] → 4 + 16 = 20", "sol": "function evenSquareSum(arr) {\n  return arr.filter(n => n % 2 === 0).map(n => n * n).reduce((a, b) => a + b, 0);\n}", "tests": [["evenSquareSum([1, 2, 3, 4])", "20"], ["evenSquareSum([1, 3])", "0"], ["evenSquareSum([6])", "36"]], "hints": ["순서대로: 고르기(filter) → 바꾸기(map) → 합치기(reduce)", "arr.filter(n => n % 2 === 0).map(n => n * n)…", "마지막에 .reduce((a, b) => a + b, 0)"], "exp": {"easy": "체로 거르고(filter), 공장에서 가공하고(map), 눈사람으로 뭉쳐요(reduce). 점(.)으로 이어서 줄줄이 연결해요.", "work": "체인이 길어지면 점(.) 앞에서 줄을 바꿔서 한 줄에 하나씩 쓰면 읽기 쉬워요.", "tip": "filter → map → reduce 순서를 외워 두면 대부분의 배열 문제가 풀려요."}, "starter": "function evenSquareSum(arr) {\n  \n}", "must": [], "names": ["evenSquareSum"], "trap": false}, {"type": "mc", "st": 6, "q": "다음 코드의 출력은?", "code": "console.log([\"1\", \"2\", \"3\"].map(parseInt));", "out": "[1, NaN, NaN]", "choices": ["[1, 2, 3]", "[1, NaN, NaN]", "[NaN, NaN, NaN]", "[1, 2, NaN]"], "answer": 1, "hints": ["map은 함수에 (값, 번호)를 같이 넘겨줘요.", "parseInt는 두 번째 값을 \"몇 진법\"으로 써요. parseInt(\"2\", 1)은?"], "exp": {"easy": "map이 parseInt에게 (\"1\", 0), (\"2\", 1), (\"3\", 2)를 줘요. 1진법, 2진법에 \"2\", \"3\"은 없는 숫자라서 NaN이 나와요.", "work": "숫자로 바꿀 땐 arr.map(Number) 또는 arr.map(s => parseInt(s, 10)) 처럼 확실하게 써요.", "tip": "map(parseInt) 는 유명한 함정. 함수 이름만 넘기면 번호까지 같이 들어가요."}, "trap": true}, {"type": "mc", "st": 6, "q": "다음 코드의 출력은?", "code": "const r = [1, 2].forEach(n => n * 2);\nconsole.log(r);", "out": "undefined", "choices": ["[2, 4]", "[1, 2]", "undefined", "에러가 나요"], "answer": 2, "hints": ["forEach는 무엇을 돌려줄까요?", "forEach는 \"하나씩 해 보기\"만 하고 새 배열을 만들지 않아요."], "exp": {"easy": "forEach는 일만 하고 보고서는 안 내는 직원이에요. 결과를 받으려 하면 빈손(undefined)이에요.", "work": "새 배열이 필요하면 map, 그냥 하나씩 출력·저장만 할 거면 forEach.", "tip": "forEach의 결과 = 늘 undefined."}, "trap": true}, {"type": "code", "st": 6, "q": "사람 객체 배열 users에서 이름(name)만 뽑은 배열을 돌려주세요.", "sol": "function names(users) {\n  return users.map(u => u.name);\n}", "tests": [["names([{ name: \"민수\", age: 20 }, { name: \"지은\", age: 31 }])", "[\"민수\", \"지은\"]"], ["names([])", "[]"]], "hints": ["모양을 바꾸는 거니까 map이에요.", "users.map(u => u.name)"], "exp": {"easy": "명찰 붙인 친구들 줄에서 명찰만 쏙쏙 떼어 새 줄을 만드는 거예요.", "work": "드롭다운 목록, 표의 한 열처럼 \"한 가지 값만 모으기\"를 할 때 매일 써요.", "tip": "객체 배열 → 값 배열 = map(x => x.키)."}, "starter": "function names(users) {\n  \n}", "must": [["\\.map\\(", "map 메서드로 풀어 보세요."]], "names": ["names"], "trap": false}, {"type": "code", "st": 6, "q": "점수 배열 scores의 점수가 전부 60점 이상이면 true를 돌려주세요.", "sol": "function allPassed(scores) {\n  return scores.every(s => s >= 60);\n}", "tests": [["allPassed([60, 99])", "true"], ["allPassed([70, 59])", "false"], ["allPassed([])", "true"]], "hints": ["\"전부 다 ~인가?\"는 every, \"하나라도 ~인가?\"는 some이에요.", "scores.every(s => s >= 60)"], "exp": {"easy": "every는 선생님이 \"모두 숙제 했니?\" 하고 묻는 거예요. 한 명이라도 안 했으면 false.", "work": "폼 검사(모든 칸을 채웠나?)에 every, 에러가 하나라도 있나는 some을 써요.", "tip": "빈 배열의 every는 true (아무도 안 어겼으니까), some은 false. 함정으로 나와요."}, "starter": "function allPassed(scores) {\n  \n}", "must": [], "names": ["allPassed"], "trap": false}, {"type": "code", "st": 7, "q": "이름 name과 나이 age를 받아 { name, age } 객체를 만들어 돌려주세요.", "sol": "function makeUser(name, age) {\n  return { name, age };\n}", "tests": [["makeUser(\"민수\", 20)", "{ name: \"민수\", age: 20 }"], ["makeUser(\"지은\", 31)", "{ name: \"지은\", age: 31 }"]], "hints": ["객체는 { 키: 값 } 모양이에요.", "키와 변수 이름이 같으면 { name, age } 처럼 줄여 쓸 수 있어요."], "exp": {"easy": "객체는 서랍장이에요. \"name\" 서랍에 이름, \"age\" 서랍에 나이를 넣어 둬요.", "work": "{ name: name } 대신 { name } 으로 줄여 쓰는 걸 실무에서 정말 많이 봐요.", "tip": "배열은 번호로, 객체는 이름(키)으로 꺼내요."}, "starter": "function makeUser(name, age) {\n  \n}", "must": [], "names": ["makeUser"], "trap": false}, {"type": "code", "st": 7, "q": "사용자 user의 주소 address 안의 도시 city를 돌려주세요. 주소가 없으면 \"모름\"을 돌려주세요.", "sol": "function cityOf(user) {\n  return user.address?.city ?? \"모름\";\n}", "tests": [["cityOf({ address: { city: \"서울\" } })", "\"서울\""], ["cityOf({ name: \"민수\" })", "\"모름\""]], "hints": ["user.address 가 없으면 user.address.city 에서 에러가 나요.", "?. 는 \"있으면 들어가고, 없으면 undefined\"예요.", "user.address?.city ?? \"모름\""], "exp": {"easy": "?. 는 \"문 열기 전에 문이 있는지 먼저 확인\" 이에요. 문이 없으면 조용히 undefined를 주고, ?? 가 \"모름\"으로 바꿔 줘요.", "work": "서버 데이터는 빠진 칸이 많아서 ?. 와 ?? 를 짝으로 자주 써요.", "tip": "없는 것의 속성을 읽으면 TypeError. ?. 하나로 막을 수 있어요."}, "starter": "function cityOf(user) {\n  \n}", "must": [], "names": ["cityOf"], "trap": true}, {"type": "code", "st": 7, "q": "단어 배열 words에서 단어마다 몇 번 나왔는지 세어 객체로 돌려주세요. 예: [\"사과\", \"배\", \"사과\"] → { 사과: 2, 배: 1 }", "sol": "function countWords(words) {\n  const count = {};\n  for (const w of words) {\n    count[w] = (count[w] || 0) + 1;\n  }\n  return count;\n}", "tests": [["countWords([\"사과\", \"배\", \"사과\"])", "{ 사과: 2, 배: 1 }"], ["countWords([])", "{}"]], "hints": ["빈 객체 const count = {}; 에 단어를 키로 써요.", "변수에 든 이름으로 키를 쓸 땐 대괄호: count[w]", "처음 나오면 undefined라서 (count[w] || 0) + 1"], "exp": {"easy": "투표함에서 표를 하나씩 꺼내, 이름 칸에 바를 정(正) 하나씩 긋는 거예요. 처음 나온 이름이면 0부터 시작!", "work": "통계, 태그 개수, 중복 찾기에서 이 \"세기 패턴\"을 계속 써요.", "tip": "변수 안의 이름으로 키를 쓸 땐 count[w], 진짜 \"w\"라는 키면 count.w."}, "starter": "function countWords(words) {\n  \n}", "must": [], "names": ["countWords"], "trap": true}, {"type": "mc", "st": 7, "q": "다음 코드의 출력은?", "code": "console.log({ a: 1 } === { a: 1 });", "out": "false", "choices": ["true", "false", "undefined", "에러가 나요"], "answer": 1, "hints": ["객체끼리 === 비교는 내용을 볼까요, 주소를 볼까요?", "{ } 를 쓸 때마다 새 객체(새 집)가 만들어져요."], "exp": {"easy": "똑같이 생긴 집 두 채를 지어도 주소는 달라요. === 는 주소를 비교해서 false예요.", "work": "내용 비교가 필요하면 키를 하나씩 비교하거나, 간단한 데이터는 JSON.stringify로 비교해요.", "tip": "객체·배열 === 비교 = 같은 것을 가리킬 때만 true."}, "trap": true}, {"type": "code", "st": 7, "q": "객체 obj에 들어 있는 키의 개수를 돌려주세요.", "sol": "function keyCount(obj) {\n  return Object.keys(obj).length;\n}", "tests": [["keyCount({ a: 1, b: 2 })", "2"], ["keyCount({})", "0"]], "hints": ["Object.keys(obj)는 키 이름 배열을 만들어 줘요.", "배열이니까 .length 로 개수를 세요."], "exp": {"easy": "Object.keys는 서랍장 서랍 이름표만 쭉 뽑아서 줄 세워 줘요. 그 줄의 길이가 서랍 개수예요.", "work": "객체를 돌 땐 Object.keys / Object.values / Object.entries 를 써요.", "tip": "객체에는 .length 가 없어요. Object.keys(obj).length!"}, "starter": "function keyCount(obj) {\n  \n}", "must": [], "names": ["keyCount"], "trap": false}, {"type": "code", "st": 7, "q": "원래 user는 바꾸지 말고, 나이 age만 1 늘린 새 객체를 돌려주세요.", "sol": "function birthday(user) {\n  return { ...user, age: user.age + 1 };\n}", "tests": [["birthday({ name: \"민수\", age: 20 })", "{ name: \"민수\", age: 21 }"], ["(() => { const u = { name: \"지은\", age: 31 }; birthday(u); return u.age; })()", "31"]], "hints": ["{ ...user } 는 user를 복사한 새 객체예요.", "뒤에 같은 키를 쓰면 덮어써요: { ...user, age: user.age + 1 }"], "exp": {"easy": "복사본을 만든 다음 나이 칸만 새로 적는 거예요. 원본 서랍장은 그대로!", "work": "화면 상태(state)를 바꿀 때 이 \"복사 후 덮어쓰기\" 패턴을 매일 써요.", "tip": "뒤에 쓴 키가 이겨요. { age: 1, ...user } 처럼 순서를 바꾸면 덮어쓰기가 안 돼요."}, "starter": "function birthday(user) {\n  \n}", "must": [], "names": ["birthday"], "trap": true}, {"type": "mc", "st": 7, "q": "다음 코드의 출력은?", "code": "const key = \"name\";\nconst u = { name: \"민수\" };\nconsole.log(u.key, u[key]);", "out": "undefined 민수", "choices": ["민수 민수", "undefined 민수", "민수 undefined", "에러가 나요"], "answer": 1, "hints": ["u.key 는 변수 key를 볼까요, 진짜 \"key\"라는 이름의 서랍을 볼까요?", "변수에 든 이름으로 꺼낼 땐 대괄호 u[key]"], "exp": {"easy": "u.key 는 \"key\"라고 적힌 서랍을 찾아요. 그런 서랍은 없어서 undefined. u[key] 는 key 안의 글자 \"name\" 서랍을 열어요.", "work": "키 이름이 변수에 들어 있으면 늘 대괄호 [ ] 를 써요.", "tip": "점(.) = 이름 그대로, 대괄호[ ] = 변수 속 값으로."}, "trap": true}, {"type": "mc", "st": 7, "q": "다음 코드의 출력은?", "code": "const { a = 5, b = 5 } = { a: 1, b: null };\nconsole.log(a, b);", "out": "1 null", "choices": ["1 5", "1 null", "5 5", "5 null"], "answer": 1, "hints": ["구조 분해 기본값(= 5)은 언제 쓰일까요?", "기본값은 값이 undefined일 때만 쓰여요. null은요?"], "exp": {"easy": "기본값은 \"아예 없을 때(undefined)\"만 나오는 예비 타이어예요. null은 \"비어 있음\"이라는 값이 있는 거라 그대로 null.", "work": "서버가 null을 보내면 기본값이 안 먹어요. const v = data.b ?? 5; 처럼 ?? 로 한 번 더 막아요.", "tip": "기본값(=) → undefined만, ?? → null과 undefined 둘 다."}, "trap": true}, {"type": "code", "st": 8, "q": "글자 s를 모두 대문자로 바꾸고 끝에 \"!\"를 붙여 돌려주세요. 예: shout(\"hi\") → \"HI!\"", "sol": "function shout(s) {\n  return s.toUpperCase() + \"!\";\n}", "tests": [["shout(\"hi\")", "\"HI!\""], ["shout(\"js\")", "\"JS!\""]], "hints": ["대문자로 바꾸는 메서드: toUpperCase()", "s.toUpperCase() + \"!\""], "exp": {"easy": "toUpperCase는 글자에 확성기를 대 주는 거예요. 작은 글씨가 전부 큰 글씨가 돼요.", "work": "검색할 때는 양쪽을 다 toLowerCase()로 바꿔서 비교하면 대소문자 상관없이 찾을 수 있어요.", "tip": "글자 메서드는 원본을 안 바꾸고 새 글자를 돌려줘요."}, "starter": "function shout(s) {\n  \n}", "must": [], "names": ["shout"], "trap": false}, {"type": "code", "st": 8, "q": "글자 s를 거꾸로 뒤집어 돌려주세요. 예: \"abc\" → \"cba\"", "sol": "function reverseStr(s) {\n  return s.split(\"\").reverse().join(\"\");\n}", "tests": [["reverseStr(\"abc\")", "\"cba\""], ["reverseStr(\"토마토!\")", "\"!토마토\""], ["reverseStr(\"\")", "\"\""]], "hints": ["글자에는 reverse가 없어요. 배열로 바꿔서 뒤집어요.", "s.split(\"\") → 글자 배열, .reverse() → 뒤집기, .join(\"\") → 다시 글자"], "exp": {"easy": "글자 목걸이를 끊어서(split) 구슬 순서를 뒤집고(reverse) 다시 꿰는(join) 거예요.", "work": "split / join은 글자 ↔ 배열을 오갈 때 늘 쓰는 짝꿍이에요.", "tip": "split(\"\") 과 join(\"\")의 빈 따옴표를 빼먹지 마세요. join()만 쓰면 쉼표가 끼어요."}, "starter": "function reverseStr(s) {\n  \n}", "must": [], "names": ["reverseStr"], "trap": false}, {"type": "code", "st": 8, "q": "글자 s 안에 글자 ch가 몇 번 나오는지 세어 돌려주세요. 예: count(\"banana\", \"a\") → 3", "sol": "function count(s, ch) {\n  return s.split(ch).length - 1;\n}", "tests": [["count(\"banana\", \"a\")", "3"], ["count(\"hello\", \"z\")", "0"], ["count(\"ㅋㅋㅋ\", \"ㅋ\")", "3"]], "hints": ["ch로 잘라 보면 조각 개수는 (나온 횟수 + 1)이에요.", "s.split(ch).length - 1", "for...of로 하나씩 세도 정답이에요."], "exp": {"easy": "빵에 칼집이 3번 들어가면 빵 조각은 4개예요. 그래서 조각 수 - 1 = 칼집 수!", "work": "반복문으로 세는 방법(for (const c of s) if (c === ch) n++)이 더 읽기 쉬우면 그렇게 써도 좋아요.", "tip": "같은 문제도 푸는 방법이 여러 개예요. 채점은 결과로 해요."}, "starter": "function count(s, ch) {\n  \n}", "must": [], "names": ["count"], "trap": false}, {"type": "code", "st": 8, "q": "글자 s가 앞으로 읽어도 뒤로 읽어도 같으면(회문) true를 돌려주세요. 예: \"토마토\" → true", "sol": "function isPalindrome(s) {\n  return s === s.split(\"\").reverse().join(\"\");\n}", "tests": [["isPalindrome(\"토마토\")", "true"], ["isPalindrome(\"level\")", "true"], ["isPalindrome(\"hello\")", "false"]], "hints": ["뒤집은 글자와 원래 글자가 같은지 비교해요.", "s === s.split(\"\").reverse().join(\"\")"], "exp": {"easy": "거울에 비춰도 똑같은 글자를 찾는 거예요. 뒤집어서 원래랑 비교!", "work": "앞 문제에서 만든 \"뒤집기\"를 재료로 다시 쓰는 것처럼, 작은 기능을 조합하는 게 실무 코딩이에요.", "tip": "비교식 결과가 바로 true/false라서 if 없이 return 하면 돼요."}, "starter": "function isPalindrome(s) {\n  \n}", "must": [], "names": ["isPalindrome"], "trap": false}, {"type": "code", "st": 8, "q": "전화번호 \"010-1234-5678\"의 가운데 4자리를 \"****\"로 가려 돌려주세요.", "sol": "function maskPhone(s) {\n  return s.slice(0, 4) + \"****\" + s.slice(8);\n}", "tests": [["maskPhone(\"010-1234-5678\")", "\"010-****-5678\""], ["maskPhone(\"010-9999-0000\")", "\"010-****-0000\""]], "hints": ["slice(시작, 끝)는 시작부터 끝 바로 앞까지 잘라요.", "앞부분 \"010-\"은 s.slice(0, 4), 뒷부분 \"-5678\"은 s.slice(8)", "s.slice(0, 4) + \"****\" + s.slice(8)"], "exp": {"easy": "가위로 앞 4칸, 뒤쪽을 잘라 두고 가운데에 별 스티커 \"****\"를 붙이는 거예요.", "work": "개인정보 가리기(마스킹)는 실제 서비스에서 꼭 하는 일이에요.", "tip": "slice(0, 4)는 0, 1, 2, 3번까지. 끝 번호는 안 들어가요."}, "starter": "function maskPhone(s) {\n  \n}", "must": [], "names": ["maskPhone"], "trap": false}, {"type": "mc", "st": 8, "q": "다음 코드의 출력은?", "code": "let s = \"abc\";\ns[0] = \"z\";\nconsole.log(s);", "out": "abc", "choices": ["zbc", "abc", "z", "에러가 나요"], "answer": 1, "hints": ["글자(문자열)는 한 번 만들면 안을 바꿀 수 없어요.", "s[0] = \"z\" 는 조용히 무시돼요."], "exp": {"easy": "글자는 돌에 새긴 글씨예요. 한 칸만 지우고 다시 쓸 수 없어요. 바꾸려면 새 글자를 만들어야 해요.", "work": "글자 일부를 바꾸려면 s = \"z\" + s.slice(1) 처럼 새로 만들어요.", "tip": "배열은 arr[0] = 바꾸기 OK, 문자열은 안 돼요."}, "trap": true}, {"type": "mc", "st": 8, "q": "다음 코드의 출력은?", "code": "console.log(\"가나다\".length, \"  hi \".trim().length);", "out": "3 2", "choices": ["3 2", "9 2", "3 5", "9 4"], "answer": 0, "hints": ["한글 한 글자는 길이 1이에요.", "trim()은 앞뒤 공백을 지워요."], "exp": {"easy": "\"가나다\"는 3글자, \"  hi \"는 공백을 잘라내면 \"hi\" 2글자예요.", "work": "로그인·검색 입력값은 trim()으로 실수로 들어간 공백을 지우고 써요.", "tip": "trim은 가운데 공백은 안 지워요. 앞뒤만!"}, "trap": false}, {"type": "code", "st": 8, "q": "name과 age를 받아 템플릿 문자열(백틱 `)로 \"민수는 20살\" 모양의 글자를 돌려주세요.", "sol": "function intro(name, age) {\n  return `${name}는 ${age}살`;\n}", "tests": [["intro(\"민수\", 20)", "\"민수는 20살\""], ["intro(\"지은\", 31)", "\"지은는 31살\""]], "hints": ["백틱 ` 안에서는 ${변수} 로 값을 끼워 넣어요.", "return `${name}는 ${age}살`;"], "exp": {"easy": "템플릿 문자열은 빈칸 채우기 문제지예요. ${ } 빈칸에 변수 값이 쏙 들어가요.", "work": "+ 로 여러 번 잇는 것보다 읽기 쉬워서, 요즘은 거의 템플릿 문자열을 써요.", "tip": "따옴표(' \")가 아니라 백틱(`)이어야 ${ }가 작동해요."}, "starter": "function intro(name, age) {\n  \n}", "must": [["`", "백틱(`) 템플릿 문자열로 풀어 보세요."]], "names": ["intro"], "trap": false}, {"type": "mc", "st": 9, "q": "다음 코드의 출력은?", "code": "for (var i = 0; i < 3; i++) {\n  setTimeout(() => console.log(i));\n}", "out": "3 / 3 / 3", "choices": ["0 / 1 / 2", "3 / 3 / 3", "2 / 2 / 2", "undefined × 3"], "answer": 1, "hints": ["setTimeout 안의 함수는 반복이 다 끝난 뒤에 실행돼요.", "var는 반복 전체에서 i 상자 하나만 써요. 다 끝났을 때 i는?"], "exp": {"easy": "var i는 교실에 하나뿐인 칠판이에요. 친구들이 나중에 칠판을 보러 왔을 땐 이미 3이 적혀 있어요.", "work": "반복문 변수는 늘 let으로! let은 반복마다 새 칠판을 만들어 줘요.", "tip": "var + setTimeout 반복 = 3 3 3. let이면 0 1 2. 면접 단골이에요."}, "trap": true}, {"type": "mc", "st": 9, "q": "앞 문제에서 var를 let으로 바꾸면 출력은?", "code": "for (let i = 0; i < 3; i++) {\n  setTimeout(() => console.log(i));\n}", "out": "0 / 1 / 2", "choices": ["0 / 1 / 2", "3 / 3 / 3", "2 / 2 / 2", "에러가 나요"], "answer": 0, "hints": ["let은 블록({ })마다 새 상자를 만들어요.", "반복할 때마다 그때의 i를 각자 기억해요."], "exp": {"easy": "let은 반복할 때마다 친구마다 자기 칠판을 하나씩 줘요. 그래서 각자 0, 1, 2를 기억해요.", "work": "let / const만 쓰면 이런 버그가 거의 사라져요. 그래서 실무에서 var를 안 써요.", "tip": "let = 블록마다 새로, var = 함수 전체에 하나."}, "trap": false}, {"type": "code", "st": 9, "q": "부를 때마다 1, 2, 3… 늘어난 수를 돌려주는 함수를 만들어 주는 makeCounter를 완성하세요.", "sol": "function makeCounter() {\n  let count = 0;\n  return () => {\n    count++;\n    return count;\n  };\n}", "tests": [["(() => { const c = makeCounter(); c(); c(); return c(); })()", "3"], ["(() => { const a = makeCounter(), b = makeCounter(); a(); a(); return b(); })()", "1"]], "hints": ["바깥 함수 안에 let count = 0; 을 만들어요.", "안쪽 함수를 return 해요. 안쪽 함수는 count를 기억해요(클로저).", "return () => { count++; return count; };"], "exp": {"easy": "클로저는 함수가 들고 다니는 비밀 주머니예요. 주머니 속 count는 밖에서 못 만지고, 함수만 꺼내 볼 수 있어요.", "work": "값을 숨기고 정해진 방법으로만 바꾸게 할 때 클로저를 써요 (React의 useState도 이 원리예요).", "tip": "makeCounter를 두 번 부르면 주머니도 두 개. 서로 숫자가 안 섞여요."}, "starter": "function makeCounter() {\n  \n}", "must": [], "names": ["makeCounter"], "trap": false}, {"type": "mc", "st": 9, "q": "다음 코드의 출력은?", "code": "console.log(a);\nvar a = 1;", "out": "undefined", "choices": ["1", "undefined", "에러가 나요 (ReferenceError)", "null"], "answer": 1, "hints": ["var 선언은 맨 위로 끌어올려지는데, 값도 같이 올라갈까요?", "이름만 올라가고, 값(= 1)은 그 줄에서 들어가요."], "exp": {"easy": "var는 \"a라는 상자가 있을 거야\"만 먼저 알려 주고, 상자 안은 비어(undefined) 있어요. 값은 그 줄에 가서야 들어가요.", "work": "let / const는 선언 전에 쓰면 에러를 내 줘서, 실수를 빨리 알 수 있어요. 그래서 더 안전해요.", "tip": "선언 전에 쓰기: var → undefined, let/const → ReferenceError."}, "trap": true}, {"type": "mc", "st": 9, "q": "다음 코드의 출력은?", "code": "let x = 1;\n{\n  let x = 2;\n}\nconsole.log(x);", "out": "1", "choices": ["1", "2", "undefined", "에러가 나요"], "answer": 0, "hints": ["{ } 안에서 let으로 만든 x는 { } 밖에서도 보일까요?", "블록 안의 x와 밖의 x는 이름만 같은 다른 상자예요."], "exp": {"easy": "방 안(블록)에 있는 x 상자와 거실의 x 상자는 다른 상자예요. 방에서 나오면 거실 상자(1)만 보여요.", "work": "같은 이름을 안쪽에서 또 만들면(가리기) 헷갈려요. 실무에서는 이름을 다르게 지어요.", "tip": "let / const는 { } 를 벗어나면 사라져요."}, "trap": false}, {"type": "code", "st": 9, "q": "함수 fn을 받아, 처음 한 번만 fn을 실행하고 그 다음부터는 처음 결과만 돌려주는 함수를 만드세요.", "sol": "function once(fn) {\n  let done = false;\n  let result;\n  return () => {\n    if (!done) {\n      done = true;\n      result = fn();\n    }\n    return result;\n  };\n}", "tests": [["(() => { let n = 0; const f = once(() => ++n); f(); f(); return [f(), n]; })()", "[1, 1]"], ["once(() => \"처음\")()", "\"처음\""]], "hints": ["실행했는지 기억할 상자 let done = false; 와 결과 상자 let result; 가 필요해요.", "안쪽 함수: 아직 안 했으면(!done) 실행해서 result에 담고 done = true;", "늘 return result;"], "exp": {"easy": "\"결제하기\" 버튼을 여러 번 눌러도 결제는 한 번만! 처음 한 번 했는지 비밀 주머니(done)에 적어 둬요.", "work": "버튼 중복 클릭 막기, 초기 설정 한 번만 하기에 이런 once 함수를 써요.", "tip": "클로저 = 바깥 변수를 기억하는 안쪽 함수. 기억할 게 여러 개면 변수도 여러 개."}, "starter": "function once(fn) {\n  \n}", "must": [], "names": ["once"], "trap": true}, {"type": "code", "st": 9, "q": "x를 받아서, 나중에 y를 주면 x + y를 돌려주는 함수를 만들어 주세요. 예: makeAdder(3)(4) → 7", "sol": "function makeAdder(x) {\n  return y => x + y;\n}", "tests": [["makeAdder(3)(4)", "7"], ["(() => { const add10 = makeAdder(10); return add10(5); })()", "15"]], "hints": ["함수가 함수를 돌려줄 수 있어요.", "return y => x + y; 안쪽 함수가 x를 기억해요."], "exp": {"easy": "makeAdder(10)은 \"10 더하기 기계\"를 만들어 줘요. 기계는 10을 기억하고 있다가 y가 들어오면 더해요.", "work": "설정값을 미리 넣어 둔 함수를 만드는 방법이에요 (예: 세율을 기억하는 세금 계산 함수).", "tip": "makeAdder(3)(4) 는 괄호 두 번: 첫 번째로 기계를 만들고, 두 번째로 기계를 써요."}, "starter": "function makeAdder(x) {\n  \n}", "must": [], "names": ["makeAdder"], "trap": false}, {"type": "code", "st": 10, "q": "이름 name을 받는 Dog 클래스를 만드세요. bark() 를 부르면 \"이름: 멍멍\"을 돌려줘요.", "sol": "class Dog {\n  constructor(name) {\n    this.name = name;\n  }\n  bark() {\n    return this.name + \": 멍멍\";\n  }\n}", "tests": [["new Dog(\"초코\").bark()", "\"초코: 멍멍\""], ["new Dog(\"보리\").name", "\"보리\""]], "hints": ["constructor(name) 는 new Dog(\"초코\") 할 때 처음 실행돼요.", "this.name = name; 으로 객체에 이름을 저장해요.", "메서드: bark() { return this.name + \": 멍멍\"; }"], "exp": {"easy": "클래스는 붕어빵 틀, new Dog(\"초코\")는 틀로 찍어낸 붕어빵 하나예요. this는 \"지금 이 붕어빵\"이에요.", "work": "비슷한 객체를 많이 만들 때(사용자, 상품) 클래스로 틀을 만들어 둬요.", "tip": "constructor = 처음 만들 때 한 번, 메서드 = 필요할 때마다."}, "starter": "class Dog {\n  \n}", "must": [], "names": ["Dog"], "trap": false}, {"type": "code", "st": 10, "q": "inc()를 부를 때마다 count가 1씩 늘고, inc()가 자기 자신(this)을 돌려줘서 이어 부를 수 있는 Counter 클래스를 완성하세요.", "sol": "class Counter {\n  count = 0;\n  inc() {\n    this.count++;\n    return this;\n  }\n}", "tests": [["new Counter().inc().inc().count", "2"], ["new Counter().count", "0"]], "hints": ["count = 0; 은 처음 값이에요 (클래스 필드).", "inc() { this.count++; return this; }", "this를 돌려주면 .inc().inc() 처럼 이어 부를 수 있어요."], "exp": {"easy": "return this 는 \"나 다시 줄게, 또 시켜!\" 예요. 그래서 점(.)으로 줄줄이 시킬 수 있어요.", "work": "jQuery, 배열 메서드처럼 줄줄이 부르는 방식(메서드 체이닝)이 바로 이거예요.", "tip": "this.count++ 의 this를 빼먹으면 count를 못 찾아서 에러가 나요."}, "starter": "class Counter {\n  count = 0;\n  \n}", "must": [], "names": ["Counter"], "trap": false}, {"type": "mc", "st": 10, "q": "다음 코드를 실행하면?", "code": "class User {\n  name = \"민수\";\n  hi() { return this.name; }\n}\nconst f = new User().hi;\nconsole.log(f());", "out": "Error:TypeError", "choices": ["민수", "undefined", "에러가 나요 (TypeError)", "에러가 나요 (ReferenceError)"], "answer": 2, "hints": ["f = new User().hi 처럼 메서드만 떼어 내면 this는 누구일까요?", "점(.) 앞의 객체가 this예요. f() 에는 점이 없어요."], "exp": {"easy": "this는 \"나를 부른 점(.) 앞의 친구\"예요. 메서드만 떼어 내서 부르면 점 앞이 비어서 this가 undefined, 그래서 this.name에서 에러!", "work": "버튼 클릭 이벤트에 메서드를 넘길 때 자주 터져요. () => user.hi() 처럼 화살표로 감싸서 넘겨요.", "tip": "this는 만든 곳이 아니라 부르는 모양으로 정해져요 (화살표 함수만 예외)."}, "trap": true}, {"type": "code", "st": 10, "q": "Animal을 물려받는(extends) Cat 클래스를 만드세요. Cat의 speak()는 \"이름: 야옹\"을 돌려줘요.", "sol": "class Animal {\n  constructor(name) {\n    this.name = name;\n  }\n  speak() {\n    return this.name + \": ...\";\n  }\n}\nclass Cat extends Animal {\n  speak() {\n    return this.name + \": 야옹\";\n  }\n}", "tests": [["new Cat(\"나비\").speak()", "\"나비: 야옹\""], ["new Animal(\"곰\").speak()", "\"곰: ...\""], ["new Cat(\"나비\") instanceof Animal", "true"]], "hints": ["extends로 물려받으면 constructor(이름 저장)도 그대로 받아요.", "speak()만 다시 만들면(덮어쓰기) 돼요.", "speak() { return this.name + \": 야옹\"; }"], "exp": {"easy": "Cat은 Animal의 자식이라 이름 저장하는 법을 물려받아요. 우는 소리만 \"야옹\"으로 바꿔요.", "work": "공통 기능은 부모에, 다른 점만 자식에 쓰면 같은 코드를 여러 번 안 써도 돼요.", "tip": "자식에서 같은 이름 메서드를 만들면 부모 것을 덮어써요 (오버라이딩)."}, "starter": "class Animal {\n  constructor(name) {\n    this.name = name;\n  }\n  speak() {\n    return this.name + \": ...\";\n  }\n}\nclass Cat extends Animal {\n  \n}", "must": [], "names": ["Cat", "Animal"], "trap": false}, {"type": "mc", "st": 10, "q": "다음 코드의 출력은?", "code": "class A {}\nconsole.log(typeof A);", "out": "function", "choices": ["class", "object", "function", "undefined"], "answer": 2, "hints": ["클래스는 사실 무엇으로 만들어져 있을까요?", "자바스크립트 클래스는 함수를 보기 좋게 포장한 거예요."], "exp": {"easy": "클래스는 함수에 예쁜 옷을 입힌 거예요. 옷을 벗기면(typeof) 함수예요.", "work": "옛날 코드에서는 function Dog() {} + prototype 으로 클래스를 흉내 냈어요. 그 흔적이에요.", "tip": "typeof class = \"function\". \"class\"라는 typeof 결과는 없어요."}, "trap": true}, {"type": "code", "st": 10, "q": "가로 w, 세로 h를 받는 Rect 클래스에 넓이를 돌려주는 getter area 를 추가하세요. new Rect(2, 3).area → 6 (괄호 없이!)", "sol": "class Rect {\n  constructor(w, h) {\n    this.w = w;\n    this.h = h;\n  }\n  get area() {\n    return this.w * this.h;\n  }\n}", "tests": [["new Rect(2, 3).area", "6"], ["new Rect(5, 5).area", "25"]], "hints": ["get 이름() { ... } 으로 만들면 괄호 없이 값처럼 읽을 수 있어요.", "get area() { return this.w * this.h; }"], "exp": {"easy": "getter는 \"물어보면 그때 계산해서 알려 주는 칸\"이에요. 따로 저장 안 해도 늘 최신 넓이가 나와요.", "work": "다른 값으로 계산되는 값(합계, 전체 이름)은 getter로 만들면 값이 어긋날 일이 없어요.", "tip": "getter는 rect.area 처럼 괄호 없이! rect.area() 라고 하면 에러예요."}, "starter": "class Rect {\n  constructor(w, h) {\n    this.w = w;\n    this.h = h;\n  }\n  \n}", "must": [], "names": ["Rect"], "trap": false}, {"type": "mc", "st": 11, "q": "다음 코드의 출력 순서는?", "code": "console.log(1);\nsetTimeout(() => console.log(2), 0);\nPromise.resolve().then(() => console.log(3));\nconsole.log(4);", "out": "1 / 4 / 3 / 2", "choices": ["1 / 2 / 3 / 4", "1 / 4 / 2 / 3", "1 / 4 / 3 / 2", "1 / 3 / 4 / 2"], "answer": 2, "hints": ["보통 코드(1, 4)가 먼저 다 끝나요.", "Promise의 then은 setTimeout보다 먼저 실행돼요 (급한 줄, 마이크로태스크)."], "exp": {"easy": "지금 할 일(1, 4)을 먼저 끝내고, 급한 숙제 통(Promise, 3)을 비운 다음, 나중 숙제 통(setTimeout, 2)을 봐요.", "work": "순서가 중요한 일은 순서를 \"추측\"하지 말고 await로 확실하게 기다려요.", "tip": "동기 → Promise(then) → setTimeout. 이 순서만 외우면 이벤트 루프 문제가 풀려요."}, "trap": true}, {"type": "code", "st": 11, "q": "ms 밀리초 뒤에 끝나는 Promise를 돌려주는 wait 함수를 만드세요.", "sol": "function wait(ms) {\n  return new Promise(resolve => setTimeout(resolve, ms));\n}", "tests": [["wait(10).then(() => \"끝\")", "\"끝\""], ["wait(0) instanceof Promise", "true"]], "hints": ["new Promise(resolve => …) 안에서, 끝났을 때 resolve() 를 불러요.", "setTimeout(resolve, ms) 는 ms 뒤에 resolve를 불러 줘요."], "exp": {"easy": "Promise는 \"다 되면 연락할게\" 약속 쪽지예요. resolve는 \"다 됐어요!\" 하고 연락하는 버튼이에요.", "work": "테스트나 애니메이션에서 \"잠깐 기다리기\"가 필요할 때 이 wait 함수를 자주 만들어 써요.", "tip": "setTimeout(resolve, ms) 에 resolve() 처럼 괄호를 붙이면 바로 실행돼 버려요. 이름만 넘겨요!"}, "starter": "function wait(ms) {\n  \n}", "must": [], "names": ["wait"], "trap": false}, {"type": "code", "st": 11, "q": "Promise p가 끝나길 기다렸다가(await) 그 값의 2배를 돌려주는 async 함수를 완성하세요.", "sol": "async function getDouble(p) {\n  const n = await p;\n  return n * 2;\n}", "tests": [["getDouble(Promise.resolve(4))", "8"], ["getDouble(Promise.resolve(0))", "0"]], "hints": ["await p 는 p가 끝날 때까지 기다렸다가 결과 값을 줘요.", "const n = await p; return n * 2;"], "exp": {"easy": "await는 \"택배 올 때까지 문 앞에서 기다리기\"예요. 택배(값)가 오면 그걸로 다음 일을 해요.", "work": "서버에서 데이터를 받는 fetch는 거의 다 const res = await fetch(url); 처럼 await로 기다려요.", "tip": "await는 async 함수 안에서만 쓸 수 있어요."}, "starter": "async function getDouble(p) {\n  \n}", "must": [["\\bawait\\b", "await로 기다려서 풀어 보세요."]], "names": ["getDouble"], "trap": false}, {"type": "mc", "st": 11, "q": "다음 코드의 출력은?", "code": "async function f() { return 1; }\nconsole.log(f() instanceof Promise);", "out": "true", "choices": ["1", "true", "false", "undefined"], "answer": 1, "hints": ["async 함수는 return 1 을 해도 그냥 1을 돌려줄까요?", "async 함수는 늘 Promise로 포장해서 돌려줘요."], "exp": {"easy": "async 함수는 결과를 늘 \"약속 상자(Promise)\"에 넣어서 줘요. 1을 꺼내려면 await나 then이 필요해요.", "work": "async 함수의 결과를 쓸 땐 꼭 await 하는 습관! 안 그러면 다음 문제 같은 버그가 나요.", "tip": "async = Promise를 돌려줌. 예외 없음."}, "trap": true}, {"type": "code", "st": 11, "q": "Promise 배열 promises가 모두 끝나길 기다린 뒤, 결과 숫자들의 합을 돌려주는 async 함수를 완성하세요.", "sol": "async function sumAsync(promises) {\n  const nums = await Promise.all(promises);\n  return nums.reduce((a, b) => a + b, 0);\n}", "tests": [["sumAsync([Promise.resolve(1), Promise.resolve(2)])", "3"], ["sumAsync([])", "0"]], "hints": ["여러 Promise를 한꺼번에 기다리는 건 Promise.all(배열)이에요.", "const nums = await Promise.all(promises);", "그 다음은 배열 합: nums.reduce((a, b) => a + b, 0)"], "exp": {"easy": "Promise.all은 \"친구들 다 올 때까지 기다렸다 같이 출발!\" 이에요. 다 오면 결과를 배열로 줘요.", "work": "여러 API를 동시에 부를 때 하나씩 await 하면 느려요. Promise.all로 한꺼번에 기다려요.", "tip": "Promise.all은 하나라도 실패하면 전체가 실패해요. 일부 실패를 허용하려면 Promise.allSettled."}, "starter": "async function sumAsync(promises) {\n  \n}", "must": [], "names": ["sumAsync"], "trap": false}, {"type": "mc", "st": 11, "q": "다음 코드의 출력은?", "code": "async function get() { return 5; }\nasync function main() {\n  const n = get();\n  console.log(n + 1);\n}\nmain();", "out": "[object Promise]1", "choices": ["6", "5", "[object Promise]1", "NaN"], "answer": 2, "hints": ["get() 앞에 무엇이 빠졌을까요?", "await 없이 받은 n은 숫자가 아니라 Promise예요. Promise + 1 은?"], "exp": {"easy": "await를 빼먹으면 택배 상자를 안 뜯고 상자째 계산한 거예요. 상자를 글자로 바꾸면 \"[object Promise]\"가 되고, 1이 뒤에 붙어요.", "work": "결과에 [object Promise]나 Promise {…}가 보이면 await를 빼먹은 거예요. 바로 찾아보세요.", "tip": "async 함수 결과 = 늘 await."}, "trap": true}, {"type": "code", "st": 12, "q": "JSON 글자 text를 객체로 바꿔 돌려주세요. 글자가 망가져서 바꿀 수 없으면 에러 대신 null을 돌려주세요.", "sol": "function safeParse(text) {\n  try {\n    return JSON.parse(text);\n  } catch (e) {\n    return null;\n  }\n}", "tests": [["safeParse('{\"a\": 1}')", "{ a: 1 }"], ["safeParse(\"망가짐\")", "null"], ["safeParse(\"[1, 2]\")", "[1, 2]"]], "hints": ["JSON.parse(text)는 망가진 글자면 에러를 던져요.", "try { 해 보기 } catch (e) { 에러 나면 여기 }", "try 안에서 return JSON.parse(text); catch 안에서 return null;"], "exp": {"easy": "try는 \"일단 해 봐\", catch는 \"넘어지면 내가 받아 줄게\" 안전 매트예요.", "work": "서버 응답, localStorage 값처럼 밖에서 온 글자를 바꿀 땐 꼭 try/catch로 감싸요.", "tip": "try/catch는 에러가 날 수 있는 곳만 좁게 감싸요."}, "starter": "function safeParse(text) {\n  \n}", "must": [], "names": ["safeParse"], "trap": false}, {"type": "code", "st": 12, "q": "숫자 n을 \"12,000원\"처럼 세 자리마다 쉼표를 찍고 \"원\"을 붙여 돌려주세요.", "sol": "function won(n) {\n  return n.toLocaleString(\"ko-KR\") + \"원\";\n}", "tests": [["won(12000)", "\"12,000원\""], ["won(500)", "\"500원\""], ["won(1234567)", "\"1,234,567원\""]], "hints": ["숫자를 지역 형식으로 바꿔 주는 메서드가 있어요: toLocaleString", "n.toLocaleString(\"ko-KR\") + \"원\""], "exp": {"easy": "toLocaleString은 숫자를 \"우리나라 사람이 읽기 좋은 모양\"으로 바꿔 주는 번역기예요.", "work": "가격 표시는 직접 쉼표를 찍지 말고 toLocaleString이나 Intl.NumberFormat 을 써요.", "tip": "\"ko-KR\"을 넣어 두면 어느 나라 폰에서 열어도 같은 모양이 나와요."}, "starter": "function won(n) {\n  \n}", "must": [], "names": ["won"], "trap": false}, {"type": "code", "st": 12, "q": "사람 배열 users를 팀(team)별로 묶어 { 팀이름: [이름들] } 객체로 돌려주세요.", "sol": "function groupByTeam(users) {\n  const out = {};\n  for (const u of users) {\n    if (!out[u.team]) out[u.team] = [];\n    out[u.team].push(u.name);\n  }\n  return out;\n}", "tests": [["groupByTeam([{ name: \"민수\", team: \"개발\" }, { name: \"지은\", team: \"영업\" }, { name: \"하늘\", team: \"개발\" }])", "{ 개발: [\"민수\", \"하늘\"], 영업: [\"지은\"] }"], ["groupByTeam([])", "{}"]], "hints": ["빈 객체 out에 팀 이름을 키로, 이름 배열을 값으로 넣어요.", "그 팀 칸이 아직 없으면 먼저 빈 배열을 만들어요: if (!out[u.team]) out[u.team] = [];", "그 다음 out[u.team].push(u.name);"], "exp": {"easy": "반별 줄 세우기예요. 새 반 이름이 나오면 빈 줄을 하나 만들고, 그 줄 끝에 친구를 세워요.", "work": "SQL의 GROUP BY를 자바스크립트로 하는 거예요. 화면에 그룹별 목록을 그릴 때 자주 해요.", "tip": "\"없으면 만들고 넣기\" 패턴. countWords(세기)와 쌍둥이예요."}, "starter": "function groupByTeam(users) {\n  \n}", "must": [], "names": ["groupByTeam"], "trap": false}, {"type": "code", "st": 12, "q": "배열 arr에서 중복을 없앤 새 배열을 돌려주세요. (처음 나온 순서 유지)", "sol": "function unique(arr) {\n  return [...new Set(arr)];\n}", "tests": [["unique([1, 2, 2, 3, 1])", "[1, 2, 3]"], ["unique([\"a\", \"a\"])", "[\"a\"]"], ["unique([])", "[]"]], "hints": ["Set은 같은 값을 두 번 담지 않는 주머니예요.", "new Set(arr) 로 중복을 없애고, [... ] 로 다시 배열로 펼쳐요."], "exp": {"easy": "Set은 \"같은 스티커는 하나만 붙일 수 있는 앨범\"이에요. 다 붙이고 나서 앨범을 펼치면(...) 중복 없는 배열!", "work": "태그 목록, 방문한 페이지처럼 중복을 없앨 때 [...new Set(arr)] 한 줄을 정말 많이 써요.", "tip": "Set은 === 로 비교해요. 내용이 같은 객체 두 개는 다른 값으로 봐요."}, "starter": "function unique(arr) {\n  \n}", "must": [], "names": ["unique"], "trap": false}, {"type": "code", "st": 12, "q": "객체 obj를 \"키=값&키=값\" 모양의 글자로 바꿔 돌려주세요. 예: { page: 2, q: \"js\" } → \"page=2&q=js\"", "sol": "function toQuery(obj) {\n  return Object.entries(obj).map(([k, v]) => k + \"=\" + v).join(\"&\");\n}", "tests": [["toQuery({ page: 2, q: \"js\" })", "\"page=2&q=js\""], ["toQuery({})", "\"\""]], "hints": ["Object.entries(obj)는 [[키, 값], [키, 값]] 배열을 만들어 줘요.", ".map(([k, v]) => k + \"=\" + v) 로 \"키=값\" 글자로 바꿔요.", ".join(\"&\") 로 이어 붙여요."], "exp": {"easy": "서랍마다 \"이름=내용\" 쪽지를 써서 & 풀로 이어 붙이는 거예요.", "work": "주소창의 ?page=2&q=js 부분이 이 모양이에요. 실제로는 URLSearchParams가 특수문자까지 처리해 줘요.", "tip": "entries → map → join. 객체를 글자로 만들 때의 공식이에요."}, "starter": "function toQuery(obj) {\n  \n}", "must": [], "names": ["toQuery"], "trap": false}, {"type": "mc", "st": 12, "q": "다음 코드의 출력은?", "code": "console.log(JSON.stringify({ a: 1, b: undefined }));", "out": "{\"a\":1}", "choices": ["{\"a\":1,\"b\":undefined}", "{\"a\":1,\"b\":null}", "{\"a\":1}", "에러가 나요"], "answer": 2, "hints": ["JSON에는 undefined라는 값이 없어요.", "그래서 JSON.stringify는 undefined인 칸을 어떻게 할까요?"], "exp": {"easy": "JSON 나라에는 undefined가 없어서, stringify가 그 칸을 조용히 빼 버려요.", "work": "서버에 \"값 없음\"을 보내야 하면 undefined 대신 null을 넣어요.", "tip": "stringify에서 사라지는 것: undefined, 함수. null은 남아요."}, "trap": true}, {"type": "code", "st": 12, "q": "장바구니 cart(각 칸은 { price, qty })의 총 금액(가격 × 수량의 합)을 돌려주세요.", "sol": "function cartTotal(cart) {\n  return cart.reduce((sum, item) => sum + item.price * item.qty, 0);\n}", "tests": [["cartTotal([{ price: 1000, qty: 2 }, { price: 500, qty: 3 }])", "3500"], ["cartTotal([])", "0"]], "hints": ["\"여러 개 → 하나\" 니까 reduce예요.", "sum + item.price * item.qty", "시작값 0 잊지 마세요: cart.reduce((sum, item) => …, 0)"], "exp": {"easy": "계산대에서 물건마다 (가격 × 개수)를 계산해서 저금통(sum)에 차곡차곡 더하는 거예요.", "work": "쇼핑몰 장바구니 합계가 딱 이 코드예요.", "tip": "곱하기가 더하기보다 먼저 계산돼요. 괄호 없이 sum + price * qty 로 써도 돼요."}, "starter": "function cartTotal(cart) {\n  \n}", "must": [], "names": ["cartTotal"], "trap": false}, {"type": "mc", "st": 12, "q": "다음 코드의 출력은?", "code": "console.log([1, 2, 3].includes(\"2\"));", "out": "false", "choices": ["true", "false", "2", "에러가 나요"], "answer": 1, "hints": ["배열 안에는 숫자 2가 들어 있어요. 찾는 건 글자 \"2\"예요.", "includes는 === 처럼 종류까지 비교해요."], "exp": {"easy": "숫자 2와 글자 \"2\"는 생긴 건 비슷해도 다른 물건이에요. 그래서 못 찾아요.", "work": "입력창에서 받은 값(늘 글자)으로 숫자 배열을 찾을 땐 Number(값)으로 바꿔서 찾아요.", "tip": "includes, indexOf, === 는 종류가 다르면 무조건 false."}, "trap": true}], "stations": ["변수·자료형", "연산자·비교", "조건문", "반복문", "함수", "배열", "배열 메서드", "객체", "문자열", "스코프·클로저", "클래스·this", "비동기", "실무"], "theory": [{"t": "변수·자료형", "easy": "변수는 이름표 붙은 상자예요. 값이 바뀔 일이 없으면 const, 바뀌면 let으로 만들어요. 상자에 담기는 값의 종류(자료형)는 숫자, 글자, true/false, null, undefined, 배열, 객체 등이 있어요.", "code": "const name = \"민수\";   // 글자 (바꿀 수 없음)\nlet age = 20;          // 숫자 (바꿀 수 있음)\nage = 21;              // OK\n\ntypeof 1        // \"number\"\ntypeof \"a\"      // \"string\"\ntypeof true     // \"boolean\"\ntypeof undefined // \"undefined\"\ntypeof null     // \"object\"  ← 함정!\nArray.isArray([1, 2]) // true", "tip": "const 먼저, 바꿔야 하면 let, var는 안 써요. typeof null과 typeof []는 둘 다 \"object\"예요."}, {"t": "연산자·비교", "easy": "+ - * / % 로 계산하고, === 로 같은지 비교해요. + 는 글자가 하나라도 있으면 이어 붙이기가 돼요. == 는 종류를 억지로 맞춰서 헷갈리니까 늘 === 를 써요.", "code": "1 + 2        // 3\n1 + \"2\"      // \"12\"  글자가 있으면 이어 붙이기\n\"3\" - 1      // 2     - 는 숫자로 바꿔서 계산\n7 % 2        // 1     나머지\n0 === \"\"     // false (종류까지 비교)\nnull ?? \"기본\" // \"기본\" (null, undefined일 때만)\n0 || \"기본\"   // \"기본\" (0, \"\" 도 바꿔 버림)\na > b ? a : b  // 삼항: 조건 ? 참 : 거짓", "tip": "0.1 + 0.2 !== 0.3, NaN !== NaN. 기본값은 ?? 가 || 보다 안전해요."}, {"t": "조건문", "easy": "if는 \"만약 ~면 이걸 해\" 갈림길이에요. 조건에 true/false가 아닌 값이 와도, 거짓 6개(false, 0, \"\", null, undefined, NaN)만 거짓이고 나머지는 전부 참으로 봐요.", "code": "if (score >= 90) return \"A\";\nelse if (score >= 80) return \"B\";\nelse return \"F\";\n\nif ([]) { }   // 빈 배열도 참!\nif (\"0\") { }  // 글자 \"0\"도 참!\n\nswitch (n) {\n  case 1: ...; break;  // break 없으면 아래로 미끄러짐\n  default: ...\n}", "tip": "조건이 겹치면 좁은 조건을 먼저. && 는 둘 다, || 는 하나라도, ! 는 반대."}, {"t": "반복문", "easy": "같은 일을 여러 번 할 때 반복문을 써요. 횟수가 정해져 있으면 for, \"~하는 동안\"이면 while, 배열 값을 하나씩 꺼낼 땐 for...of 예요.", "code": "for (let i = 0; i < 3; i++) { }  // 0, 1, 2\n\nwhile (n > 0) { n--; }           // n-- 꼭!\n\nfor (const x of [10, 20]) { }    // x = 10, 20 (값)\nfor (const k in [10, 20]) { }    // k = \"0\", \"1\" (번호) ← 배열엔 X\n\nfor (const x of arr) {\n  if (x < 0) return x;  // 찾으면 바로 끝\n}", "tip": "i < arr.length (작다)로 써요. <= 면 한 번 더 돌아요. of = 값, in = 키."}, {"t": "함수", "easy": "함수는 재료를 넣으면 결과를 주는 기계예요. 매개변수로 재료를 받고 return 으로 결과를 내보내요. return이 없으면 undefined를 돌려줘요.", "code": "function add(a, b) {\n  return a + b;\n}\nconst double = n => n * 2;        // 화살표 함수\nconst add2 = (a, b) => { return a + b; };\n\nfunction greet(name = \"친구\") { }  // 기본값\nfunction sumAll(...nums) { }       // 나머지: 배열로 모으기\napplyTwice(n => n + 1, 5);          // 함수를 값처럼 넘기기", "tip": "function 선언은 위로 끌어올려져서 먼저 불러도 되고, const 화살표 함수는 안 돼요. { } 를 쓰면 return 필수."}, {"t": "배열", "easy": "배열은 번호가 붙은 칸들이에요. 번호는 0부터 시작하고, 마지막 칸 번호는 length - 1 이에요. 배열을 다른 변수에 넣으면 복사가 아니라 같은 배열을 가리켜요.", "code": "const arr = [10, 20, 30];\narr[0]               // 10\narr[arr.length - 1]  // 30\narr.push(40);        // 원본에 추가 (const여도 OK)\nconst copy = [...arr];         // 복사\nconst more = [...arr, 50];     // 복사 + 추가\nconst [a, b] = arr;            // 구조 분해: a=10, b=20\narr.includes(20)     // true\n[10, 1, 2].sort()    // [1, 10, 2] ← 글자 순!\n[10, 1, 2].sort((a, b) => a - b) // [1, 2, 10]", "tip": "원본을 바꾸는 것: push, pop, sort, reverse, splice. 숫자 정렬은 (a, b) => a - b."}, {"t": "배열 메서드", "easy": "배열 메서드는 반복문을 한 줄로 줄여 주는 도구예요. map은 모양 바꾸기, filter는 골라내기, reduce는 하나로 합치기, find는 하나 찾기예요.", "code": "[1, 2, 3].map(n => n * 2)          // [2, 4, 6]\n[1, 2, 3].filter(n => n > 1)       // [2, 3]\n[1, 2, 3].reduce((s, n) => s + n, 0) // 6\nusers.find(u => u.id === 2)         // 첫 번째 하나\n[60, 70].every(s => s >= 60)        // 전부? true\n[50, 70].some(s => s < 60)          // 하나라도? true\n[1, 2].forEach(n => console.log(n)) // 결과는 undefined", "tip": "filter → map → reduce 순서로 이어 써요. reduce에는 시작값(, 0)을 꼭!"}, {"t": "객체", "easy": "객체는 이름표(키)가 붙은 서랍장이에요. obj.키 나 obj[\"키\"] 로 꺼내요. 키 이름이 변수에 들어 있으면 대괄호를 써요.", "code": "const user = { name: \"민수\", age: 20 };\nuser.name            // \"민수\"\nconst key = \"age\";\nuser[key]            // 20 (변수 속 이름으로)\nuser.address?.city   // 없으면 undefined (에러 X)\nObject.keys(user)    // [\"name\", \"age\"]\nObject.entries(user) // [[\"name\",\"민수\"], [\"age\",20]]\nconst older = { ...user, age: 21 }; // 복사 + 덮어쓰기\nconst { name, age } = user;        // 구조 분해", "tip": "객체끼리 === 는 같은 객체일 때만 true. 구조 분해 기본값은 undefined일 때만 쓰여요."}, {"t": "문자열", "easy": "문자열은 글자 목걸이예요. 한 번 만들면 안의 글자를 바꿀 수 없고, 메서드들은 늘 새 글자를 만들어 돌려줘요.", "code": "const s = \"Hello\";\ns.length            // 5\ns[0]                // \"H\"\ns.toUpperCase()     // \"HELLO\"\ns.slice(1, 3)       // \"el\" (끝 번호는 안 들어감)\ns.split(\"\")         // [\"H\",\"e\",\"l\",\"l\",\"o\"]\n[\"a\",\"b\"].join(\"-\") // \"a-b\"\n\"  hi \".trim()      // \"hi\"\ns.includes(\"ell\")   // true\n`${s}, 민수!`       // 템플릿 문자열", "tip": "글자 ↔ 배열은 split / join. 뒤집기는 split(\"\").reverse().join(\"\")."}, {"t": "스코프·클로저", "easy": "스코프는 변수가 보이는 범위예요. let/const는 { } 블록 안에서만 보여요. 클로저는 안쪽 함수가 바깥 함수의 변수를 계속 기억하는 거예요.", "code": "function makeCounter() {\n  let count = 0;          // 비밀 주머니\n  return () => ++count;   // 기억하는 함수\n}\nconst c = makeCounter();\nc(); c();  // 1, 2\n\nconsole.log(a); var a = 1;  // undefined\nconsole.log(b); let b = 1;  // ReferenceError\n\nfor (var i = 0; i < 3; i++) setTimeout(() => console.log(i)); // 3 3 3\nfor (let i = 0; i < 3; i++) setTimeout(() => console.log(i)); // 0 1 2", "tip": "반복 변수는 let. 클로저 = 함수 + 기억하는 바깥 변수."}, {"t": "클래스·this", "easy": "클래스는 객체를 찍어내는 틀이에요. new로 만들 때 constructor가 실행되고, this는 \"지금 만든(부른) 그 객체\"예요. extends로 부모 기능을 물려받아요.", "code": "class Dog {\n  constructor(name) { this.name = name; }\n  bark() { return this.name + \": 멍멍\"; }\n  get upper() { return this.name.toUpperCase(); } // getter\n}\nconst d = new Dog(\"초코\");\nd.bark();   // \"초코: 멍멍\"\nd.upper;    // 괄호 없이\n\nclass Puppy extends Dog {\n  bark() { return this.name + \": 왈\"; } // 덮어쓰기\n}\nconst f = d.bark; f();  // TypeError: this가 없음", "tip": "this는 점(.) 앞의 객체. 메서드를 떼어 넘기면 this를 잃어요 → () => d.bark() 로 감싸요."}, {"t": "비동기", "easy": "비동기는 \"시간이 걸리는 일을 기다리는 동안 다른 일 하기\"예요. Promise는 \"다 되면 알려 줄게\" 약속이고, async 함수 안에서 await로 그 약속을 기다려요.", "code": "const wait = ms => new Promise(r => setTimeout(r, ms));\n\nasync function load() {\n  await wait(100);             // 기다리기\n  const res = await fetch(url); // 서버 응답 기다리기\n  return res.json();\n}\nconst [a, b] = await Promise.all([p1, p2]); // 같이 기다리기\n\n// 순서: 일반 코드 → Promise.then → setTimeout\nconsole.log(1);\nsetTimeout(() => console.log(2));\nPromise.resolve().then(() => console.log(3));\n// 1, 3, 2", "tip": "async 함수는 늘 Promise를 돌려줘요. 결과에 [object Promise]가 보이면 await를 빼먹은 거예요."}, {"t": "실무", "easy": "실무 코드는 \"밖에서 온 값은 믿지 않기\", \"원본은 바꾸지 않기\", \"작은 함수를 조합하기\"가 기본이에요.", "code": "try { JSON.parse(text); } catch (e) { /* 망가진 값 대비 */ }\n(12000).toLocaleString(\"ko-KR\")   // \"12,000\"\n[...new Set([1, 1, 2])]            // [1, 2] 중복 제거\nObject.entries(obj).map(([k, v]) => k + \"=\" + v).join(\"&\")\nJSON.stringify({ a: 1, b: undefined }) // '{\"a\":1}'\n[1, 2].includes(\"2\")               // false (종류 다름)", "tip": "입력값은 늘 글자예요. Number()로 바꾸고, trim()으로 공백을 지우고, ?? 로 기본값을 줘요."}]};
+</script>
+<script>
+(function () {
+  const P = DATA.problems, STN = DATA.stations, TH = DATA.theory;
+  const KEY = "js-commute-v1";
+  const $ = id => document.getElementById(id);
+  const blank = () => ({ cur: 0, solved: {}, wrong: {}, tries: {}, drafts: {}, mode: "all" });
+
+  // ---------- state ----------
+  let st = blank();
+  try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s) st = Object.assign(st, s); } catch (e) {}
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
+
+  // ---------- 코드 실행: Web Worker 안에서 돌리고 3초가 넘으면 멈춘다 (무한 반복 대비) ----------
+  let workerURL = null;
+  try { workerURL = URL.createObjectURL(new Blob([$("runner").textContent + "\nonmessage = async e => postMessage(await runJob(e.data));"], { type: "text/javascript" })); } catch (e) {}
+  const direct = job => runJob(job).catch(err => ({ logs: [], err: errText(err), results: [] }));
+  function exec(job) {
+    return new Promise(resolve => {
+      let w;
+      try { if (!workerURL) throw 0; w = new Worker(workerURL); } catch (e) { direct(job).then(resolve); return; }
+      const timer = setTimeout(() => { w.terminate(); resolve({ timeout: true, logs: [], results: [] }); }, 3000);
+      w.onmessage = e => { clearTimeout(timer); w.terminate(); resolve(e.data); };
+      w.onerror = e => { e.preventDefault(); clearTimeout(timer); w.terminate(); direct(job).then(resolve); };
+      w.postMessage(job);
+    });
+  }
+  function friendly(err) {
+    let m;
+    const name = err.split(":")[0], msg = err.slice(name.length + 2);
+    if (name === "SyntaxError") return "문법 오류가 있어요. 괄호 ( ), 중괄호 { }, 따옴표 짝이 맞는지, 쉼표나 => 가 빠지지 않았는지 보세요. (" + msg + ")";
+    if ((m = msg.match(/^(\S+) is not defined/))) return `"${m[1]}"라는 이름을 찾을 수 없어요. 철자(대소문자 포함)를 확인하거나, 그 변수를 먼저 만들었는지 보세요.`;
+    if ((m = msg.match(/access '(\S+)' before initialization/))) return `"${m[1]}"를 만들기(선언하기) 전에 썼어요. 선언하는 줄을 위로 올려 보세요.`;
+    if (/Assignment to constant/.test(msg)) return "const로 만든 변수에 다시 값을 넣었어요. 바뀌는 값이면 let으로 만들어요.";
+    if ((m = msg.match(/(\S+) is not a function/))) return `${m[1]}은(는) 함수가 아닌데 ( )로 불렀어요. 이름 철자나 점(.) 앞의 값이 맞는지 보세요.`;
+    if ((m = msg.match(/Cannot read propert(?:y|ies) of (undefined|null)(?: \(reading '(.+?)'\))?/))) return `${m[1]}에서 ${m[2] ? "." + m[2] + " 을(를)" : "속성을"} 꺼내려 했어요. 점(.) 앞의 값이 비어 있지 않은지, ?. 가 필요한지 보세요.`;
+    if (/Reduce of empty array/.test(msg)) return "빈 배열에 reduce를 했는데 시작값이 없어요. reduce(..., 0) 처럼 시작값을 넣어 보세요.";
+    if (/is not a constructor/.test(msg)) return "new 로 만들 수 없는 것에 new를 붙였어요. class 이름을 확인해 보세요.";
+    if (/Maximum call stack|too much recursion/.test(msg)) return "함수가 자기 자신을 끝없이 부르고 있어요. 멈추는 조건이 있는지 보세요.";
+    return "실행 중 오류: " + err;
+  }
+  const TIMEOUT_MSG = "3초 안에 끝나지 않았어요. 끝나지 않는 반복(무한 반복)이 있는지 보세요. while 안에서 조건이 바뀌나요? i++ 를 빼먹지 않았나요?";
+
+  // ---------- 그리기 도우미 ----------
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  // 문제·해설 글 속 코드 조각을 코드 글씨로 (escape 한 뒤라 따옴표는 &quot;)
+  const inlineCode = s => esc(s).replace(/(`[^`]+`|(?:\b|\.)[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*\([^()]*\)(?:\.[A-Za-z_$][\w$]*\([^()]*\))*|\[\.\.\.[^\]]*\]|\.\.\.[a-z]+|===|!==|\?\?|\?\.|=&gt;|&amp;&amp;|\|\||\b(?:typeof|return|const|let|var|null|undefined|NaN|async|await|this|true|false)\b)/g, "<code>$1</code>");
+  function list() {
+    if (st.mode === "wrong") return (st.queue || []).slice();
+    if (st.mode === "trap") return P.map((p, i) => i).filter(i => P[i].trap);
+    return P.map((p, i) => i);
+  }
+  function fb(kind, title, body) {
+    const d = document.createElement("div"); d.className = "fb " + kind;
+    d.innerHTML = (title ? `<h3>${title}</h3>` : "") + (body || "");
+    $("fb").appendChild(d); bindTheory(d); return d;
+  }
+  const theoryBtn = si => `<button class="btn ghost theory" data-th="${si}">📖 ${esc(STN[si])} 이론 보기</button>`;
+  function bindTheory(root) { root.querySelectorAll("[data-th]").forEach(b => b.onclick = () => show("theory", true, +b.dataset.th)); }
+  function renderExp(p) {
+    $("exp").innerHTML = `<div class="exp">
+      <div class="row"><span class="lab">쉽게 말하면</span><p>${inlineCode(p.exp.easy)}</p></div>
+      <div class="row"><span class="lab">실무 스타일</span><p>${inlineCode(p.exp.work)}</p></div>
+      <div class="row"><span class="lab">시험 꿀팁</span><p>${inlineCode(p.exp.tip)}</p></div>
+      ${theoryBtn(p.st)}</div>`;
+    bindTheory($("exp"));
+  }
+
+  function renderTop() {
+    const solved = Object.keys(st.solved).length;
+    $("score").innerHTML = `<b>${solved}</b>/${P.length}`;
+    const wrongN = Object.keys(st.wrong).length;
+    $("modeWrong").textContent = `오답 다시 풀기 ${wrongN}`;
+    $("modeWrong").disabled = wrongN === 0 && st.mode !== "wrong";
+    ["All", "Wrong", "Trap"].forEach(k => $("mode" + k).setAttribute("aria-pressed", String(st.mode === k.toLowerCase())));
+    const cs = P[st.cur].st;
+    $("stNow").textContent = STN[cs];
+    $("prevStName").textContent = cs > 0 ? STN[cs - 1] : "처음";
+    $("nextStName").textContent = cs < STN.length - 1 ? STN[cs + 1] : "끝";
+    $("prevSt").disabled = cs === 0; $("nextSt").disabled = cs === STN.length - 1;
+  }
+  const caretAt = s => { const k = s.indexOf("\n  \n"); return k >= 0 ? k + 3 : s.length; };
+
+  function render() {
+    const i = st.cur, p = P[i], L = list(), pos = L.indexOf(i);
+    renderTop();
+    $("meta").innerHTML =
+      `<span class="tag">${esc(STN[p.st])}</span>` +
+      (p.trap ? '<span class="tag trap">함정</span>' : "") +
+      `<span class="tag mc">${p.type === "mc" ? "객관식" : "코드 작성"}</span>` +
+      (st.solved[i] ? '<span class="tag solved">정답</span>' : "") +
+      `<span class="qnum">${i + 1} / ${P.length}${st.mode !== "all" ? ` · 이 모드 ${pos + 1}/${L.length}` : ""}</span>`;
+    $("q").innerHTML = inlineCode(p.q);
+    $("fb").innerHTML = ""; $("exp").innerHTML = "";
+    const area = $("answerArea");
+    if (p.type === "mc") {
+      $("codeWrap").innerHTML = p.code ? `<pre class="code">${esc(p.code)}</pre>` : "";
+      area.innerHTML = '<div class="choices">' + p.choices.map((c, k) =>
+        `<button class="choice" data-k="${k}"><span class="n">${"①②③④"[k]}</span><span class="c">${esc(c)}</span></button>`).join("") + "</div>" +
+        `<div class="actions" style="margin-top:8px"><button class="btn ghost" id="hintBtn">힌트</button><button class="btn ghost" id="showBtn">정답 보기</button>${theoryBtn(p.st)}</div>`;
+      area.querySelectorAll(".choice").forEach(b => b.onclick = () => pickChoice(i, +b.dataset.k, b));
+      if (st.solved[i]) { area.querySelector(`.choice[data-k="${p.answer}"]`).classList.add("picked-ok"); renderExp(p); }
+    } else {
+      $("codeWrap").innerHTML = '<div class="examples"><span class="lab">이렇게 나오면 정답</span>' + p.tests.map(t =>
+        `<div class="ex">${esc(t[0])} <span class="arr">→</span> <span class="val">${esc(t[1])}</span></div>`).join("") + "</div>";
+      area.innerHTML = `<div class="editor">
+        <textarea id="src" rows="7" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="코드 입력" inputmode="none"></textarea>
+        <div class="keys" id="k1" aria-label="키워드 버튼"></div>
+        <div class="keys" id="k2" aria-label="기호와 메서드 버튼"></div>
+        <div class="keys" id="k3" aria-label="이름과 값 버튼"></div>
+        <div class="actions">
+          <button class="btn" id="runBtn">실행</button>
+          <button class="btn primary" id="gradeBtn">채점하기</button>
+        </div>
+        <div class="actions"><button class="btn ghost" id="hintBtn">힌트</button><button class="btn ghost" id="showBtn">정답 보기</button><button class="btn ghost" id="undoBtn">↶ 한 단계 전</button><button class="btn ghost" id="clearBtn">처음 틀로</button><button class="btn ghost" id="kbdBtn" aria-pressed="false">키보드 켜기</button>${theoryBtn(p.st)}</div>
+      </div>`;
+      const ta = $("src"); ta.value = st.drafts[i] ?? p.starter;
+      if (ta.value === p.starter) ta.setSelectionRange(caretAt(p.starter), caretAt(p.starter));
+      else ta.setSelectionRange(ta.value.length, ta.value.length);
+      const fit = () => { ta.style.height = "auto"; ta.style.height = Math.max(150, ta.scrollHeight + 4) + "px"; };
+      ta.oninput = () => { st.drafts[i] = ta.value; save(); fit(); };
+      requestAnimationFrame(fit);
+      undoStack = []; let lastType = 0;
+      ta.addEventListener("beforeinput", () => { const now = Date.now(); if (now - lastType > 800) pushUndo(ta); lastType = now; });
+      buildKeys(ta, p);
+      $("runBtn").onclick = () => doRun(i);
+      $("gradeBtn").onclick = () => doGrade(i);
+      $("undoBtn").onclick = () => { if (!undoStack.length) return; ta.value = undoStack.pop(); st.drafts[i] = ta.value; save(); const n = ta.value.length; ta.setSelectionRange(n, n); };
+      $("kbdBtn").onclick = () => { const on = ta.getAttribute("inputmode") === "none"; ta.setAttribute("inputmode", on ? "text" : "none"); $("kbdBtn").textContent = on ? "키보드 끄기" : "키보드 켜기"; $("kbdBtn").setAttribute("aria-pressed", String(on)); ta.blur(); if (on) setTimeout(() => ta.focus(), 50); };
+      $("clearBtn").onclick = () => { pushUndo(ta); ta.value = p.starter; st.drafts[i] = p.starter; save(); ta.setSelectionRange(caretAt(p.starter), caretAt(p.starter)); };
+      if (st.solved[i]) { fb("ok", "이미 맞힌 문제예요", "<p>다시 조립해 봐도 좋아요. 손에 익을수록 빨라져요.</p>"); renderExp(p); }
+    }
+    bindTheory(area);
+    $("hintBtn").onclick = () => showHint(i, true);
+    $("showBtn").onclick = () => reveal(i);
+    $("prev").disabled = pos <= 0; $("next").disabled = pos < 0 || pos >= L.length - 1;
+  }
+
+  // ---------- 버튼 조립: 정답 코드에 필요한 조각만, 순서는 섞어서 ----------
+  const TOKRE = /`(?:\\.|[^`\\])*`|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|\d+(?:\.\d+)?|\.\.\.|\??\.[A-Za-z_$][\w$]*\(?|[A-Za-z_$][\w$]*\(?|===|!==|=>|\?\?|&&|\|\||\+\+|--|[+\-*\/%]=|<=|>=|==|!=|[{}()[\];,:?!<>=+\-*\/%.]/g;
+  const KW = new Set("const let var return if else for while of in function new class this async await switch case break default typeof instanceof true false null undefined try catch finally throw extends constructor static get set super".split(" "));
+  const tokens = s => s.match(TOKRE) || [];
+  function buildKeys(ta, p) {
+    const need = new Map(), have = new Map();
+    tokens(p.sol).forEach(t => need.set(t, (need.get(t) || 0) + 1));
+    tokens(p.starter).forEach(t => have.set(t, (have.get(t) || 0) + 1));
+    const r1 = [], r2 = [], r3 = [];
+    for (const [t, n] of need) {
+      if (n <= (have.get(t) || 0)) continue;
+      if (KW.has(t.replace(/\($/, ""))) r1.push([t, "kw"]);
+      else if (/^[`"'\d]/.test(t)) r3.push([t, "val"]);
+      else if (/^\??\.[A-Za-z_$]/.test(t) || /\($/.test(t)) r2.push([t, "fn"]);
+      else if (/^[A-Za-z_$]/.test(t)) r3.push([t, "nm"]);
+      else r2.push([t, ""]);
+    }
+    const cmp = (a, b) => a[0].localeCompare(b[0]);
+    r1.sort(cmp); r2.sort((a, b) => (a[1] === "fn") - (b[1] === "fn") || cmp(a, b)); r3.sort((a, b) => (a[1] === "val") - (b[1] === "val") || cmp(a, b));
+    r1.forEach(([k, c]) => keyBtn($("k1"), ta, k, c));
+    r2.forEach(([k, c]) => keyBtn($("k2"), ta, k, c));
+    r3.forEach(([k, c]) => keyBtn($("k3"), ta, k, c));
+    keyBtn($("k3"), ta, "⏎", "ctl", "줄 바꾸기"); keyBtn($("k3"), ta, "⌫", "ctl", "한 조각 지우기");
+  }
+  function keyBtn(box, ta, k, cls, label) {
+    const b = document.createElement("button"); b.type = "button"; b.className = "key " + cls; b.textContent = k;
+    if (label) b.setAttribute("aria-label", label);
+    b.addEventListener("pointerdown", e => e.preventDefault());
+    b.onclick = () => insert(ta, k);
+    box.appendChild(b);
+  }
+  let undoStack = [];
+  function pushUndo(ta) { if (undoStack[undoStack.length - 1] !== ta.value) undoStack.push(ta.value); if (undoStack.length > 100) undoStack.shift(); }
+  const noStr = s => s.replace(/`(?:\\.|[^`\\])*`|"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'/g, '""');
+  const depthOf = s => { const t = noStr(s); return (t.match(/\{/g) || []).length - (t.match(/\}/g) || []).length; };
+  const parenOf = s => { const t = noStr(s); return (t.match(/\(/g) || []).length - (t.match(/\)/g) || []).length; };
+  const ind = n => "  ".repeat(Math.max(0, n));
+  const CALL_KW = /\b(if|for|while|switch|catch|return|typeof|of|in|await|new|case)$/;
+  // 조각을 커서 자리에 넣는다: 띄어쓰기, { } 줄바꿈과 들여쓰기는 알아서
+  function insert(ta, k) {
+    pushUndo(ta);
+    const v = ta.value, s = ta.selectionStart ?? v.length, e = ta.selectionEnd ?? s;
+    let before = v.slice(0, s);
+    const after = v.slice(e);
+    if (k === "⌫") {
+      const t = before.replace(/\s+$/, "");
+      let cut = t.length;
+      for (const m of t.matchAll(TOKRE)) if (m.index + m[0].length === t.length) cut = m.index;
+      if (cut === t.length && t.length) cut = t.length - 1;
+      return put(ta, t.slice(0, cut).replace(/[ \t]+$/, ""), "", after);
+    }
+    const depth = depthOf(before), line = before.slice(before.lastIndexOf("\n") + 1);
+    if (k === "⏎") return put(ta, before.replace(/[ \t]+$/, ""), "\n" + ind(depth), after);
+    if (k === "}") {
+      before = /^\s*$/.test(line) ? before.slice(0, before.length - line.length) + ind(depth - 1) : before.replace(/[ \t]+$/, "") + "\n" + ind(depth - 1);
+      return put(ta, before, "}", after);
+    }
+    const trimmed = before.replace(/[ \t]+$/, "");
+    // { 나 ; 다음, 또는 } 다음에 새 문장이 오면 줄을 바꾼다 (}) 나 } else 는 그대로 이어서)
+    const last = trimmed.slice(-1);
+    if (last === "{" || (last === ";" && parenOf(trimmed) === 0) || (last === "}" && !/^([)\],;.:]|else$|catch$|finally$|\?\.)/.test(k))) before = trimmed + "\n" + ind(depth);
+    let space = true;
+    if (!before || /[\s(\[!]$/.test(before) || /(^|[^.])\.$/.test(before) || /\.\.\.$/.test(before)) space = false;
+    else if (/^[,;)\]:]/.test(k) || /^\??\.[A-Za-z_$]/.test(k) || k === ".") space = false;
+    else if ((k === "++" || k === "--") && /[\w$)\]]$/.test(before)) space = false;
+    else if ((k === "(" || k === "[") && /[\w$)\]]$/.test(before) && !CALL_KW.test(before)) space = false;
+    put(ta, before, (space ? " " : "") + k, after);
+  }
+  function put(ta, before, text, after) {
+    ta.value = before + text + after;
+    const pos = before.length + text.length; ta.setSelectionRange(pos, pos);
+    if (ta.getAttribute("inputmode") !== "none") ta.focus();
+    ta.dispatchEvent(new Event("input"));
+  }
+
+  // ---------- 실행·채점 ----------
+  function testsHTML(r, grade) {
+    return '<div class="tests">' + r.results.map(t => {
+      const cls = grade ? (t.ok ? "ok" : "bad") : "", mk = grade ? (t.ok ? "✓" : "✗") : "▸";
+      const got = t.err ? `에러 (${esc(t.err.split(":")[0])})` : esc(t.got);
+      return `<div class="t ${cls}"><span class="mk">${mk}</span><span class="body">${esc(t.call)} → ${got}${grade && !t.ok ? ` <span class="want">(정답: ${esc(t.exp)})</span>` : ""}</span></div>`;
+    }).join("") + "</div>";
+  }
+  const logsHTML = r => r.logs && r.logs.length ? `<p class="result-label">console.log 출력</p><pre class="logs">${esc(r.logs.slice(0, 40).join("\n"))}</pre>` : "";
+  const errHint = r => { const t = r.results.find(x => x.err); return t ? `<p>${esc(friendly(t.err))}</p>` : ""; };
+  let busy = false;
+  async function runMine(i) {
+    const p = P[i], code = $("src").value;
+    $("fb").innerHTML = ""; $("exp").innerHTML = "";
+    if (!code.trim() || code === p.starter) { fb("info", "", "<p>먼저 버튼을 눌러 코드를 조립해 주세요.</p>"); return null; }
+    busy = true; $("runBtn").disabled = $("gradeBtn").disabled = true;
+    const r = await exec({ code, names: p.names, tests: p.tests });
+    busy = false; if ($("runBtn")) $("runBtn").disabled = $("gradeBtn").disabled = false;
+    return st.cur === i && view === "quiz" ? r : null;
+  }
+  async function doRun(i) {
+    if (busy) return; const r = await runMine(i); if (!r) return;
+    if (r.timeout) return fb("bad", "멈췄어요", `<p>${TIMEOUT_MSG}</p>`);
+    if (r.err) return fb("bad", "실행 오류", `<p>${esc(friendly(r.err))}</p>`);
+    fb("info", "내 결과", testsHTML(r, false) + logsHTML(r) + errHint(r));
+  }
+  function markWrong(i) { st.wrong[i] = true; st.tries[i] = (st.tries[i] || 0) + 1; save(); }
+  function markRight(i) { st.solved[i] = true; if (st.mode === "wrong") delete st.wrong[i]; st.tries[i] = 0; save(); }
+  async function doGrade(i) {
+    if (busy) return; const p = P[i]; const r = await runMine(i); if (!r) return;
+    const code = $("src").value;
+    if (r.timeout || r.err) {
+      markWrong(i);
+      fb("bad", r.timeout ? "멈췄어요" : "실행 오류", `<p>${esc(r.timeout ? TIMEOUT_MSG : friendly(r.err))}</p>`);
+      showHint(i); renderTop(); return;
+    }
+    const pass = r.results.filter(t => t.ok).length, all = r.results.length;
+    const miss = pass === all ? p.must.find(([re]) => !new RegExp(re).test(code)) : null;
+    if (pass === all && !miss) {
+      const first = !(st.tries[i] > 0); markRight(i);
+      fb("ok", first ? "정답이에요!" : "정답! 이번엔 맞혔어요", testsHTML(r, true) + logsHTML(r));
+      renderExp(p);
+    } else if (miss) {
+      st.tries[i] = (st.tries[i] || 0) + 1; save();
+      fb("hint", "결과는 맞았어요! 그런데…", `<p>${esc(miss[1])}</p><p class="result-label">이 문제는 이 문법을 손에 익히는 문제예요.</p>`);
+    } else {
+      markWrong(i);
+      fb("bad", `아깝다! ${all}개 중 ${pass}개 통과`, testsHTML(r, true) + logsHTML(r) + errHint(r) + theoryBtn(p.st));
+      showHint(i);
+    }
+    renderTop(); updateMeta(i);
+  }
+  function pickChoice(i, k, btn) {
+    const p = P[i]; $("fb").innerHTML = ""; $("exp").innerHTML = "";
+    document.querySelectorAll(".choice").forEach(b => b.classList.remove("picked-bad", "picked-ok"));
+    if (k === p.answer) {
+      btn.classList.add("picked-ok"); const first = !(st.tries[i] > 0); markRight(i);
+      fb("ok", first ? "정답이에요!" : "정답! 이번엔 맞혔어요", ""); renderExp(p);
+    } else {
+      btn.classList.add("picked-bad"); markWrong(i);
+      fb("bad", "아깝다!", `<p>${"①②③④"[k]}번은 아니에요. 힌트 보고 다시 골라 보세요.</p>${theoryBtn(p.st)}`); showHint(i);
+    }
+    renderTop(); updateMeta(i);
+  }
+  function showHint(i, manual) {
+    const p = P[i];
+    if (manual) { st.tries[i] = Math.min((st.tries[i] || 0) + 1, p.hints.length); save(); }
+    const t = st.tries[i] || 0, n = Math.min(t, p.hints.length);
+    if (!n) return;
+    document.querySelectorAll(".fb.hint.h").forEach(e => e.remove());
+    let body = "";
+    for (let k = 0; k < n; k++) body += `<p>${k + 1}. ${inlineCode(p.hints[k])}</p>`;
+    if (t >= p.hints.length) body += '<p class="result-label">힌트를 다 봤어요. 그래도 막히면 "정답 보기"나 이론 노트를 열어 보세요.</p>';
+    fb("hint", "힌트", body).classList.add("h");
+  }
+  function reveal(i) {
+    const p = P[i];
+    document.querySelectorAll(".fb.reveal").forEach(e => e.remove());
+    let body;
+    if (p.type === "mc") {
+      body = `<p>정답은 <b>${"①②③④"[p.answer]}</b> <code>${esc(p.choices[p.answer])}</code></p>`;
+      document.querySelectorAll(".choice").forEach(b => { if (+b.dataset.k === p.answer) b.classList.add("picked-ok"); });
+    } else body = `<pre class="code">${esc(p.sol)}</pre><p class="result-label">보고 나서 "처음 틀로"를 누르고 직접 다시 조립해 보세요.</p>`;
+    st.wrong[i] = true; save();
+    fb("info", "정답", body).classList.add("reveal");
+    renderExp(p); renderTop();
+  }
+  function updateMeta(i) {
+    const m = $("meta"); if (st.solved[i] && !m.querySelector(".solved")) m.querySelector(".qnum").insertAdjacentHTML("beforebegin", '<span class="tag solved">정답</span>');
+  }
+
+  function go(i) { st.cur = i; save(); render(); window.scrollTo({ top: 0, behavior: "smooth" }); }
+  function setMode(m, quiet) {
+    st.mode = m;
+    if (m === "wrong") st.queue = Object.keys(st.wrong).map(Number).sort((a, b) => a - b);
+    save();
+    const L = list();
+    if (L.length && !L.includes(st.cur)) st.cur = L[0];
+    if (!L.length) st.mode = "all";
+    if (!quiet) render();
+  }
+  $("prev").onclick = () => { const L = list(), p = L.indexOf(st.cur); if (p > 0) go(L[p - 1]); };
+  $("next").onclick = () => { const L = list(), p = L.indexOf(st.cur); if (p >= 0 && p < L.length - 1) go(L[p + 1]); };
+  function goStation(si) {
+    if (si < 0 || si >= STN.length) return;
+    const ids = P.map((p, i) => i).filter(i => P[i].st === si);
+    st.mode = "all"; st.cur = ids.find(i => !st.solved[i]) ?? ids[0]; save();
+    if (view !== "quiz") show("quiz"); else { render(); window.scrollTo({ top: 0, behavior: "smooth" }); }
+  }
+  $("prevSt").onclick = () => goStation(P[st.cur].st - 1);
+  $("nextSt").onclick = () => goStation(P[st.cur].st + 1);
+  $("listBtn").onclick = () => show("list");
+  $("modeAll").onclick = () => setMode("all");
+  $("modeWrong").onclick = () => setMode("wrong");
+  $("modeTrap").onclick = () => setMode("trap");
+  $("reset").onclick = () => { $("resetConfirm").hidden = false; };
+  $("resetYes").onclick = () => { st = blank(); save(); $("resetConfirm").hidden = true; render(); };
+
+  // ---------- 화면: 홈 / 목록 / 문제 / 이론 ----------
+  let view = "home", lf = "all";
+  function show(v, push, arg) {
+    view = v;
+    ["home", "list", "quiz", "theory"].forEach(k => $(k + "View").hidden = k !== v);
+    if (v === "home") renderHome();
+    if (v === "list") renderList();
+    if (v === "quiz") render();
+    if (v === "theory") renderTheory(arg);
+    if (push !== false) { try { history.pushState({ v, arg }, "", "#" + v); } catch (e) {} }
+    if (!(v === "theory" && arg != null)) window.scrollTo(0, 0);
+  }
+  window.addEventListener("popstate", e => show((e.state && e.state.v) || "home", false, e.state && e.state.arg));
+  const plain = s => String(s).replace(/\s+/g, " ");
+  function nextTodo(from) {
+    for (let k = 0; k < P.length; k++) { const i = (from + k) % P.length; if (!st.solved[i]) return i; }
+    return from;
+  }
+  function renderHome() {
+    const solved = Object.keys(st.solved).length, wrongN = Object.keys(st.wrong).length;
+    $("hSolved").textContent = solved;
+    $("hTotal").textContent = `/ ${P.length} 문제 맞힘`;
+    $("hBar").style.width = (solved / P.length * 100) + "%";
+    $("hOk").textContent = P.filter((p, i) => st.solved[i] && !st.wrong[i]).length;
+    $("hBad").textContent = wrongN; $("hLeft").textContent = P.length - solved;
+    $("hContinueSub").textContent = `${st.cur + 1}번 · ${STN[P[st.cur].st]}`;
+    $("hWrongSub").textContent = wrongN ? `${wrongN}문제 남음` : "아직 없어요";
+    $("hWrong").disabled = wrongN === 0;
+    $("hTrapSub").textContent = `${P.filter(p => p.trap).length}문제`;
+    $("hTopics").innerHTML = STN.map((name, si) => {
+      const ids = P.map((p, i) => i).filter(i => P[i].st === si), n = ids.filter(i => st.solved[i]).length;
+      return `<button class="topic" data-si="${si}" aria-label="${esc(name)}, ${ids.length}문제 중 ${n}개 정답"><span class="tn">${si + 1}. ${esc(name)}</span><span class="tc">${n}/${ids.length}</span><span class="bar thin" aria-hidden="true"><i style="width:${n / ids.length * 100}%"></i></span></button>`;
+    }).join("");
+    $("hTopics").querySelectorAll(".topic").forEach(b => b.onclick = () => goStation(+b.dataset.si));
+  }
+  function renderList() {
+    $("lScore").innerHTML = `<b>${Object.keys(st.solved).length}</b>/${P.length}`;
+    document.querySelectorAll("#listView [data-f]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.f === lf)));
+    const keep = i => lf === "all" || (lf === "todo" && !st.solved[i]) || (lf === "wrong" && st.wrong[i]) || (lf === "trap" && P[i].trap);
+    let h = "";
+    STN.forEach((name, si) => {
+      const ids = P.map((p, i) => i).filter(i => P[i].st === si), shown = ids.filter(keep);
+      if (!shown.length) return;
+      const n = ids.filter(i => st.solved[i]).length;
+      h += `<section class="lsec"><h2>${esc(name)} <small>${n}/${ids.length} 맞힘</small></h2><div class="lbox">` + shown.map(i => {
+        const p = P[i], s = st.wrong[i] ? '<span class="stt bad">오답</span>' : st.solved[i] ? '<span class="stt ok">정답</span>' : '<span class="stt no">안 풂</span>';
+        return `<button class="lrow${i === st.cur ? " cur" : ""}" data-i="${i}"><span class="no">${i + 1}</span><span class="tx">${p.trap ? '<span class="tag trap">함정</span>' : ""}${p.type === "mc" ? '<span class="tag mc">객관식</span>' : ""}${esc(plain(p.q))}</span>${s}</button>`;
+      }).join("") + "</div></section>";
+    });
+    $("lBody").innerHTML = h || '<p class="empty">여기에 해당하는 문제가 없어요.</p>';
+    $("lBody").querySelectorAll(".lrow").forEach(b => b.onclick = () => { st.mode = "all"; st.cur = +b.dataset.i; save(); show("quiz"); });
+  }
+  function renderTheory(focus) {
+    $("tChips").innerHTML = TH.map((t, si) => `<button class="pill" data-go="${si}" aria-pressed="${si === focus}">${esc(t.t)}</button>`).join("");
+    $("tBody").innerHTML = TH.map((t, si) => `<section class="card lesson${si === focus ? " focus" : ""}" id="lesson${si}">
+      <h2>${si + 1}. ${esc(t.t)}</h2><p>${inlineCode(t.easy)}</p><pre class="code">${esc(t.code)}</pre>
+      <div class="tipbox"><b>외우기</b> ${inlineCode(t.tip)}</div>
+      <button class="btn go" data-si="${si}">이 주제 문제 풀기 ▶</button></section>`).join("");
+    $("tChips").querySelectorAll("[data-go]").forEach(b => b.onclick = () => $("lesson" + b.dataset.go).scrollIntoView({ behavior: "smooth" }));
+    $("tBody").querySelectorAll(".go").forEach(b => b.onclick = () => goStation(+b.dataset.si));
+    if (focus != null) requestAnimationFrame(() => $("lesson" + focus).scrollIntoView());
+  }
+  document.querySelectorAll("#listView [data-f]").forEach(b => b.onclick = () => { lf = b.dataset.f; renderList(); });
+  $("lHome").onclick = () => show("home");
+  $("qHome").onclick = () => show("home");
+  $("tBack").onclick = () => { if (history.state && history.state.v === "theory" && history.length > 1) history.back(); else show("home"); };
+  $("hList").onclick = () => show("list");
+  $("hTheory").onclick = () => show("theory");
+  $("hContinue").onclick = () => { if (!list().includes(st.cur)) st.mode = "all"; show("quiz"); };
+  $("hWrong").onclick = () => { setMode("wrong", true); show("quiz"); };
+  $("hTrap").onclick = () => { setMode("trap", true); show("quiz"); };
+  $("hFresh").onclick = () => { st.mode = "all"; st.cur = nextTodo(st.cur); save(); show("quiz"); };
+  $("hReset").onclick = () => { $("hResetConfirm").hidden = false; };
+  $("hResetYes").onclick = () => { st = blank(); save(); $("hResetConfirm").hidden = true; renderHome(); };
+
+  if (st.cur >= P.length) st.cur = 0;
+  if (!list().length) st.mode = "all";
+  try { history.replaceState({ v: "home" }, "", "#home"); } catch (e) {}
+  show("home", false);
+})();
+
+  // 홈 화면에 추가: 설치 창을 띄울 수 있는 브라우저면 바로 띄우고, 아니면 방법을 보여준다
+  let installEvt = null;
+  addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; });
+  const isStandalone = () => (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone;
+  const IGUIDE = `<p><b>아이폰 (Safari)</b><br>화면 아래 공유 버튼(네모에 화살표) → <b>홈 화면에 추가</b> → 추가</p>
+    <p><b>갤럭시·안드로이드 (Chrome, 삼성 인터넷)</b><br>오른쪽 위 ⋮ 또는 아래 ≡ 메뉴 → <b>홈 화면에 추가</b> (또는 <b>앱 설치</b>)</p>
+    <p>Claude 앱 안에서 보고 있다면, 먼저 링크를 Safari나 Chrome으로 열어 주세요.</p>`;
+  document.querySelectorAll("[data-install]").forEach(btn => {
+    if (isStandalone()) { btn.parentElement.hidden = true; return; }
+    btn.onclick = async () => {
+      if (installEvt) { installEvt.prompt(); try { await installEvt.userChoice; } catch (e) {} installEvt = null; return; }
+      const g = btn.nextElementSibling; g.innerHTML = IGUIDE; g.hidden = !g.hidden;
+      btn.textContent = g.hidden ? "홈 화면에 추가" : "설명 닫기";
+    };
+  });
+</script>
+
+<script>if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));</script>
+</body>
+</html>
