@@ -1,5 +1,5 @@
 // 오프라인용: 앱 파일은 설치할 때 저장, 글꼴은 처음 받을 때 저장
-const CACHE = "js-commute-e30fcef1"; // 같은 주소의 다른 앱 캐시는 건드리지 않게 이름 앞부분으로 구분
+const CACHE = "js-commute-8ae5bf42"; // 같은 주소의 다른 앱 캐시는 건드리지 않게 이름 앞부분으로 구분
 const SHELL = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png", "icon-180.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL))); self.skipWaiting(); });
 self.addEventListener("activate", e => {

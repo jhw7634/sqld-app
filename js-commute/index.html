@@ -89,6 +89,18 @@ pre.code { margin: 0; background: var(--code-bg); border-radius: 10px; padding: 
 .editor { display: flex; flex-direction: column; gap: 8px; }
 textarea#src { width: 100%; min-height: 150px; resize: vertical; font-family: var(--f-mono); font-size: 14.5px; line-height: 1.55; tab-size: 2;
   padding: 10px 12px; border-radius: 10px; border: 1.5px solid var(--rule); background: var(--code-bg); color: var(--ink); white-space: pre; overflow-x: auto; }
+textarea#cSrc { width: 100%; min-height: 180px; resize: vertical; font-family: var(--f-mono); font-size: 14.5px; line-height: 1.55; tab-size: 2;
+  padding: 10px 12px; border-radius: 10px; border: 1.5px solid var(--rule); background: var(--code-bg); color: var(--ink); white-space: pre; overflow-x: auto; }
+textarea#cSrc:focus { outline: none; border-color: var(--line); }
+.cout { background: #1E2130; color: #E8EAF2; border-radius: 10px; padding: 10px 12px; font-family: var(--f-mono); font-size: 13px; line-height: 1.55; min-height: 64px; display: flex; flex-direction: column; gap: 2px; }
+.cout .ln { white-space: pre-wrap; overflow-wrap: anywhere; }
+.cout .ln::before { content: "› "; color: #8A90A8; }
+.cout .ln.er { color: #FF9B9B; } .cout .ln.er::before { content: "✗ "; }
+.cout .ln.dim { color: #8A90A8; } .cout .ln.dim::before { content: ""; }
+.cout .tip { font-family: var(--f-body, inherit); color: #FFD27A; font-size: 13px; white-space: normal; }
+.cex { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+.cex::-webkit-scrollbar { display: none; }
+.cex .pill { flex: none; }
 textarea#src:focus { outline: none; border-color: var(--line); }
 .keys { display: flex; gap: 6px; flex-wrap: wrap; }
 .keys:empty { display: none; }
@@ -241,6 +253,7 @@ pre.logs { margin: 0; font-family: var(--f-mono); font-size: 12.5px; background:
     <button class="btn" id="hTrap">함정만 풀기<small id="hTrapSub">헷갈리는 출력 문제</small></button>
     <button class="btn" id="hFresh">안 푼 문제부터<small>처음 보는 문제</small></button>
     <button class="btn wide" id="hTheory">📖 이론 노트<small>주제별 한 장 요약 · 막히면 먼저 읽기</small></button>
+    <button class="btn wide" id="hConsole">🧪 콘솔 (연습장)<small>아무 코드나 써서 실행 · console.log 결과 바로 보기</small></button>
   </div>
   <h2 class="sect">주제별 진도</h2>
   <div class="topics" id="hTopics"></div>
@@ -267,6 +280,23 @@ pre.logs { margin: 0; font-family: var(--f-mono); font-size: 12.5px; background:
     <div class="tchips" id="tChips"></div>
   </header>
   <div id="tBody" style="display:flex;flex-direction:column;gap:12px"></div>
+</div>
+
+<div class="wrap screen" id="consoleView" hidden>
+  <header class="top">
+    <div class="bar-top"><button class="btn back" id="cHome">◀ 홈</button><h1>콘솔</h1></div>
+    <div class="cex" id="cEx" aria-label="예시 코드"></div>
+  </header>
+  <main class="card editor">
+    <textarea id="cSrc" rows="8" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="콘솔 코드 입력" placeholder="여기에 코드를 써 보세요.&#10;예) console.log(1 + 2)"></textarea>
+    <div class="keys" id="cKeys" aria-label="자주 쓰는 조각"></div>
+    <div class="actions">
+      <button class="btn primary" id="cRun">▶ 실행</button>
+    </div>
+    <div class="actions"><button class="btn ghost" id="cUndo">↶ 한 단계 전</button><button class="btn ghost" id="cClear">모두 지우기</button><button class="btn ghost" id="cKbd" aria-pressed="true">키보드 끄기</button></div>
+    <p class="result-label">결과</p>
+    <div class="cout" id="cOut" aria-live="polite"><span class="ln dim">실행 버튼을 누르면 console.log 결과가 여기 나와요.</span></div>
+  </main>
 </div>
 
 <div class="wrap screen" id="quizView" hidden>
@@ -458,7 +488,7 @@ const DATA = {"problems": [{"type": "code", "st": 0, "q": "이름 name을 받아
       $("codeWrap").innerHTML = p.code ? `<pre class="code">${esc(p.code)}</pre>` : "";
       area.innerHTML = '<div class="choices">' + p.choices.map((c, k) =>
         `<button class="choice" data-k="${k}"><span class="n">${"①②③④"[k]}</span><span class="c">${esc(c)}</span></button>`).join("") + "</div>" +
-        `<div class="actions" style="margin-top:8px"><button class="btn ghost" id="hintBtn">힌트</button><button class="btn ghost" id="showBtn">정답 보기</button>${theoryBtn(p.st)}</div>`;
+        `<div class="actions" style="margin-top:8px"><button class="btn ghost" id="hintBtn">힌트</button><button class="btn ghost" id="showBtn">정답 보기</button>${theoryBtn(p.st)}${p.code ? '<button class="btn ghost theory" id="toConsole">🧪 콘솔에서 해보기</button>' : ""}</div>`;
       area.querySelectorAll(".choice").forEach(b => b.onclick = () => pickChoice(i, +b.dataset.k, b));
       if (st.solved[i]) { area.querySelector(`.choice[data-k="${p.answer}"]`).classList.add("picked-ok"); renderExp(p); }
     } else {
@@ -473,7 +503,7 @@ const DATA = {"problems": [{"type": "code", "st": 0, "q": "이름 name을 받아
           <button class="btn" id="runBtn">실행</button>
           <button class="btn primary" id="gradeBtn">채점하기</button>
         </div>
-        <div class="actions"><button class="btn ghost" id="hintBtn">힌트</button><button class="btn ghost" id="showBtn">정답 보기</button><button class="btn ghost" id="undoBtn">↶ 한 단계 전</button><button class="btn ghost" id="clearBtn">처음 틀로</button><button class="btn ghost" id="kbdBtn" aria-pressed="false">키보드 켜기</button>${theoryBtn(p.st)}</div>
+        <div class="actions"><button class="btn ghost" id="hintBtn">힌트</button><button class="btn ghost" id="showBtn">정답 보기</button><button class="btn ghost" id="undoBtn">↶ 한 단계 전</button><button class="btn ghost" id="clearBtn">처음 틀로</button><button class="btn ghost" id="kbdBtn" aria-pressed="false">키보드 켜기</button>${theoryBtn(p.st)}<button class="btn ghost theory" id="toConsole">🧪 콘솔에서 해보기</button></div>
       </div>`;
       const ta = $("src"); ta.value = st.drafts[i] ?? p.starter;
       if (ta.value === p.starter) ta.setSelectionRange(caretAt(p.starter), caretAt(p.starter));
@@ -492,6 +522,7 @@ const DATA = {"problems": [{"type": "code", "st": 0, "q": "이름 name을 받아
       if (st.solved[i]) { fb("ok", "이미 맞힌 문제예요", "<p>다시 조립해 봐도 좋아요. 손에 익을수록 빨라져요.</p>"); renderExp(p); }
     }
     bindTheory(area);
+    if ($("toConsole")) $("toConsole").onclick = () => openConsole(p.type === "mc" ? p.code : $("src").value);
     $("hintBtn").onclick = () => showHint(i, true);
     $("showBtn").onclick = () => reveal(i);
     $("prev").disabled = pos <= 0; $("next").disabled = pos < 0 || pos >= L.length - 1;
@@ -694,11 +725,12 @@ const DATA = {"problems": [{"type": "code", "st": 0, "q": "이름 name을 받아
   let view = "home", lf = "all";
   function show(v, push, arg) {
     view = v;
-    ["home", "list", "quiz", "theory"].forEach(k => $(k + "View").hidden = k !== v);
+    ["home", "list", "quiz", "theory", "console"].forEach(k => $(k + "View").hidden = k !== v);
     if (v === "home") renderHome();
     if (v === "list") renderList();
     if (v === "quiz") render();
     if (v === "theory") renderTheory(arg);
+    if (v === "console") renderConsole();
     if (push !== false) { try { history.pushState({ v, arg }, "", "#" + v); } catch (e) {} }
     if (!(v === "theory" && arg != null)) window.scrollTo(0, 0);
   }
@@ -708,6 +740,89 @@ const DATA = {"problems": [{"type": "code", "st": 0, "q": "이름 name을 받아
     for (let k = 0; k < P.length; k++) { const i = (from + k) % P.length; if (!st.solved[i]) return i; }
     return from;
   }
+  // ---------- 콘솔(연습장): 아무 코드나 실행하고 console.log 출력을 본다 ----------
+  const CEX = [
+    ["더하기", 'const a = 3;\nconst b = 4;\nconsole.log(a + b);\nconsole.log("합: " + (a + b));\nconsole.log(`합: ${a + b}`);'],
+    ["배열", 'const nums = [1, 2, 3, 4, 5];\nconsole.log(nums.map(n => n * 2));\nconsole.log(nums.filter(n => n % 2 === 0));\nconsole.log(nums.reduce((s, n) => s + n, 0));'],
+    ["객체", 'const me = { name: "미아", age: 20 };\nme.age += 1;\nconsole.log(me);\nconsole.log(Object.keys(me));\nconst { name } = me;\nconsole.log(name);'],
+    ["반복문", 'for (let i = 1; i <= 3; i++) {\n  console.log(i + "번째");\n}\nfor (const ch of "JS") {\n  console.log(ch);\n}'],
+    ["함수", 'function hello(name = "친구") {\n  return "안녕, " + name;\n}\nconsole.log(hello("미아"));\nconsole.log(hello());\nconst sq = x => x * x;\nconsole.log(sq(5));'],
+    ["typeof", 'console.log(typeof 1, typeof "1", typeof null, typeof [], typeof undefined);\nconsole.log(1 == "1", 1 === "1");\nconsole.log(0.1 + 0.2);'],
+    ["비동기", 'console.log("1");\nsetTimeout(() => console.log("3 (setTimeout)"), 0);\nPromise.resolve().then(() => console.log("2 (Promise)"));\nconsole.log("끝?");'],
+  ];
+  // [버튼 글자, 넣을 글자] : | 자리에 커서가 간다
+  const CKEYS = [["console.log()", "console.log(|)"], ["const", "const "], ["let", "let "], ["=", " = "], ["=>", " => "], ["( )", "(|)"], ["{ }", "{|}"], ["[ ]", "[|]"], ['" "', '"|"'], ["` `", "`|`"], ["${ }", "${|}"], [";", ";"], [",", ", "], [".", "."],
+    ["return", "return "], ["if", "if (|) {\n  \n}"], ["for…of", "for (const x of |) {\n  \n}"], ["function", "function |() {\n  \n}"], ["===", " === "], ["+", " + "], ["⇥", "  "], ["⏎", "\n"], ["⌫", ""]];
+  let cUndo = [], cBusy = false;
+  const cTa = () => $("cSrc");
+  const cSave = () => { st.console = cTa().value; save(); };
+  const cFit = () => { const ta = cTa(); ta.style.height = "auto"; ta.style.height = Math.max(180, ta.scrollHeight + 4) + "px"; };
+  function cPush() { const v = cTa().value; if (cUndo[cUndo.length - 1] !== v) cUndo.push(v); if (cUndo.length > 100) cUndo.shift(); }
+  function cInsert(text) {
+    const ta = cTa(); cPush();
+    const v = ta.value, s = ta.selectionStart ?? v.length, e = ta.selectionEnd ?? s;
+    let before = v.slice(0, s); const after = v.slice(e);
+    if (text === "") { // ⌫ 한 글자 지우기
+      before = before.slice(0, -1);
+      ta.value = before + after; ta.setSelectionRange(before.length, before.length);
+    } else {
+      const line = before.slice(before.lastIndexOf("\n") + 1), lead = line.match(/^\s*/)[0];
+      const extra = /\{\s*$/.test(before) ? "  " : "";
+      let t = text.replace(/\n/g, "\n" + lead + (text === "\n" ? extra : ""));
+      const k = t.indexOf("|"); t = t.replace("|", "");
+      ta.value = before + t + after;
+      const pos = before.length + (k < 0 ? t.length : k); ta.setSelectionRange(pos, pos);
+    }
+    if (ta.getAttribute("inputmode") !== "none") ta.focus();
+    cSave(); cFit();
+  }
+  function renderConsole() {
+    const ta = cTa();
+    if (ta.dataset.ready !== "1") {
+      ta.dataset.ready = "1";
+      ta.value = st.console || "";
+      ta.addEventListener("beforeinput", () => { const now = Date.now(); if (now - (ta._t || 0) > 800) cPush(); ta._t = now; });
+      ta.oninput = () => { cSave(); cFit(); };
+      // 탭 키는 들여쓰기로
+      ta.addEventListener("keydown", e => { if (e.key === "Tab" && !e.shiftKey) { e.preventDefault(); cInsert("  "); } if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); cRun(); } });
+      CKEYS.forEach(([label, text]) => {
+        const b = document.createElement("button"); b.type = "button"; b.textContent = label;
+        b.className = "key " + (/^[a-z]/.test(label) ? (label.includes("(") ? "fn" : "kw") : /[⇥⏎⌫]/.test(label) ? "ctl" : "");
+        if (label === "⏎") b.setAttribute("aria-label", "줄 바꾸기"); if (label === "⌫") b.setAttribute("aria-label", "한 글자 지우기"); if (label === "⇥") b.setAttribute("aria-label", "들여쓰기");
+        b.addEventListener("pointerdown", e => e.preventDefault());
+        b.onclick = () => cInsert(text);
+        $("cKeys").appendChild(b);
+      });
+      $("cEx").innerHTML = CEX.map(([n], k) => `<button class="pill" data-k="${k}">${esc(n)}</button>`).join("");
+      $("cEx").querySelectorAll(".pill").forEach(b => b.onclick = () => { cPush(); ta.value = CEX[+b.dataset.k][1]; cSave(); cFit(); cRun(); });
+    }
+    requestAnimationFrame(cFit);
+  }
+  async function cRun() {
+    if (cBusy) return;
+    const code = cTa().value, out = $("cOut");
+    if (!code.trim()) { out.innerHTML = '<span class="ln dim">먼저 코드를 써 주세요. 위의 예시 버튼을 눌러 봐도 좋아요.</span>'; return; }
+    cBusy = true; $("cRun").disabled = true; out.innerHTML = '<span class="ln dim">실행 중…</span>';
+    const r = await exec({ code, names: [], tests: [], wait: 60 });
+    cBusy = false; $("cRun").disabled = false;
+    let h = (r.logs || []).slice(0, 300).map(l => `<span class="ln">${esc(l)}</span>`).join("");
+    if ((r.logs || []).length > 300) h += `<span class="ln dim">… ${r.logs.length - 300}줄 더 있어요</span>`;
+    if (r.timeout) h += `<span class="ln er">멈췄어요</span><span class="tip">${esc(TIMEOUT_MSG)}</span>`;
+    else if (r.err) h += `<span class="ln er">${esc(r.err)}</span><span class="tip">${esc(friendly(r.err))}</span>`;
+    if (!h) h = '<span class="ln dim">(출력 없음) 값을 보려면 console.log(값) 으로 찍어 보세요.</span>';
+    out.innerHTML = h;
+  }
+  function openConsole(code) {
+    show("console");
+    if (code && code.trim()) { cPush(); cTa().value = code; cSave(); cFit(); }
+  }
+  $("hConsole").onclick = () => show("console");
+  $("cHome").onclick = () => show("home");
+  $("cRun").onclick = () => cRun();
+  $("cUndo").onclick = () => { if (!cUndo.length) return; const ta = cTa(); ta.value = cUndo.pop(); cSave(); cFit(); const n = ta.value.length; ta.setSelectionRange(n, n); };
+  $("cClear").onclick = () => { cPush(); cTa().value = ""; cSave(); cFit(); $("cOut").innerHTML = '<span class="ln dim">실행 버튼을 누르면 console.log 결과가 여기 나와요.</span>'; };
+  $("cKbd").onclick = () => { const ta = cTa(), on = ta.getAttribute("inputmode") === "none"; if (on) ta.removeAttribute("inputmode"); else ta.setAttribute("inputmode", "none"); $("cKbd").textContent = on ? "키보드 끄기" : "키보드 켜기"; $("cKbd").setAttribute("aria-pressed", String(on)); ta.blur(); if (on) setTimeout(() => ta.focus(), 50); };
+
   function renderHome() {
     const solved = Object.keys(st.solved).length, wrongN = Object.keys(st.wrong).length;
     $("hSolved").textContent = solved;
